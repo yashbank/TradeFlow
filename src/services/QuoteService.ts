@@ -279,6 +279,87 @@ export class QuoteService {
   }
 
   /**
+   * In-App / Internal Quote Approval: Plumbers and dispatchers can record approval
+   * directly in the app (e.g., customer approved verbally on the phone, signed work order, etc.).
+   */
+  static async acceptInternal(
+    quoteId: string,
+    signerName?: string,
+    approvalMethod = 'Verbal / Phone Approval'
+  ): Promise<Quote> {
+    const { organization } = await AuthService.requireRole(['owner', 'admin']);
+    const supabase = await createClient();
+
+    const quote = await this.getById(quoteId);
+    if (!quote) throw new Error('Quote not found.');
+
+    // If still in draft, step through sent to satisfy lifecycle state transition rules
+    if (quote.status === 'draft') {
+      transitionQuoteStatus('draft', 'sent');
+      transitionQuoteStatus('sent', 'accepted');
+    } else {
+      transitionQuoteStatus(quote.status, 'accepted');
+    }
+
+    const customerName = `${quote.customer?.first_name || ''} ${quote.customer?.last_name || ''}`.trim();
+    const finalSigner = signerName?.trim() || customerName || 'Customer';
+
+    const { data, error } = await supabase
+      .from('quotes')
+      .update({
+        status: 'accepted',
+        accepted_at: new Date().toISOString(),
+        accepted_by_name: `${finalSigner} (${approvalMethod})`,
+      })
+      .eq('id', quoteId)
+      .eq('organization_id', organization.id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to record quote approval: ${error?.message}`);
+    }
+
+    return data as Quote;
+  }
+
+  /**
+   * In-App / Internal Quote Decline: Plumbers and dispatchers can record customer decline.
+   */
+  static async rejectInternal(quoteId: string, reason?: string): Promise<Quote> {
+    const { organization } = await AuthService.requireRole(['owner', 'admin']);
+    const supabase = await createClient();
+
+    const quote = await this.getById(quoteId);
+    if (!quote) throw new Error('Quote not found.');
+
+    if (quote.status === 'draft') {
+      transitionQuoteStatus('draft', 'sent');
+      transitionQuoteStatus('sent', 'rejected');
+    } else {
+      transitionQuoteStatus(quote.status, 'rejected');
+    }
+
+    const { data, error } = await supabase
+      .from('quotes')
+      .update({
+        status: 'rejected',
+        rejected_at: new Date().toISOString(),
+        rejection_reason: reason?.trim() || 'Declined by customer (in-app update)',
+      })
+      .eq('id', quoteId)
+      .eq('organization_id', organization.id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to record quote rejection: ${error?.message}`);
+    }
+
+    return data as Quote;
+  }
+
+  /**
    * Converts an accepted quote to an active scheduled job.
    */
   static async convertToJob(

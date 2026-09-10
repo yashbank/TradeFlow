@@ -4,7 +4,8 @@ import { InvoiceService } from '@/services/InvoiceService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Receipt, ChevronRight } from 'lucide-react';
+import { Receipt, ChevronRight, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { InvoiceStatus } from '@/types/database';
 
 interface InvoicesPageProps {
@@ -33,6 +34,12 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Invoices & Billing</h1>
           <p className="text-sm text-slate-500 mt-0.5">{totalCount} invoice records total</p>
         </div>
+        <Link href="/invoices/new">
+          <Button size="sm" className="min-h-[44px] font-semibold">
+            <Plus className="w-4 h-4 mr-1.5" />
+            Create Invoice
+          </Button>
+        </Link>
       </div>
 
       {/* Filter Tabs */}
@@ -57,12 +64,20 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
       <div className="grid grid-cols-1 gap-3">
         {invoices.length === 0 ? (
           <Card>
-            <CardContent className="p-12 text-center text-slate-400 space-y-3">
+            <CardContent className="p-12 text-center text-slate-400 space-y-4">
               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
                 <Receipt className="w-6 h-6" />
               </div>
-              <p className="text-sm font-medium">No invoices found.</p>
-              <p className="text-xs text-slate-400">Complete an active job to generate an invoice with 1 click.</p>
+              <div>
+                <p className="text-sm font-medium text-slate-700">No invoices found.</p>
+                <p className="text-xs text-slate-400 mt-1">Directly generate a quick invoice or complete an active job.</p>
+              </div>
+              <Link href="/invoices/new">
+                <Button size="sm" variant="outline" className="min-h-[44px]">
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Create First Invoice
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         ) : (

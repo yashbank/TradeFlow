@@ -99,6 +99,47 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
         )}
       </div>
 
+      {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl flex items-center justify-between gap-2">
+        {job.status === 'scheduled' && (
+          <Button
+            size="sm"
+            onClick={handleStart}
+            disabled={loading}
+            className="w-full min-h-[48px] font-bold text-base"
+          >
+            <Play className="w-5 h-5 mr-2" />
+            {loading ? 'Starting...' : 'Start Job Now'}
+          </Button>
+        )}
+
+        {job.status === 'in_progress' && (
+          <Button
+            size="sm"
+            variant="success"
+            onClick={() => setShowCompleteModal(true)}
+            disabled={loading}
+            className="w-full min-h-[48px] font-bold text-base"
+          >
+            <CheckCircle className="w-5 h-5 mr-2" />
+            Complete Job
+          </Button>
+        )}
+
+        {job.status === 'completed' && (
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={handleCreateInvoice}
+            disabled={loading}
+            className="w-full min-h-[48px] font-bold text-base shadow-sm"
+          >
+            <Receipt className="w-5 h-5 mr-2" />
+            {loading ? 'Generating...' : 'Create Invoice'}
+          </Button>
+        )}
+      </div>
+
       {showCompleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
           <Card className="w-full max-w-md">

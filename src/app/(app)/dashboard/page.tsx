@@ -192,21 +192,27 @@ export default async function DashboardPage() {
         </div>
         <div className="flex items-center gap-2.5 overflow-x-auto pb-1 sm:pb-0">
           <Link href="/quotes/new">
-            <Button size="sm" className="whitespace-nowrap">
+            <Button size="sm" className="whitespace-nowrap min-h-[44px]">
               <Plus className="w-4 h-4 mr-1.5" />
               New Quote
             </Button>
           </Link>
-          <Link href="/customers">
-            <Button size="sm" variant="outline" className="whitespace-nowrap">
-              <Plus className="w-4 h-4 mr-1.5" />
-              Add Customer
-            </Button>
-          </Link>
-          <Link href="/jobs">
-            <Button size="sm" variant="secondary" className="whitespace-nowrap">
+          <Link href="/jobs/new">
+            <Button size="sm" variant="secondary" className="whitespace-nowrap min-h-[44px]">
               <Calendar className="w-4 h-4 mr-1.5" />
               Schedule Job
+            </Button>
+          </Link>
+          <Link href="/invoices/new">
+            <Button size="sm" variant="outline" className="whitespace-nowrap min-h-[44px]">
+              <Plus className="w-4 h-4 mr-1.5" />
+              New Invoice
+            </Button>
+          </Link>
+          <Link href="/customers">
+            <Button size="sm" variant="ghost" className="whitespace-nowrap min-h-[44px] text-slate-600">
+              <Plus className="w-4 h-4 mr-1.5" />
+              Customer
             </Button>
           </Link>
         </div>

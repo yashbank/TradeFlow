@@ -4,7 +4,8 @@ import { JobService } from '@/services/JobService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDate, formatDateTime } from '@/lib/utils';
-import { CalendarCheck2, MapPin, ChevronRight, Clock, User } from 'lucide-react';
+import { CalendarCheck2, MapPin, ChevronRight, Clock, User, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { JobStatus } from '@/types/database';
 
 interface JobsPageProps {
@@ -32,6 +33,12 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Active Jobs & Dispatch</h1>
           <p className="text-sm text-slate-500 mt-0.5">{totalCount} active job records</p>
         </div>
+        <Link href="/jobs/new">
+          <Button size="sm" className="min-h-[44px] font-semibold">
+            <Plus className="w-4 h-4 mr-1.5" />
+            Schedule Job
+          </Button>
+        </Link>
       </div>
 
       {/* Filter Tabs */}
@@ -56,12 +63,20 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       <div className="grid grid-cols-1 gap-3">
         {jobs.length === 0 ? (
           <Card>
-            <CardContent className="p-12 text-center text-slate-400 space-y-3">
+            <CardContent className="p-12 text-center text-slate-400 space-y-4">
               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
                 <CalendarCheck2 className="w-6 h-6" />
               </div>
-              <p className="text-sm font-medium">No jobs found in this category.</p>
-              <p className="text-xs text-slate-400">Accept a quote or convert an accepted quote to spawn a job.</p>
+              <div>
+                <p className="text-sm font-medium text-slate-700">No jobs found in this category.</p>
+                <p className="text-xs text-slate-400 mt-1">Directly schedule a new plumbing dispatch or convert an accepted quote.</p>
+              </div>
+              <Link href="/jobs/new">
+                <Button size="sm" variant="outline" className="min-h-[44px]">
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Schedule First Job
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         ) : (

@@ -12,6 +12,43 @@ export interface UserOrgContext {
   role: UserRole;
 }
 
+import { cache } from 'react';
+
+const getCachedUserOrgContext = cache(async (): Promise<UserOrgContext | null> => {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    // Fetch user profile and member in parallel to minimize latency
+    const [profileRes, memberRes] = await Promise.all([
+      supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single(),
+      supabase
+        .from('organization_members')
+        .select('*, organization:organizations(*)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .single(),
+    ]);
+
+    if (!profileRes.data || !memberRes.data || !memberRes.data.organization) return null;
+
+    return {
+      user: profileRes.data as UserProfile,
+      organization: memberRes.data.organization as Organization,
+      role: memberRes.data.role as UserRole,
+    };
+  } catch {
+    return null;
+  }
+});
+
 export class AuthService {
   /**
    * Registers a new user with Supabase Auth, creates the user profile,
@@ -190,40 +227,7 @@ export class AuthService {
    * Guaranteed to read from real persistent Supabase session.
    */
   static async getCurrentContext(): Promise<UserOrgContext | null> {
-    try {
-      const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) return null;
-
-      // Fetch user profile from public.users
-      const { data: profile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile) return null;
-
-      // Fetch primary organization membership with organization join
-      const { data: member } = await supabase
-        .from('organization_members')
-        .select('*, organization:organizations(*)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .single();
-
-      if (!member || !member.organization) return null;
-
-      return {
-        user: profile as UserProfile,
-        organization: member.organization as Organization,
-        role: member.role as UserRole,
-      };
-    } catch {
-      return null;
-    }
+    return getCachedUserOrgContext();
   }
 
   /**

@@ -171,4 +171,29 @@ export class JobService {
 
     return data as Job;
   }
+
+  /**
+   * Lists active team members in the organization for technician assignment.
+   */
+  static async getTeamMembers(): Promise<{ id: string; full_name: string; email: string; role: string }[]> {
+    const { organization } = await AuthService.requireContext();
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from('organization_members')
+      .select('role, user:users(id, full_name, email)')
+      .eq('organization_id', organization.id);
+
+    if (error || !data) return [];
+
+    return data
+      .filter((m: any) => m.user)
+      .map((m: any) => ({
+        id: m.user.id,
+        full_name: m.user.full_name || m.user.email,
+        email: m.user.email,
+        role: m.role,
+      }));
+  }
 }
+

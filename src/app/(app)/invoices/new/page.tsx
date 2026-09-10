@@ -1,0 +1,35 @@
+import React from 'react';
+import { CustomerService } from '@/services/CustomerService';
+import { AuthService } from '@/services/AuthService';
+import { InvoiceBuilder } from '@/components/invoices/InvoiceBuilder';
+
+interface NewInvoicePageProps {
+  searchParams: Promise<{ customer_id?: string }>;
+}
+
+export default async function NewInvoicePage({ searchParams }: NewInvoicePageProps) {
+  const { customer_id } = await searchParams;
+  const { organization } = await AuthService.requireRole(['owner', 'admin']);
+  const { customers } = await CustomerService.list('', 100);
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+          Create New Invoice
+        </h1>
+        <p className="text-sm text-slate-500">
+          Direct billing & quick invoice generation with live tax calculation.
+        </p>
+      </div>
+
+      <InvoiceBuilder
+        customers={customers}
+        defaultCustomerId={customer_id}
+        taxRateBasisPoints={organization.tax_rate_basis_points}
+        currency={organization.currency}
+        defaultTerms={organization.invoice_terms}
+      />
+    </div>
+  );
+}

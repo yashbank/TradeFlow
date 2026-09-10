@@ -91,3 +91,41 @@ export async function convertQuoteToJobAction(
     };
   }
 }
+
+export async function approveQuoteAction(
+  quoteId: string,
+  signerName?: string,
+  approvalMethod = 'Verbal / Phone Approval'
+) {
+  try {
+    const quote = await QuoteService.acceptInternal(quoteId, signerName, approvalMethod);
+    revalidatePath('/quotes');
+    revalidatePath(`/quotes/${quoteId}`);
+    return {
+      success: true,
+      data: quote,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}
+
+export async function rejectQuoteAction(quoteId: string, reason?: string) {
+  try {
+    const quote = await QuoteService.rejectInternal(quoteId, reason);
+    revalidatePath('/quotes');
+    revalidatePath(`/quotes/${quoteId}`);
+    return {
+      success: true,
+      data: quote,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}

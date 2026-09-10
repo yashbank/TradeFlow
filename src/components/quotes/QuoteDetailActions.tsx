@@ -3,8 +3,26 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { sendQuoteAction, convertQuoteToJobAction } from '@/actions/quotes';
-import { Send, CalendarCheck2, Copy, Check, ExternalLink, Download } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  sendQuoteAction,
+  convertQuoteToJobAction,
+  approveQuoteAction,
+  rejectQuoteAction,
+} from '@/actions/quotes';
+import {
+  Send,
+  CalendarCheck2,
+  Copy,
+  Check,
+  ExternalLink,
+  Download,
+  CheckCircle2,
+  XCircle,
+  X,
+  PhoneCall,
+} from 'lucide-react';
 import type { Quote } from '@/types/database';
 
 interface QuoteDetailActionsProps {
@@ -17,6 +35,16 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // In-app quote approval & decline modal states
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [signerName, setSignerName] = useState(
+    `${quote.customer?.first_name || ''} ${quote.customer?.last_name || ''}`.trim()
+  );
+  const [approvalMethod, setApprovalMethod] = useState('Verbal / Phone Approval');
+  const [autoConvert, setAutoConvert] = useState(true);
+  const [declineReason, setDeclineReason] = useState('Price too high / Budget mismatch');
 
   function copyLink() {
     navigator.clipboard.writeText(publicUrl);
@@ -36,6 +64,43 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
     }
   }
 
+  async function handleApprove() {
+    setLoading(true);
+    setError(null);
+    const res = await approveQuoteAction(quote.id, signerName, approvalMethod);
+    if (!res.success) {
+      setLoading(false);
+      setError(res.error || 'Failed to approve quote');
+      return;
+    }
+
+    if (autoConvert) {
+      const convRes = await convertQuoteToJobAction(quote.id);
+      setLoading(false);
+      if (convRes.success && convRes.data) {
+        router.push(`/jobs/${convRes.data.id}`);
+        return;
+      }
+    }
+
+    setLoading(false);
+    setShowApproveModal(false);
+    router.refresh();
+  }
+
+  async function handleDecline() {
+    setLoading(true);
+    setError(null);
+    const res = await rejectQuoteAction(quote.id, declineReason);
+    setLoading(false);
+    if (!res.success) {
+      setError(res.error || 'Failed to decline quote');
+    } else {
+      setShowDeclineModal(false);
+      router.refresh();
+    }
+  }
+
   async function handleConvertToJob() {
     setLoading(true);
     setError(null);
@@ -48,14 +113,17 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
     }
   }
 
+  const isPending = quote.status === 'draft' || quote.status === 'sent';
+
   return (
     <div className="space-y-2">
       {error && (
-        <div className="p-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded">
+        <div className="p-2.5 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg">
           {error}
         </div>
       )}
 
+      {/* Main Desktop Action Bar */}
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="outline" size="sm" onClick={copyLink} className="min-h-[44px]">
           {copied ? <Check className="w-4 h-4 mr-1.5 text-emerald-600" /> : <Copy className="w-4 h-4 mr-1.5" />}
@@ -77,10 +145,36 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
         </a>
 
         {quote.status === 'draft' && (
-          <Button size="sm" onClick={handleSend} disabled={loading} className="min-h-[44px]">
+          <Button variant="outline" size="sm" onClick={handleSend} disabled={loading} className="min-h-[44px]">
             <Send className="w-4 h-4 mr-1.5" />
             {loading ? 'Sending...' : 'Send to Customer'}
           </Button>
+        )}
+
+        {isPending && (
+          <>
+            <Button
+              size="sm"
+              variant="success"
+              onClick={() => setShowApproveModal(true)}
+              disabled={loading}
+              className="min-h-[44px] font-semibold"
+            >
+              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+              Approve Quote
+            </Button>
+
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowDeclineModal(true)}
+              disabled={loading}
+              className="min-h-[44px] text-slate-500 hover:text-red-600"
+            >
+              <XCircle className="w-4 h-4 mr-1.5" />
+              Decline
+            </Button>
+          </>
         )}
 
         {quote.status === 'accepted' && (
@@ -96,6 +190,196 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
           </Button>
         )}
       </div>
+
+      {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl flex items-center justify-between gap-2">
+        <a href={`/api/quotes/${quote.id}/pdf`} target="_blank" rel="noopener noreferrer" className="flex-1">
+          <Button variant="outline" size="sm" className="w-full min-h-[44px]">
+            <Download className="w-4 h-4 mr-1" />
+            PDF
+          </Button>
+        </a>
+
+        {isPending && (
+          <Button
+            size="sm"
+            variant="success"
+            onClick={() => setShowApproveModal(true)}
+            disabled={loading}
+            className="flex-2 min-h-[44px] font-bold"
+          >
+            <CheckCircle2 className="w-4 h-4 mr-1.5" />
+            Approve Quote
+          </Button>
+        )}
+
+        {quote.status === 'accepted' && (
+          <Button
+            size="sm"
+            variant="success"
+            onClick={handleConvertToJob}
+            disabled={loading}
+            className="flex-2 min-h-[44px] font-bold"
+          >
+            <CalendarCheck2 className="w-4 h-4 mr-1.5" />
+            Convert to Job
+          </Button>
+        )}
+      </div>
+
+      {/* In-App Approve Modal */}
+      {showApproveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <Card className="w-full max-w-md shadow-2xl">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <CardTitle className="text-lg font-bold">Approve Quote {quote.quote_number}</CardTitle>
+              </div>
+              <button
+                onClick={() => setShowApproveModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </CardHeader>
+
+            <CardContent className="space-y-4 pt-4">
+              <p className="text-xs text-slate-500">
+                Record customer approval immediately without waiting for portal signature. Ideal for verbal phone orders or on-site agreements.
+              </p>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Customer Signer Name
+                </label>
+                <Input
+                  value={signerName}
+                  onChange={(e) => setSignerName(e.target.value)}
+                  placeholder="e.g. John Doe"
+                  className="min-h-[44px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Approval Method
+                </label>
+                <select
+                  value={approvalMethod}
+                  onChange={(e) => setApprovalMethod(e.target.value)}
+                  className="w-full h-11 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="Verbal / Phone Approval">Verbal / Phone Approval</option>
+                  <option value="On-Site Verbal Agreement">On-Site Verbal Agreement</option>
+                  <option value="Customer Email Confirmation">Customer Email Confirmation</option>
+                  <option value="Signed Paper Work Order">Signed Paper Work Order</option>
+                </select>
+              </div>
+
+              <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="autoConvert"
+                  checked={autoConvert}
+                  onChange={(e) => setAutoConvert(e.target.checked)}
+                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                />
+                <label htmlFor="autoConvert" className="text-xs font-medium text-emerald-900 cursor-pointer">
+                  Automatically dispatch / convert to Active Job now
+                </label>
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowApproveModal(false)}
+                className="min-h-[44px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="success"
+                onClick={handleApprove}
+                disabled={loading}
+                className="min-h-[44px] font-bold"
+              >
+                {loading ? 'Approving...' : 'Confirm & Approve'}
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
+
+      {/* In-App Decline Modal */}
+      {showDeclineModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <Card className="w-full max-w-md shadow-2xl">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                  <XCircle className="w-5 h-5" />
+                </div>
+                <CardTitle className="text-lg font-bold">Decline Quote {quote.quote_number}</CardTitle>
+              </div>
+              <button
+                onClick={() => setShowDeclineModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </CardHeader>
+
+            <CardContent className="space-y-4 pt-4">
+              <p className="text-xs text-slate-500">
+                Mark this quote as declined. You can reopen or duplicate it later if requirements change.
+              </p>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Reason for Decline
+                </label>
+                <select
+                  value={declineReason}
+                  onChange={(e) => setDeclineReason(e.target.value)}
+                  className="w-full h-11 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="Price too high / Budget mismatch">Price too high / Budget mismatch</option>
+                  <option value="Selected another plumbing provider">Selected another plumbing provider</option>
+                  <option value="Customer decided to delay/cancel repair">Customer decided to delay/cancel repair</option>
+                  <option value="Scheduling/Timing mismatch">Scheduling/Timing mismatch</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDeclineModal(false)}
+                className="min-h-[44px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleDecline}
+                disabled={loading}
+                className="min-h-[44px] font-bold"
+              >
+                {loading ? 'Declining...' : 'Confirm Decline'}
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

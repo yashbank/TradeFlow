@@ -116,6 +116,40 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
         )}
       </div>
 
+      {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl flex items-center justify-between gap-2">
+        <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer" className="flex-1">
+          <Button variant="outline" size="sm" className="w-full min-h-[44px]">
+            <Download className="w-4 h-4 mr-1" />
+            PDF
+          </Button>
+        </a>
+
+        {invoice.status === 'draft' && (
+          <Button
+            size="sm"
+            onClick={handleSend}
+            disabled={loading}
+            className="flex-2 min-h-[44px] font-bold"
+          >
+            <Send className="w-4 h-4 mr-1.5" />
+            Send Invoice
+          </Button>
+        )}
+
+        {canRecordPayment && (
+          <Button
+            size="sm"
+            variant="success"
+            onClick={() => setShowPaymentModal(true)}
+            className="flex-2 min-h-[44px] font-bold shadow-sm"
+          >
+            <DollarSign className="w-4 h-4 mr-1" />
+            Record Payment
+          </Button>
+        )}
+      </div>
+
       <RecordPaymentModal
         invoice={invoice}
         isOpen={showPaymentModal}
