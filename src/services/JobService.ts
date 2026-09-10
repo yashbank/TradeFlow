@@ -173,6 +173,44 @@ export class JobService {
   }
 
   /**
+   * Updates an existing job (title, schedule, assignment, location, notes).
+   */
+  static async update(
+    jobId: string,
+    input: Partial<CreateJobInput> & { internal_notes?: string }
+  ): Promise<Job> {
+    const { organization } = await AuthService.requireRole(['owner', 'admin']);
+    const supabase = await createClient();
+
+    const updatePayload: Record<string, any> = {};
+    if (input.title !== undefined) updatePayload.title = input.title;
+    if (input.description !== undefined) updatePayload.description = input.description;
+    if (input.assigned_to_user_id !== undefined) updatePayload.assigned_to_user_id = input.assigned_to_user_id || null;
+    if (input.scheduled_start !== undefined) updatePayload.scheduled_start = input.scheduled_start;
+    if (input.scheduled_end !== undefined) updatePayload.scheduled_end = input.scheduled_end;
+    if (input.address_line1 !== undefined) updatePayload.address_line1 = input.address_line1;
+    if (input.address_line2 !== undefined) updatePayload.address_line2 = input.address_line2;
+    if (input.city !== undefined) updatePayload.city = input.city;
+    if (input.state !== undefined) updatePayload.state = input.state;
+    if (input.postal_code !== undefined) updatePayload.postal_code = input.postal_code;
+    if (input.internal_notes !== undefined) updatePayload.internal_notes = input.internal_notes;
+
+    const { data, error } = await supabase
+      .from('jobs')
+      .update(updatePayload)
+      .eq('id', jobId)
+      .eq('organization_id', organization.id)
+      .select('*, customer:customers(*), assigned_to:users!jobs_assigned_to_user_id_fkey(*)')
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to update job: ${error?.message}`);
+    }
+
+    return data as Job;
+  }
+
+  /**
    * Lists active team members in the organization for technician assignment.
    */
   static async getTeamMembers(): Promise<{ id: string; full_name: string; email: string; role: string }[]> {

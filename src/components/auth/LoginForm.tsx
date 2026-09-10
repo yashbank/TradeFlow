@@ -27,26 +27,26 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
-      <Card className="w-full max-w-md shadow-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100 dark:bg-zinc-950">
+      <Card className="w-full max-w-md shadow-md dark:bg-zinc-900 dark:border-zinc-800">
         <CardHeader className="text-center pb-4">
           <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
             <Wrench className="w-6 h-6" />
           </div>
-          <CardTitle className="text-2xl font-black text-slate-900">Sign In to TradeFlow</CardTitle>
-          <p className="text-xs text-slate-500 mt-1">Access your professional plumbing workspace</p>
+          <CardTitle className="text-2xl font-black text-slate-900 dark:text-zinc-100">Sign In to TradeFlow</CardTitle>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Access your professional plumbing workspace</p>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4 pt-0">
             {error && (
-              <div className="p-3 bg-red-50 text-red-700 text-xs rounded-md border border-red-200">
+              <div className="p-3 bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 text-xs rounded-md border border-red-200 dark:border-red-900">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Email Address</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Email Address</label>
               <Input
                 type="email"
                 name="email"
@@ -59,10 +59,10 @@ export function LoginForm() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-slate-700">Password</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Password</label>
                 <Link
                   href="/forgot-password"
-                  className="text-[11px] text-blue-600 hover:underline"
+                  className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline"
                 >
                   Forgot password?
                 </Link>
@@ -87,9 +87,9 @@ export function LoginForm() {
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </Button>
-            <p className="text-xs text-slate-500 text-center">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 text-center">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="text-blue-600 font-semibold hover:underline">
+              <Link href="/signup" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
                 Start 14-Day Free Trial
               </Link>
             </p>

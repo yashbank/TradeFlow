@@ -161,7 +161,7 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
       </div>
 
       {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl flex items-center justify-between gap-2">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur border-t border-slate-200 dark:border-zinc-800 z-50 shadow-2xl flex items-center justify-between gap-2">
         <div className="flex-1">
           <Button
             variant="outline"

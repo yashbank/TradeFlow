@@ -182,7 +182,7 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
             <button
               type="submit"
               title={t('nav.logout')}
-              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors"
             >
               <LogOut className="w-4 h-4" />
             </button>

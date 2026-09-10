@@ -68,3 +68,23 @@ export async function convertJobToInvoiceAction(jobId: string) {
     };
   }
 }
+
+export async function updateJobAction(
+  jobId: string,
+  input: Partial<CreateJobInput> & { internal_notes?: string }
+) {
+  try {
+    const job = await JobService.update(jobId, input);
+    revalidatePath('/jobs');
+    revalidatePath(`/jobs/${jobId}`);
+    return {
+      success: true,
+      data: job,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}

@@ -62,13 +62,13 @@ export function RecordPaymentModal({ invoice, isOpen, onClose }: RecordPaymentMo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md dark:bg-zinc-900 dark:border-zinc-800">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-lg flex items-center">
-            <DollarSign className="w-5 h-5 mr-1.5 text-emerald-600" />
+          <CardTitle className="text-lg flex items-center dark:text-zinc-100">
+            <DollarSign className="w-5 h-5 mr-1.5 text-emerald-600 dark:text-emerald-400" />
             Record Customer Payment
           </CardTitle>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg">
             <X className="w-5 h-5" />
           </button>
         </CardHeader>
@@ -76,13 +76,13 @@ export function RecordPaymentModal({ invoice, isOpen, onClose }: RecordPaymentMo
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-3 pt-2">
             {error && (
-              <div className="p-2.5 text-xs text-red-700 bg-red-50 border border-red-200 rounded-md">
+              <div className="p-2.5 text-xs text-red-700 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded-md">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Payment Amount ($) *
               </label>
               <Input
@@ -94,19 +94,19 @@ export function RecordPaymentModal({ invoice, isOpen, onClose }: RecordPaymentMo
                 onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
                 required
               />
-              <span className="text-[11px] text-slate-400 mt-1 block">
+              <span className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1 block">
                 Balance due: ${(invoice.balance_due_cents / 100).toFixed(2)}
               </span>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Payment Method *
               </label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                className="w-full h-11 rounded-md border border-slate-300 bg-white px-3 text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full h-11 rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 px-3 text-sm focus:ring-2 focus:ring-blue-500"
               >
                 <option value="credit_card">Credit Card (Square / On-Site Reader)</option>
                 <option value="bank_transfer">Bank Transfer / Direct Deposit</option>
@@ -117,7 +117,7 @@ export function RecordPaymentModal({ invoice, isOpen, onClose }: RecordPaymentMo
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Payment Date
               </label>
               <Input
@@ -129,7 +129,7 @@ export function RecordPaymentModal({ invoice, isOpen, onClose }: RecordPaymentMo
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Transaction Reference # / Check #
               </label>
               <Input
@@ -140,7 +140,7 @@ export function RecordPaymentModal({ invoice, isOpen, onClose }: RecordPaymentMo
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Internal Payment Notes
               </label>
               <Input
@@ -151,7 +151,7 @@ export function RecordPaymentModal({ invoice, isOpen, onClose }: RecordPaymentMo
             </div>
           </CardContent>
 
-          <CardFooter className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <CardFooter className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>

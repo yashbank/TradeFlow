@@ -10,6 +10,7 @@ import { createQuoteAction, sendQuoteAction } from '@/actions/quotes';
 import { formatCurrency } from '@/lib/utils';
 import { Plus, Trash2, Sparkles, Send, Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/lib/toast/ToastContext';
 import type { Customer, SupportedCurrency } from '@/types/database';
 
 interface QuoteBuilderProps {
@@ -34,6 +35,7 @@ export function QuoteBuilder({
   currency,
 }: QuoteBuilderProps) {
   const router = useRouter();
+  const toast = useToast();
   const [customerId, setCustomerId] = useState(defaultCustomerId || (customers[0]?.id || ''));
   const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0]);
   const [expiryDate, setExpiryDate] = useState(
@@ -124,11 +126,15 @@ export function QuoteBuilder({
     if (!res.success || !res.data) {
       setLoading(false);
       setError(res.error || 'Failed to create quote.');
+      toast.error('Quote Failed', res.error || 'Failed to create quote.');
       return;
     }
 
     if (andSend) {
       await sendQuoteAction(res.data.id);
+      toast.success('Quote Sent', `Quote #${res.data.quote_number || ''} created and sent to customer.`);
+    } else {
+      toast.success('Quote Saved', `Quote #${res.data.quote_number || ''} saved as draft.`);
     }
 
     router.push(`/quotes/${res.data.id}`);
@@ -138,7 +144,7 @@ export function QuoteBuilder({
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Link href="/quotes" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800">
+        <Link href="/quotes" className="inline-flex items-center text-sm font-medium text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200">
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back to Quotes
         </Link>
@@ -301,7 +307,7 @@ export function QuoteBuilder({
                     type="button"
                     onClick={() => removeItem(item.id)}
                     disabled={items.length <= 1}
-                    className="text-slate-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-30 p-1"
+                    className="text-slate-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-30 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -310,7 +316,7 @@ export function QuoteBuilder({
             );
           })}
 
-          <Button type="button" variant="outline" size="sm" onClick={() => addItem('', 1, 0, true)} className="mt-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => addItem('', 1, 0, true)} className="mt-2 min-h-[44px]">
             <Plus className="w-4 h-4 mr-1.5" />
             Add Another Line Item
           </Button>
@@ -366,7 +372,7 @@ export function QuoteBuilder({
                 step="1"
                 value={discountAmount}
                 onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                className="w-24 px-2 py-1 text-xs text-right bg-slate-800 dark:bg-zinc-800 text-white rounded border border-slate-700 dark:border-zinc-600"
+                className="w-24 px-3 min-h-[44px] text-xs text-right bg-slate-800 dark:bg-zinc-800 text-white rounded border border-slate-700 dark:border-zinc-600"
               />
             </div>
 
@@ -385,12 +391,37 @@ export function QuoteBuilder({
             </div>
           </CardContent>
           <CardFooter className="p-5 pt-0 flex justify-end gap-2">
-            <Button size="lg" className="w-full" onClick={() => handleSave(true)} disabled={loading}>
+            <Button size="lg" className="w-full min-h-[44px]" onClick={() => handleSave(true)} disabled={loading}>
               <Send className="w-4 h-4 mr-2" />
               {loading ? 'Processing...' : 'Review & Send Quote'}
             </Button>
           </CardFooter>
         </Card>
+      </div>
+
+      {/* Sticky Mobile Action Footer */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur border-t border-slate-200 dark:border-zinc-800 z-50 shadow-2xl flex items-center justify-between gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => handleSave(false)}
+          disabled={loading}
+          className="flex-1 min-h-[44px]"
+        >
+          <Save className="w-4 h-4 mr-1.5" />
+          Save Draft
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => handleSave(true)}
+          disabled={loading}
+          className="flex-1 min-h-[44px] font-bold"
+        >
+          <Send className="w-4 h-4 mr-1.5" />
+          {loading ? 'Sending...' : 'Send Quote'}
+        </Button>
       </div>
     </div>
   );

@@ -34,7 +34,7 @@ export function CurrencySelector() {
         onClick={() => setIsOpen(!isOpen)}
         aria-label={`Current currency: ${selectedCurrency}. Click to change.`}
         title={`Currency: ${currentCurrencyMeta.name} (${selectedCurrency})`}
-        className="flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200/80 hover:border-slate-300 bg-white/90 dark:bg-zinc-800/90 dark:border-zinc-700/80 text-slate-700 dark:text-zinc-200 shadow-2xs hover:shadow-xs transition-all active:scale-90 hover:scale-105 font-bold text-xs"
+        className="flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl border border-slate-200/80 hover:border-slate-300 bg-white/90 dark:bg-zinc-800/90 dark:border-zinc-700/80 text-slate-700 dark:text-zinc-200 shadow-2xs hover:shadow-xs transition-all active:scale-90 hover:scale-105 font-bold text-xs"
       >
         <span className="text-sm font-black tracking-tight">{currentCurrencyMeta.symbol}</span>
       </button>

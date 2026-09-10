@@ -81,8 +81,8 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
-              <CardTitle className="text-base font-bold text-slate-900">TradeFlow SaaS Subscription</CardTitle>
-              <p className="text-xs text-slate-500">Starter Plan — $39/month for unlimited quotes, jobs, and invoices</p>
+              <CardTitle className="text-base font-bold text-slate-900 dark:text-zinc-100">TradeFlow SaaS Subscription</CardTitle>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">Starter Plan — $39/month for unlimited quotes, jobs, and invoices</p>
             </div>
           </div>
           <Badge variant={isActive ? 'success' : 'default'} className="uppercase">
@@ -92,7 +92,7 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
         <CardContent className="p-6 pt-2">
           {isTrial ? (
             <div className="space-y-3">
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-600 dark:text-zinc-300">
                 You are currently on your <strong>14-Day Free Access Trial</strong>. Upgrade to the Starter Plan to ensure continuous access to invoicing and quote conversions.
               </p>
               <form action={createCheckoutSessionAction}>
@@ -103,7 +103,7 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-600 dark:text-zinc-300">
                 Your subscription is active. You can manage your payment methods, download VAT/tax receipts, or cancel your plan through the Stripe Customer Portal.
               </p>
               <form action={createPortalSessionAction}>
@@ -118,9 +118,9 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
 
       {/* Business Profile Settings */}
       <Card>
-        <CardHeader className="p-6 border-b border-slate-100">
-          <CardTitle className="text-base font-bold text-slate-900">Plumbing Business Profile</CardTitle>
-          <p className="text-xs text-slate-500">
+        <CardHeader className="p-6 border-b border-slate-100 dark:border-zinc-800">
+          <CardTitle className="text-base font-bold text-slate-900 dark:text-zinc-100">Plumbing Business Profile</CardTitle>
+          <p className="text-xs text-slate-500 dark:text-zinc-400">
             This information appears on quotes, invoices, and the customer portal.
           </p>
         </CardHeader>
@@ -128,12 +128,12 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
         <form onSubmit={handleSaveSettings}>
           <CardContent className="p-6 space-y-4">
             {error && (
-              <div className="p-3 bg-red-50 text-red-700 text-xs rounded-md border border-red-200">
+              <div className="p-3 bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 text-xs rounded-md border border-red-200 dark:border-red-900">
                 {error}
               </div>
             )}
             {savedSuccess && (
-              <div className="p-3 bg-emerald-50 text-emerald-700 text-xs rounded-md border border-emerald-200 flex items-center">
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs rounded-md border border-emerald-200 dark:border-emerald-900 flex items-center">
                 <Check className="w-4 h-4 mr-1.5" />
                 Settings updated successfully!
               </div>
@@ -141,34 +141,34 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                   Business Name *
                 </label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} required />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                   Office Phone
                 </label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                   Business Email
                 </label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                   Currency
                 </label>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value as any)}
-                  className="w-full h-11 rounded-md border border-slate-300 bg-white px-3 text-sm focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-11 rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 px-3 text-sm focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="USD">USD ($)</option>
                   <option value="GBP">GBP (£)</option>
@@ -178,7 +178,7 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Office / Shop Address
               </label>
               <Input
@@ -188,24 +188,24 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">City</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">City</label>
                 <Input value={city} onChange={(e) => setCity(e.target.value)} />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">State</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">State</label>
                 <Input value={state} onChange={(e) => setState(e.target.value)} />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Zip / Postal</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Zip / Postal</label>
                 <Input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                   Default Sales Tax Rate (%)
                 </label>
                 <Input
@@ -216,13 +216,13 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
                   value={taxRatePercent}
                   onChange={(e) => setTaxRatePercent(e.target.value)}
                 />
-                <span className="text-[11px] text-slate-400 mt-1 block">
+                <span className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1 block">
                   Example: 8.25 for 8.25% sales tax
                 </span>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                   Default Payment Terms
                 </label>
                 <Input
@@ -234,7 +234,7 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
             </div>
           </CardContent>
 
-          <CardFooter className="p-6 pt-0 flex justify-end border-t border-slate-100">
+          <CardFooter className="p-6 pt-0 flex justify-end border-t border-slate-100 dark:border-zinc-800">
             <Button type="submit" disabled={saving}>
               <Save className="w-4 h-4 mr-1.5" />
               {saving ? 'Saving...' : 'Save Settings'}

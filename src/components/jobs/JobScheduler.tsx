@@ -18,7 +18,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { useToast } from '@/lib/toast/ToastContext';
-import type { Customer } from '@/types/database';
+import type { Customer, Job } from '@/types/database';
 
 interface TeamMember {
   id: string;
@@ -31,6 +31,7 @@ interface JobSchedulerProps {
   customers: Customer[];
   teamMembers: TeamMember[];
   defaultCustomerId?: string;
+  scheduledJobs?: Job[];
 }
 
 const PLUMBING_JOB_PRESETS = [
@@ -64,6 +65,7 @@ export function JobScheduler({
   customers,
   teamMembers,
   defaultCustomerId,
+  scheduledJobs = [],
 }: JobSchedulerProps) {
   const router = useRouter();
   const toast = useToast();
@@ -174,6 +176,63 @@ export function JobScheduler({
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
+      )}
+
+      {/* Already Created Jobs Section (Quick-Assign & Customization) */}
+      {scheduledJobs && scheduledJobs.length > 0 && (
+        <Card className="glass-panel border-sky-500/30 dark:border-sky-500/20">
+          <CardHeader className="pb-3 border-b border-slate-100 dark:border-zinc-800 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CalendarCheck2 className="w-5 h-5 text-sky-500" />
+              <CardTitle className="text-base font-bold text-slate-900 dark:text-zinc-100">
+                Already Created & Pending Work Orders ({scheduledJobs.length})
+              </CardTitle>
+            </div>
+            <span className="text-xs text-slate-500 dark:text-zinc-400 hidden sm:inline">
+              Click any work order to customize or reassign
+            </span>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {scheduledJobs.slice(0, 4).map((j) => (
+                <div
+                  key={j.id}
+                  className="p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-white/70 dark:bg-zinc-850/70 hover:border-sky-500/50 transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
+                        {j.job_number}
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        {j.status}
+                      </span>
+                    </div>
+                    <p className="font-semibold text-xs text-slate-800 dark:text-zinc-100 line-clamp-1">
+                      {j.title}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span className="truncate">{j.city ? `${j.city}, ${j.state}` : j.address_line1}</span>
+                    </p>
+                  </div>
+                  <div className="pt-2 mt-2 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {j.assigned_to?.full_name || 'Unassigned'}
+                    </span>
+                    <Link
+                      href={`/jobs/${j.id}`}
+                      className="text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      Customize & View →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Plumbing Service Presets */}

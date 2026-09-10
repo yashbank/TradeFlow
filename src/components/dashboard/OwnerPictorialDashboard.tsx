@@ -27,6 +27,7 @@ import {
   Gauge,
   Sparkles,
   UserPlus,
+  RefreshCw,
 } from 'lucide-react';
 import type { UserProfile, Organization } from '@/types/database';
 
@@ -37,6 +38,11 @@ interface OwnerPictorialDashboardProps {
   teamMembers?: any[];
   user: UserProfile;
   organization: Organization;
+  lastSyncTime?: Date;
+  isSyncing?: boolean;
+  isAutoSyncing?: boolean;
+  onToggleAutoSync?: () => void;
+  onManualSync?: () => void;
 }
 
 export function OwnerPictorialDashboard({
@@ -46,6 +52,11 @@ export function OwnerPictorialDashboard({
   teamMembers = [],
   user,
   organization,
+  lastSyncTime,
+  isSyncing = false,
+  isAutoSyncing = true,
+  onToggleAutoSync,
+  onManualSync,
 }: OwnerPictorialDashboardProps) {
   const { formatConverted } = useCurrency();
 
@@ -155,6 +166,35 @@ export function OwnerPictorialDashboard({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Live Radar Telemetry Beacon */}
+          <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 shadow-sm backdrop-blur-sm">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+            </span>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                <Zap className="w-3 h-3 text-emerald-500 fill-emerald-500" />
+                Live Radar • 3s Sync
+              </span>
+              <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-medium">
+                {lastSyncTime
+                  ? `Synced ${lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+                  : '3s Telemetry Active'}
+              </span>
+            </div>
+            {onManualSync && (
+              <button
+                type="button"
+                onClick={onManualSync}
+                title="Trigger immediate telemetry radar ping"
+                className="p-1 rounded-lg hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition-transform active:scale-90"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              </button>
+            )}
+          </div>
+
           <Link href="/quotes/new">
             <Button size="sm" variant="outline" className="bg-white/80 dark:bg-zinc-800/80 font-bold text-xs">
               <Plus className="w-3.5 h-3.5 mr-1" />

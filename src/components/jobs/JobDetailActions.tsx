@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { updateJobStatusAction, convertJobToInvoiceAction } from '@/actions/jobs';
-import { Play, CheckCircle, Receipt, X } from 'lucide-react';
+import { updateJobStatusAction, convertJobToInvoiceAction, updateJobAction } from '@/actions/jobs';
+import { Play, CheckCircle, Receipt, X, Pencil, Clock, MapPin } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/lib/toast/ToastContext';
 import type { Job } from '@/types/database';
 
@@ -17,9 +18,22 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
   const router = useRouter();
   const toast = useToast();
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [internalNotes, setInternalNotes] = useState(job.internal_notes || '');
   const [loading, setLoading] = useState(false);
+  const [isUpdatingJob, setIsUpdatingJob] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Edit fields
+  const [editTitle, setEditTitle] = useState(job.title);
+  const [editDescription, setEditDescription] = useState(job.description || '');
+  const [editStart, setEditStart] = useState(job.scheduled_start ? job.scheduled_start.slice(0, 16) : '');
+  const [editEnd, setEditEnd] = useState(job.scheduled_end ? job.scheduled_end.slice(0, 16) : '');
+  const [editAddress, setEditAddress] = useState(job.address_line1 || '');
+  const [editCity, setEditCity] = useState(job.city || '');
+  const [editState, setEditState] = useState(job.state || '');
+  const [editPostalCode, setEditPostalCode] = useState(job.postal_code || '');
+  const [editNotes, setEditNotes] = useState(job.internal_notes || '');
 
   async function handleStart() {
     setLoading(true);
@@ -64,15 +78,51 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
     }
   }
 
+  async function handleEditJob(e: React.FormEvent) {
+    e.preventDefault();
+    setIsUpdatingJob(true);
+    setError(null);
+    const res = await updateJobAction(job.id, {
+      title: editTitle.trim(),
+      description: editDescription.trim(),
+      scheduled_start: editStart ? new Date(editStart).toISOString() : undefined,
+      scheduled_end: editEnd ? new Date(editEnd).toISOString() : undefined,
+      address_line1: editAddress.trim(),
+      city: editCity.trim(),
+      state: editState.trim(),
+      postal_code: editPostalCode.trim(),
+      internal_notes: editNotes.trim(),
+    });
+    setIsUpdatingJob(false);
+    if (!res.success) {
+      setError(res.error || 'Failed to update work order');
+      toast.error('Update Failed', res.error || 'Failed to update work order');
+    } else {
+      toast.success('Work Order Updated', `Job #${job.job_number || ''} details successfully saved`);
+      setShowEditModal(false);
+      router.refresh();
+    }
+  }
+
   return (
     <div className="space-y-2">
       {error && (
-        <div className="p-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded">
+        <div className="p-2 text-xs text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded">
           {error}
         </div>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setShowEditModal(true)}
+          className="min-h-[44px]"
+        >
+          <Pencil className="w-4 h-4 mr-1.5 text-slate-500 dark:text-zinc-400" />
+          Edit Work Order
+        </Button>
+
         {job.status === 'scheduled' && (
           <Button size="sm" onClick={handleStart} disabled={loading} className="min-h-[44px]">
             <Play className="w-4 h-4 mr-1.5" />
@@ -108,7 +158,7 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
       </div>
 
       {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl flex items-center justify-between gap-2">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur border-t border-slate-200 dark:border-zinc-800 z-50 shadow-2xl flex items-center justify-between gap-2">
         {job.status === 'scheduled' && (
           <Button
             size="sm"
@@ -150,22 +200,22 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
 
       {showCompleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <Card className="w-full max-w-md">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-lg">Complete Job</CardTitle>
+          <Card className="w-full max-w-md dark:bg-zinc-900 dark:border-zinc-800">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+              <CardTitle className="text-lg dark:text-zinc-100">Complete Job</CardTitle>
               <button
                 onClick={() => setShowCompleteModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-xs text-slate-500">
+            <CardContent className="space-y-3 pt-4">
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
                 Mark this plumbing job completed. You can add internal notes or parts used before issuing the invoice.
               </p>
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                   Internal Completion Notes / Work Summary:
                 </label>
                 <textarea
@@ -173,11 +223,11 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
                   value={internalNotes}
                   onChange={(e) => setInternalNotes(e.target.value)}
                   placeholder="e.g. Replaced faulty pressure relief valve. Tested cold/hot pressure at 60 PSI."
-                  className="w-full text-xs rounded-md border border-slate-300 p-2.5 focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-xs rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 p-2.5 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <CardFooter className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
               <Button variant="outline" onClick={() => setShowCompleteModal(false)}>
                 Cancel
               </Button>
@@ -185,6 +235,132 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
                 {loading ? 'Completing...' : 'Mark Completed'}
               </Button>
             </CardFooter>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit Work Order Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <Card className="w-full max-w-lg dark:bg-zinc-900 dark:border-zinc-800 max-h-[90vh] overflow-y-auto">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800 sticky top-0 bg-white dark:bg-zinc-900 z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-bold dark:text-zinc-100">Edit Work Order #{job.job_number}</CardTitle>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">Customize schedule, dispatch title, or job address</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </CardHeader>
+
+            <form onSubmit={handleEditJob}>
+              <CardContent className="space-y-4 pt-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
+                    Job Title *
+                  </label>
+                  <Input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    required
+                    className="min-h-[44px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
+                    Detailed Scope / Work Description
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="w-full text-xs rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 p-2.5 focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
+                      Scheduled Start Time
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={editStart}
+                      onChange={(e) => setEditStart(e.target.value)}
+                      className="min-h-[44px]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
+                      Scheduled End Time
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={editEnd}
+                      onChange={(e) => setEditEnd(e.target.value)}
+                      className="min-h-[44px]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
+                    Service Address
+                  </label>
+                  <Input
+                    value={editAddress}
+                    onChange={(e) => setEditAddress(e.target.value)}
+                    className="min-h-[44px]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">City</label>
+                    <Input value={editCity} onChange={(e) => setEditCity(e.target.value)} className="min-h-[44px]" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">State</label>
+                    <Input value={editState} onChange={(e) => setEditState(e.target.value)} className="min-h-[44px]" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Postal Code</label>
+                    <Input value={editPostalCode} onChange={(e) => setEditPostalCode(e.target.value)} className="min-h-[44px]" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
+                    Internal Dispatch Notes / Gate Codes
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    placeholder="e.g. Call customer 15 minutes before arrival. Gate code #4092."
+                    className="w-full text-xs rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 p-2.5 focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+              </CardContent>
+
+              <CardFooter className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-zinc-800 sticky bottom-0 bg-white dark:bg-zinc-900">
+                <Button type="button" variant="outline" onClick={() => setShowEditModal(false)} className="min-h-[44px]">
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" disabled={isUpdatingJob} className="min-h-[44px] font-bold">
+                  {isUpdatingJob ? 'Saving Changes...' : 'Save Work Order Changes'}
+                </Button>
+              </CardFooter>
+            </form>
           </Card>
         </div>
       )}

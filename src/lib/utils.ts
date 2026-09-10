@@ -6,26 +6,37 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amountCents: number, currency: SupportedCurrency = 'USD'): string {
-  const currencyLocales: Record<SupportedCurrency, string> = {
-    USD: 'en-US',
-    GBP: 'en-GB',
-    AUD: 'en-AU',
-  };
+export const CURRENCY_LOCALES: Record<SupportedCurrency, string> = {
+  USD: 'en-US',
+  EUR: 'de-DE',
+  GBP: 'en-GB',
+  CAD: 'en-CA',
+  AUD: 'en-AU',
+  INR: 'en-IN',
+  JPY: 'ja-JP',
+};
 
-  return new Intl.NumberFormat(currencyLocales[currency] || 'en-US', {
+export function formatCurrency(amountCents: number, currency: SupportedCurrency = 'USD'): string {
+  const locale = CURRENCY_LOCALES[currency] || 'en-US';
+  const isZeroDecimal = currency === 'JPY';
+  const amountUnits = amountCents / 100;
+
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amountCents / 100);
+    minimumFractionDigits: isZeroDecimal ? 0 : 2,
+    maximumFractionDigits: isZeroDecimal ? 0 : 2,
+  }).format(isZeroDecimal ? Math.round(amountUnits) : amountUnits);
 }
 
 export function formatDate(dateString: string | null | undefined): string {
   if (!dateString) return '—';
   try {
-    const date = new Date(dateString);
+    // If date-only format YYYY-MM-DD, parse as UTC to avoid local timezone shifts
+    const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateString);
+    const date = isDateOnly ? new Date(`${dateString}T00:00:00Z`) : new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
+      timeZone: isDateOnly ? 'UTC' : undefined,
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -33,6 +44,15 @@ export function formatDate(dateString: string | null | undefined): string {
   } catch {
     return dateString;
   }
+}
+
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 export function formatDateTime(dateString: string | null | undefined): string {

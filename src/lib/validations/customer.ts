@@ -15,4 +15,5 @@ export const CustomerSchema = z.object({
   notes: z.string().max(2000).nullable().optional().or(z.literal('')),
 });
 
-export type CustomerInput = z.infer<typeof CustomerSchema>;
+export type CustomerInput = z.input<typeof CustomerSchema>;
+export type CustomerOutput = z.output<typeof CustomerSchema>;

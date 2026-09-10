@@ -9,7 +9,7 @@ export type JobStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'void';
 export type PaymentMethod = 'credit_card' | 'bank_transfer' | 'cash' | 'check' | 'other';
 export type SupportedCountry = 'US' | 'GB' | 'AU';
-export type SupportedCurrency = 'USD' | 'GBP' | 'AUD';
+export type SupportedCurrency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'INR' | 'JPY';
 
 export interface Organization {
   id: string;

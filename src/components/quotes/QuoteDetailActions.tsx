@@ -242,7 +242,7 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
       </div>
 
       {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl flex items-center justify-between gap-2">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl dark:bg-zinc-900/95 dark:border-zinc-800 flex items-center justify-between gap-2">
         <div className="flex-1">
           <Button
             variant="outline"
@@ -286,29 +286,29 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
       {/* In-App Approve Modal */}
       {showApproveModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <Card className="w-full max-w-md shadow-2xl">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100">
+          <Card className="w-full max-w-md shadow-2xl dark:bg-zinc-900 dark:border-zinc-800">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-lg font-bold">Approve Quote {quote.quote_number}</CardTitle>
+                <CardTitle className="text-lg font-bold dark:text-zinc-100">Approve Quote {quote.quote_number}</CardTitle>
               </div>
               <button
                 onClick={() => setShowApproveModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </CardHeader>
 
             <CardContent className="space-y-4 pt-4">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
                 Record customer approval immediately without waiting for portal signature. Ideal for verbal phone orders or on-site agreements.
               </p>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                   Customer Signer Name
                 </label>
                 <Input
@@ -320,13 +320,13 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                   Approval Method
                 </label>
                 <select
                   value={approvalMethod}
                   onChange={(e) => setApprovalMethod(e.target.value)}
-                  className="w-full h-11 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-11 px-3 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Verbal / Phone Approval">Verbal / Phone Approval</option>
                   <option value="On-Site Verbal Agreement">On-Site Verbal Agreement</option>
@@ -335,7 +335,7 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
                 </select>
               </div>
 
-              <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex items-center gap-3">
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg border border-emerald-100 dark:border-emerald-900/60 flex items-center gap-3">
                 <input
                   type="checkbox"
                   id="autoConvert"
@@ -343,13 +343,13 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
                   onChange={(e) => setAutoConvert(e.target.checked)}
                   className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
                 />
-                <label htmlFor="autoConvert" className="text-xs font-medium text-emerald-900 cursor-pointer">
+                <label htmlFor="autoConvert" className="text-xs font-medium text-emerald-900 dark:text-emerald-300 cursor-pointer">
                   Automatically dispatch / convert to Active Job now
                 </label>
               </div>
             </CardContent>
 
-            <CardFooter className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+            <CardFooter className="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-zinc-800 pt-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -375,35 +375,35 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
       {/* In-App Decline Modal */}
       {showDeclineModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <Card className="w-full max-w-md shadow-2xl">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100">
+          <Card className="w-full max-w-md shadow-2xl dark:bg-zinc-900 dark:border-zinc-800">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-950/60 flex items-center justify-center text-red-600 dark:text-red-400">
                   <XCircle className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-lg font-bold">Decline Quote {quote.quote_number}</CardTitle>
+                <CardTitle className="text-lg font-bold dark:text-zinc-100">Decline Quote {quote.quote_number}</CardTitle>
               </div>
               <button
                 onClick={() => setShowDeclineModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </CardHeader>
 
             <CardContent className="space-y-4 pt-4">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
                 Mark this quote as declined. You can reopen or duplicate it later if requirements change.
               </p>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                   Reason for Decline
                 </label>
                 <select
                   value={declineReason}
                   onChange={(e) => setDeclineReason(e.target.value)}
-                  className="w-full h-11 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-11 px-3 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Price too high / Budget mismatch">Price too high / Budget mismatch</option>
                   <option value="Selected another plumbing provider">Selected another plumbing provider</option>
@@ -414,7 +414,7 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
               </div>
             </CardContent>
 
-            <CardFooter className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+            <CardFooter className="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-zinc-800 pt-3">
               <Button
                 variant="outline"
                 size="sm"

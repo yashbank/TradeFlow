@@ -27,6 +27,10 @@ import {
   ArrowRight,
   ShieldCheck,
   Compass,
+  MessageSquare,
+  Plus,
+  Minus,
+  Trash2,
 } from 'lucide-react';
 import type { UserProfile, Organization } from '@/types/database';
 
@@ -34,6 +38,54 @@ interface TechnicianFieldPortalProps {
   myJobs?: any[];
   user: UserProfile;
   organization: Organization;
+}
+
+/**
+ * Quarter-Hour (15 min) labor rounding utility for trade service billing.
+ * Trade standard: any work started (>0s) billable minimum 15 mins (0.25h),
+ * rounded to the ceiling 15-minute quantum.
+ */
+export function calculateQuarterHourRounding(seconds: number): {
+  exactMinutes: number;
+  roundedMinutes: number;
+  roundedHours: number;
+  formatted: string;
+} {
+  if (seconds <= 0) {
+    return { exactMinutes: 0, roundedMinutes: 0, roundedHours: 0, formatted: '0.00 hrs (0m billable)' };
+  }
+  const exactMinutes = Math.floor(seconds / 60);
+  const roundedMinutes = Math.max(15, Math.ceil(seconds / 900) * 15);
+  const roundedHours = roundedMinutes / 60;
+  return {
+    exactMinutes,
+    roundedMinutes,
+    roundedHours,
+    formatted: `${roundedHours.toFixed(2)} hrs (${roundedMinutes}m billable)`,
+  };
+}
+
+/**
+ * Normalizes phone strings by removing formatting characters for mobile dialer schemes.
+ */
+export function normalizePhoneForUri(phone: string): string {
+  return phone.replace(/[^0-9+]/g, '');
+}
+
+/**
+ * Generates prefilled SMS dispatch URL with template for en route notification.
+ */
+export function generateSmsDispatchUrl(
+  phone: string,
+  techName: string,
+  customerName: string,
+  address: string
+): string {
+  const cleanPhone = normalizePhoneForUri(phone);
+  const body = encodeURIComponent(
+    `Hi ${customerName}, your TradeFlow technician (${techName}) is en route to ${address}. Estimated arrival: 8 mins.`
+  );
+  return `sms:${cleanPhone}?&body=${body}`;
 }
 
 export function TechnicianFieldPortal({
@@ -106,6 +158,25 @@ export function TechnicianFieldPortal({
     toast.success('Part Added', `${part.name} logged.`);
   }
 
+  function incrementPart(partName: string) {
+    setLoggedParts((prev) =>
+      prev.map((p) => (p.name === partName ? { ...p, qty: p.qty + 1 } : p))
+    );
+  }
+
+  function decrementPart(partName: string) {
+    setLoggedParts((prev) =>
+      prev
+        .map((p) => (p.name === partName ? { ...p, qty: p.qty - 1 } : p))
+        .filter((p) => p.qty > 0)
+    );
+  }
+
+  function removePart(partName: string) {
+    setLoggedParts((prev) => prev.filter((p) => p.name !== partName));
+    toast.info('Part Removed', `${partName} removed from order.`);
+  }
+
   // Address and Navigation details
   const customer = activeJob?.customer;
   const customerAddress = customer
@@ -117,6 +188,10 @@ export function TechnicianFieldPortal({
 
   // Navigation URL for native GPS
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(customerAddress)}`;
+
+  // Direct 1-tap call and prefilled SMS dispatch update
+  const normalizedPhone = normalizePhoneForUri(customerPhone);
+  const smsUrl = generateSmsDispatchUrl(customerPhone, user.full_name, customerName, customerAddress);
 
   async function handleEnRoute() {
     setFieldState('en_route');
@@ -146,7 +221,8 @@ export function TechnicianFieldPortal({
     }
 
     setIsUpdating(true);
-    const summaryNotes = `Technician: ${user.full_name}\nLabor Duration: ${formatStopwatch(timerSeconds)}\nParts Used: ${loggedParts.map((p) => `${p.qty}x ${p.name}`).join(', ') || 'None'}\nField Notes: ${completionNotes || 'Job completed smoothly.'}`;
+    const laborRounding = calculateQuarterHourRounding(timerSeconds);
+    const summaryNotes = `Technician: ${user.full_name}\nLabor Duration: ${formatStopwatch(timerSeconds)} (${laborRounding.formatted})\nParts Used: ${loggedParts.map((p) => `${p.qty}x ${p.name}`).join(', ') || 'None'}\nField Notes: ${completionNotes || 'Job completed smoothly.'}`;
 
     const res = await updateJobStatusAction(activeJob.id, 'completed', summaryNotes);
     setIsUpdating(false);
@@ -321,14 +397,22 @@ export function TechnicianFieldPortal({
             </p>
           </div>
 
-          {/* Quick Action Dial & Direction Buttons */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Quick Action Dial, SMS & Direction Buttons */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <a
-              href={`tel:${customerPhone}`}
+              href={`tel:${normalizedPhone}`}
               className="p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95"
             >
               <Phone className="w-4 h-4" />
               Call Customer
+            </a>
+
+            <a
+              href={smsUrl}
+              className="p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95"
+            >
+              <MessageSquare className="w-4 h-4" />
+              SMS Dispatch
             </a>
 
             <a
@@ -443,13 +527,16 @@ export function TechnicianFieldPortal({
                 <span className="text-3xl sm:text-4xl font-black font-mono tracking-wider text-sky-300">
                   {formatStopwatch(timerSeconds)}
                 </span>
+                <p className="text-[11px] text-sky-400 font-mono mt-1">
+                  Billable: {calculateQuarterHourRounding(timerSeconds).formatted}
+                </p>
               </div>
 
               <div className="flex items-center justify-center gap-2">
                 <button
                   type="button"
                   onClick={() => setTimerRunning(!timerRunning)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                  className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 ${
                     timerRunning
                       ? 'bg-amber-500 hover:bg-amber-600 text-white'
                       : 'bg-emerald-500 hover:bg-emerald-600 text-white'
@@ -461,7 +548,7 @@ export function TechnicianFieldPortal({
                 <button
                   type="button"
                   onClick={() => setTimerSeconds(0)}
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 active:scale-95"
                   title="Reset Timer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -492,11 +579,47 @@ export function TechnicianFieldPortal({
               {loggedParts.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-slate-100 dark:border-zinc-800 text-xs">
                   <p className="font-semibold text-slate-700 dark:text-zinc-300 mb-1">Logged to Order:</p>
-                  <div className="space-y-1 max-h-20 overflow-y-auto">
-                    {loggedParts.map((p, idx) => (
-                      <div key={idx} className="flex justify-between text-slate-600 dark:text-zinc-400 text-[11px]">
-                        <span>{p.qty}x {p.name}</span>
-                        <span className="font-mono font-bold">{formatConverted(p.priceCents * p.qty)}</span>
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto pr-0.5">
+                    {loggedParts.map((p) => (
+                      <div
+                        key={p.name}
+                        className="flex items-center justify-between text-slate-600 dark:text-zinc-400 text-[11px] bg-slate-50/80 dark:bg-zinc-900/60 p-1.5 rounded-xl border border-slate-200/60 dark:border-zinc-800"
+                      >
+                        <div className="min-w-0 flex-1 mr-2">
+                          <p className="font-semibold text-slate-800 dark:text-zinc-200 truncate">{p.name}</p>
+                          <span className="font-mono text-[10px] text-slate-400">
+                            {formatConverted(p.priceCents * p.qty)} ({formatConverted(p.priceCents)}/ea)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => decrementPart(p.name)}
+                            aria-label={`Decrease ${p.name}`}
+                            className="w-5 h-5 rounded bg-slate-200 dark:bg-zinc-700 hover:bg-slate-300 dark:hover:bg-zinc-600 flex items-center justify-center text-slate-700 dark:text-zinc-200 font-bold active:scale-95"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="w-5 text-center font-bold font-mono text-slate-800 dark:text-zinc-200 text-xs">
+                            {p.qty}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => incrementPart(p.name)}
+                            aria-label={`Increase ${p.name}`}
+                            className="w-5 h-5 rounded bg-slate-200 dark:bg-zinc-700 hover:bg-slate-300 dark:hover:bg-zinc-600 flex items-center justify-center text-slate-700 dark:text-zinc-200 font-bold active:scale-95"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removePart(p.name)}
+                            aria-label={`Remove ${p.name}`}
+                            className="w-5 h-5 rounded text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/40 flex items-center justify-center active:scale-95 ml-1"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -523,7 +646,7 @@ export function TechnicianFieldPortal({
                 type="button"
                 onClick={handleCompleteJob}
                 disabled={isUpdating}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/25 min-h-[42px] px-6"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/25 min-h-[44px] px-6"
               >
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
                 {isUpdating ? 'Completing Work Order...' : 'Submit & Complete Work Order'}

@@ -20,6 +20,7 @@ import {
   AlertCircle,
   FileText,
 } from 'lucide-react';
+import { useToast } from '@/lib/toast/ToastContext';
 import type { Customer, SupportedCurrency } from '@/types/database';
 
 interface InvoiceBuilderProps {
@@ -79,6 +80,7 @@ export function InvoiceBuilder({
   defaultTerms,
 }: InvoiceBuilderProps) {
   const router = useRouter();
+  const toast = useToast();
   const [customerId, setCustomerId] = useState(
     defaultCustomerId || (customers[0]?.id || '')
   );
@@ -181,6 +183,7 @@ export function InvoiceBuilder({
     if (!res.success || !res.data) {
       setLoading(false);
       setError(res.error || 'Failed to generate invoice.');
+      toast.error('Invoice Failed', res.error || 'Failed to generate invoice.');
       return;
     }
 
@@ -188,6 +191,9 @@ export function InvoiceBuilder({
 
     if (andSend) {
       await sendInvoiceAction(createdId);
+      toast.success('Invoice Sent', `Invoice #${res.data.invoice_number || ''} created and sent to customer.`);
+    } else {
+      toast.success('Invoice Saved', `Invoice #${res.data.invoice_number || ''} saved as draft.`);
     }
 
     setLoading(false);
@@ -302,7 +308,7 @@ export function InvoiceBuilder({
             variant="outline"
             size="sm"
             onClick={() => addItem()}
-            className="min-h-[38px]"
+            className="min-h-[44px]"
           >
             <Plus className="w-4 h-4 mr-1" />
             Add Custom Line
@@ -322,7 +328,7 @@ export function InvoiceBuilder({
                   value={item.description}
                   onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                   placeholder="e.g. Cleared main drain blockage with heavy snake"
-                  className="min-h-[40px]"
+                  className="min-h-[44px]"
                 />
               </div>
 
@@ -333,11 +339,11 @@ export function InvoiceBuilder({
                   </label>
                   <Input
                     type="number"
-                    min="1"
-                    step="1"
+                    min="0.01"
+                    step="any"
                     value={item.quantity}
-                    onChange={(e) => updateItem(item.id, 'quantity', Math.max(1, parseInt(e.target.value) || 1))}
-                    className="min-h-[40px] text-center"
+                    onChange={(e) => updateItem(item.id, 'quantity', Math.max(0.01, parseFloat(e.target.value) || 1))}
+                    className="min-h-[44px] text-center"
                   />
                 </div>
 
@@ -351,7 +357,7 @@ export function InvoiceBuilder({
                     step="0.01"
                     value={item.unitPrice}
                     onChange={(e) => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                    className="min-h-[40px] text-right"
+                    className="min-h-[44px] text-right"
                   />
                 </div>
 
@@ -366,7 +372,7 @@ export function InvoiceBuilder({
                   <button
                     type="button"
                     onClick={() => updateItem(item.id, 'taxable', !item.taxable)}
-                    className={`px-2 py-1 text-[11px] font-semibold rounded border transition-colors ${
+                    className={`px-2 py-1 min-h-[44px] text-[11px] font-semibold rounded-lg border transition-colors flex items-center justify-center ${
                       item.taxable
                         ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
                         : 'bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-400 border-slate-200 dark:border-zinc-700'
@@ -380,7 +386,7 @@ export function InvoiceBuilder({
                     type="button"
                     onClick={() => removeItem(item.id)}
                     disabled={items.length <= 1}
-                    className="p-2 text-slate-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-30 rounded"
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-30 rounded-lg"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -407,7 +413,7 @@ export function InvoiceBuilder({
                   step="0.01"
                   value={discountAmount}
                   onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                  className="h-8 text-right text-xs"
+                  className="h-11 min-h-[44px] text-right text-xs"
                 />
               </div>
             </div>

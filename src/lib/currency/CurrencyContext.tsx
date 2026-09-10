@@ -2,35 +2,24 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'INR' | 'JPY';
+import {
+  type CurrencyCode,
+  type CurrencyMeta,
+  SUPPORTED_CURRENCIES,
+  FALLBACK_RATES,
+  convertCurrencyCents,
+  formatCurrencyLocale,
+  parseExchangeRatesResponse,
+} from './rates';
 
-export interface CurrencyMeta {
-  code: CurrencyCode;
-  symbol: string;
-  name: string;
-  flag: string;
-  locale: string;
-}
-
-export const SUPPORTED_CURRENCIES: CurrencyMeta[] = [
-  { code: 'USD', symbol: '$', name: 'US Dollar', flag: '🇺🇸', locale: 'en-US' },
-  { code: 'EUR', symbol: '€', name: 'Euro', flag: '🇪🇺', locale: 'de-DE' },
-  { code: 'GBP', symbol: '£', name: 'British Pound', flag: '🇬🇧', locale: 'en-GB' },
-  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', flag: '🇨🇦', locale: 'en-CA' },
-  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar', flag: '🇦🇺', locale: 'en-AU' },
-  { code: 'INR', symbol: '₹', name: 'Indian Rupee', flag: '🇮🇳', locale: 'en-IN' },
-  { code: 'JPY', symbol: '¥', name: 'Japanese Yen', flag: '🇯🇵', locale: 'ja-JP' },
-];
-
-// Fallback rates against USD in case API is temporarily unavailable
-const FALLBACK_RATES: Record<CurrencyCode, number> = {
-  USD: 1.0,
-  EUR: 0.92,
-  GBP: 0.79,
-  CAD: 1.36,
-  AUD: 1.52,
-  INR: 83.5,
-  JPY: 155.0,
+export {
+  type CurrencyCode,
+  type CurrencyMeta,
+  SUPPORTED_CURRENCIES,
+  FALLBACK_RATES,
+  convertCurrencyCents,
+  formatCurrencyLocale,
+  parseExchangeRatesResponse,
 };
 
 interface CurrencyContextValue {
@@ -92,25 +81,15 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         });
         if (!res.ok) throw new Error('Failed to fetch exchange rates');
         const data = await res.json();
-        if (data && data.rates) {
-          const updatedRates: Record<CurrencyCode, number> = {
-            USD: 1.0,
-            EUR: data.rates.EUR || FALLBACK_RATES.EUR,
-            GBP: data.rates.GBP || FALLBACK_RATES.GBP,
-            CAD: data.rates.CAD || FALLBACK_RATES.CAD,
-            AUD: data.rates.AUD || FALLBACK_RATES.AUD,
-            INR: data.rates.INR || FALLBACK_RATES.INR,
-            JPY: data.rates.JPY || FALLBACK_RATES.JPY,
-          };
-          setRates(updatedRates);
-          try {
-            localStorage.setItem(
-              STORAGE_RATES_KEY,
-              JSON.stringify({ timestamp: Date.now(), rates: updatedRates })
-            );
-          } catch {
-            // Ignore
-          }
+        const updatedRates = parseExchangeRatesResponse(data);
+        setRates(updatedRates);
+        try {
+          localStorage.setItem(
+            STORAGE_RATES_KEY,
+            JSON.stringify({ timestamp: Date.now(), rates: updatedRates })
+          );
+        } catch {
+          // Ignore
         }
       } catch (err) {
         console.warn('Using fallback exchange rates:', err);
@@ -139,12 +118,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     fromCurrency: CurrencyCode = 'USD',
     toCurrency: CurrencyCode = selectedCurrency
   ): number {
-    if (fromCurrency === toCurrency) return amountCents;
-    const fromRate = rates[fromCurrency] || 1.0;
-    const toRate = rates[toCurrency] || 1.0;
-    // Normalize to USD then multiply by target rate
-    const usdAmount = amountCents / fromRate;
-    return Math.round(usdAmount * toRate);
+    return convertCurrencyCents(amountCents, fromCurrency, toCurrency, rates);
   }
 
   /**
@@ -152,22 +126,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
    */
   function formatConverted(amountCents: number, baseCurrency: CurrencyCode = 'USD'): string {
     const convertedCents = convertCents(amountCents, baseCurrency, selectedCurrency);
-    const meta =
-      SUPPORTED_CURRENCIES.find((c) => c.code === selectedCurrency) || SUPPORTED_CURRENCIES[0];
-
-    const amountUnits = convertedCents / 100;
-
-    // Format using native Intl with specific currency symbol
-    try {
-      return new Intl.NumberFormat(meta.locale, {
-        style: 'currency',
-        currency: selectedCurrency,
-        minimumFractionDigits: selectedCurrency === 'JPY' ? 0 : 2,
-        maximumFractionDigits: selectedCurrency === 'JPY' ? 0 : 2,
-      }).format(selectedCurrency === 'JPY' ? Math.round(amountUnits) : amountUnits);
-    } catch {
-      return `${meta.symbol}${amountUnits.toFixed(2)}`;
-    }
+    return formatCurrencyLocale(convertedCents, selectedCurrency);
   }
 
   const currentCurrencyMeta =

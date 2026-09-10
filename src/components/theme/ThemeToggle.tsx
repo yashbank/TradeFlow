@@ -59,7 +59,7 @@ export function ThemeToggle() {
         onClick={() => setIsOpen(!isOpen)}
         aria-label={`Current identity: ${currentOption.label}. Click to switch theme.`}
         title={`Fluid Theme: ${currentOption.label}`}
-        className="group flex items-center justify-center w-9 h-9 rounded-xl glass-panel-elevated hover:scale-105 active:scale-95 transition-all text-slate-800 dark:text-zinc-100"
+        className="group flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl glass-panel-elevated hover:scale-105 active:scale-95 transition-all text-slate-800 dark:text-zinc-100"
       >
         <div className={`p-1.5 rounded-lg ${currentOption.pillClass} transition-all spring-icon`}>
           <CurrentIcon className="w-4 h-4" />

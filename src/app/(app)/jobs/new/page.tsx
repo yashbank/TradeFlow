@@ -12,9 +12,10 @@ export default async function NewJobPage({ searchParams }: NewJobPageProps) {
   const { customer_id } = await searchParams;
   await AuthService.requireRole(['owner', 'admin']);
 
-  const [{ customers }, teamMembers] = await Promise.all([
+  const [{ customers }, teamMembers, { jobs: scheduledJobs }] = await Promise.all([
     CustomerService.list('', 100),
     JobService.getTeamMembers(),
+    JobService.list('scheduled', 10, 0),
   ]);
 
   return (
@@ -32,6 +33,7 @@ export default async function NewJobPage({ searchParams }: NewJobPageProps) {
         customers={customers}
         teamMembers={teamMembers}
         defaultCustomerId={customer_id}
+        scheduledJobs={scheduledJobs}
       />
     </div>
   );

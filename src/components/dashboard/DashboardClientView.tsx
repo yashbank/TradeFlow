@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { TechnicianFieldPortal } from './TechnicianFieldPortal';
 import { OwnerPictorialDashboard } from './OwnerPictorialDashboard';
 import type { UserProfile, Organization, UserRole } from '@/types/database';
@@ -26,6 +27,34 @@ export function DashboardClientView({
   organization,
   role,
 }: DashboardClientViewProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [lastSyncTime, setLastSyncTime] = useState<Date>(() => new Date());
+  const [isAutoSyncing, setIsAutoSyncing] = useState<boolean>(true);
+
+  // 3-second live auto-refresh polling (only when tab is visible to prevent unnecessary load)
+  useEffect(() => {
+    if (!isAutoSyncing) return;
+
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        startTransition(() => {
+          router.refresh();
+          setLastSyncTime(new Date());
+        });
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [router, isAutoSyncing]);
+
+  const handleManualSync = () => {
+    startTransition(() => {
+      router.refresh();
+      setLastSyncTime(new Date());
+    });
+  };
+
   // If user is a field technician, directly render the technician field portal
   if (isTechnician) {
     return (
@@ -46,6 +75,12 @@ export function DashboardClientView({
       teamMembers={teamMembers}
       user={user}
       organization={organization}
+      lastSyncTime={lastSyncTime}
+      isSyncing={isPending}
+      isAutoSyncing={isAutoSyncing}
+      onToggleAutoSync={() => setIsAutoSyncing((prev) => !prev)}
+      onManualSync={handleManualSync}
     />
   );
 }
+
