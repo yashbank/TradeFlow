@@ -17,7 +17,168 @@ import {
   Calendar,
 } from 'lucide-react';
 
+import { AuthService } from '@/services/AuthService';
+import { JobService } from '@/services/JobService';
+
 export default async function DashboardPage() {
+  const context = await AuthService.getCurrentContext();
+  const isTechnician = context?.role === 'technician';
+
+  if (isTechnician) {
+    const { jobs: myJobs } = await JobService.list();
+    const scheduledCount = myJobs.filter((j: any) => j.status === 'scheduled').length;
+    const inProgressCount = myJobs.filter((j: any) => j.status === 'in_progress').length;
+    const completedCount = myJobs.filter((j: any) => j.status === 'completed').length;
+
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              Field Schedule
+            </h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Welcome back, {context?.user.full_name}. Your assigned jobs and site dispatches.
+            </p>
+          </div>
+          <Link href="/jobs">
+            <Button size="sm" variant="outline" className="min-h-[44px]">
+              View All Jobs
+            </Button>
+          </Link>
+        </div>
+
+        {/* Technician KPI Cards */}
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Scheduled
+              </CardTitle>
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <Calendar className="w-4 h-4" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="text-2xl font-bold text-slate-900">{scheduledCount}</div>
+              <p className="text-xs text-slate-500 mt-1">Pending dispatch</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                In Progress
+              </CardTitle>
+              <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                <Clock className="w-4 h-4" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="text-2xl font-bold text-amber-600">{inProgressCount}</div>
+              <p className="text-xs text-slate-500 mt-1">Currently working</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Completed
+              </CardTitle>
+              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                <FileCheck className="w-4 h-4" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="text-2xl font-bold text-emerald-600">{completedCount}</div>
+              <p className="text-xs text-slate-500 mt-1">Jobs finished</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Assigned Jobs List */}
+        <Card>
+          <CardHeader className="p-4 sm:p-5 border-b border-slate-100">
+            <CardTitle className="text-base font-semibold">Today&apos;s Dispatch Queue</CardTitle>
+            <p className="text-xs text-slate-500">Click a job to open work order details and update status</p>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-5 divide-y divide-slate-100">
+            {myJobs.length === 0 ? (
+              <div className="text-center py-10 text-slate-400 text-sm">
+                No jobs currently assigned. Check back later or notify your dispatcher.
+              </div>
+            ) : (
+              myJobs.map((job: any) => {
+                const addressStr = `${job.address_line1}${job.city ? `, ${job.city}` : ''}`;
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressStr)}`;
+
+                return (
+                  <div key={job.id} className="py-4 first:pt-0 last:pb-0 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-900">{job.title}</span>
+                          <Badge
+                            variant={
+                              job.status === 'completed'
+                                ? 'success'
+                                : job.status === 'in_progress'
+                                ? 'default'
+                                : 'secondary'
+                            }
+                          >
+                            {job.status}
+                          </Badge>
+                        </div>
+                        {job.customer && (
+                          <p className="text-xs text-slate-600 mt-0.5">
+                            Customer: {job.customer.first_name} {job.customer.last_name}
+                          </p>
+                        )}
+                      </div>
+                      <Link href={`/jobs/${job.id}`}>
+                        <Button size="sm" className="min-h-[44px]">
+                          Open Work Order
+                        </Button>
+                      </Link>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <a
+                        href={mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1.5 rounded min-h-[36px]"
+                      >
+                        <MapPin className="w-3.5 h-3.5 mr-1 text-blue-600" />
+                        {addressStr}
+                      </a>
+                      {job.customer?.phone && (
+                        <a
+                          href={`tel:${job.customer.phone}`}
+                          className="inline-flex items-center text-emerald-700 hover:text-emerald-900 bg-emerald-50 px-2.5 py-1.5 rounded min-h-[36px]"
+                        >
+                          <Phone className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                          Call Customer
+                        </a>
+                      )}
+                      {job.scheduled_start && (
+                        <span className="inline-flex items-center text-slate-500 bg-slate-100 px-2.5 py-1.5 rounded">
+                          <Clock className="w-3.5 h-3.5 mr-1 text-slate-400" />
+                          Start: {formatDate(job.scheduled_start)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const metrics = await DashboardService.getMetrics();
   const activity = await DashboardService.getRecentActivity();
 

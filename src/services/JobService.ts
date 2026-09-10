@@ -38,17 +38,6 @@ export class JobService {
    */
   static async list(status?: JobStatus, limit = 50, offset = 0) {
     const { organization, user, role } = await AuthService.requireContext();
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      let filtered = DemoStore.jobs;
-      if (status) filtered = filtered.filter((j) => j.status === status);
-      return {
-        jobs: filtered.slice(offset, offset + limit) as Job[],
-        totalCount: filtered.length,
-      };
-    }
-
     const supabase = await createClient();
 
     let query = supabase
@@ -82,12 +71,6 @@ export class JobService {
    */
   static async getById(jobId: string): Promise<Job | null> {
     const { organization, user, role } = await AuthService.requireContext();
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      return (DemoStore.jobs.find((j) => j.id === jobId) as Job) || null;
-    }
-
     const supabase = await createClient();
 
     let query = supabase
@@ -149,13 +132,7 @@ export class JobService {
    * Updates job status (Technicians, Admins, and Owners).
    */
   static async updateStatus(jobId: string, targetStatus: JobStatus, internalNotes?: string): Promise<Job> {
-    const { organization, user, role } = await AuthService.requireContext();
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      return DemoStore.updateJobStatus(jobId, targetStatus, internalNotes);
-    }
-
+    const { organization } = await AuthService.requireContext();
     const supabase = await createClient();
 
     const job = await this.getById(jobId);

@@ -37,8 +37,7 @@ export async function middleware(request: NextRequest) {
     user = null;
   }
 
-  const isDemoSession = request.cookies.get('tradeflow_demo_session')?.value === '1';
-  const isAuthenticated = !!user || isDemoSession;
+  const isAuthenticated = !!user;
   const path = request.nextUrl.pathname;
 
   // Protect internal authenticated workspace routes

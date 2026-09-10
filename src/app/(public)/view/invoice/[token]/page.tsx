@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { InvoiceService } from '@/services/InvoiceService';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Wrench, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Wrench, Phone, CheckCircle2, AlertCircle, Download } from 'lucide-react';
 
 interface PublicInvoicePageProps {
   params: Promise<{ token: string }>;
@@ -38,15 +38,26 @@ export default async function PublicInvoicePage({ params }: PublicInvoicePagePro
               <p className="text-xs text-slate-500">Official Invoice</p>
             </div>
           </div>
-          {org?.phone && (
+          <div className="flex items-center space-x-2">
             <a
-              href={`tel:${org.phone}`}
-              className="inline-flex items-center text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-md hover:bg-blue-100 min-h-[44px]"
+              href={`/api/invoices/${invoice.id}/pdf?token=${token}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-2 rounded-md hover:bg-slate-200 min-h-[44px]"
             >
-              <Phone className="w-3.5 h-3.5 mr-1.5" />
-              Call Office
+              <Download className="w-3.5 h-3.5 mr-1.5" />
+              PDF
             </a>
-          )}
+            {org?.phone && (
+              <a
+                href={`tel:${org.phone}`}
+                className="inline-flex items-center text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-md hover:bg-blue-100 min-h-[44px]"
+              >
+                <Phone className="w-3.5 h-3.5 mr-1.5" />
+                Call Office
+              </a>
+            )}
+          </div>
         </div>
 
         {/* Paid Stamp Banner */}

@@ -1,10 +1,10 @@
 // ==============================================================================
-// src/services/AuthService.ts — Authentication & Workspace Provisioning
+// src/services/AuthService.ts — Real Authentication & Multi-Tenant Provisioning
 // ==============================================================================
 
 import { createClient } from '@/lib/supabase/server';
 import type { RegisterInput, LoginInput } from '@/lib/validations/auth';
-import type { Organization, OrganizationMember, UserProfile, UserRole } from '@/types/database';
+import type { Organization, UserProfile, UserRole } from '@/types/database';
 
 export interface UserOrgContext {
   user: UserProfile;
@@ -14,13 +14,13 @@ export interface UserOrgContext {
 
 export class AuthService {
   /**
-   * Registers a new user, provisions their organization, creates the owner membership,
-   * and initializes a 14-day free trial subscription.
+   * Registers a new user with Supabase Auth, creates the user profile,
+   * provisions the business workspace atomically, and assigns Owner role.
    */
   static async registerUser(input: RegisterInput) {
     const supabase = await createClient();
 
-    // 1. Register with Supabase Auth
+    // 1. Register with Supabase Auth GoTrue
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
@@ -37,23 +37,49 @@ export class AuthService {
 
     const userId = authData.user.id;
 
-    // 2. Ensure public.users row exists
-    await supabase.from('users').upsert({
+    // 2. Ensure public.users record exists
+    const { error: userError } = await supabase.from('users').upsert({
       id: userId,
       full_name: input.fullName,
       email: input.email,
     });
 
-    // 3. Generate unique slug from business name
+    if (userError) {
+      // Non-fatal if handle_new_user trigger already inserted the row
+      console.warn('users upsert note:', userError.message);
+    }
+
+    // 3. Atomically Provision Workspace via stored procedure or direct inserts
+    try {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('fn_create_workspace', {
+        p_user_id: userId,
+        p_business_name: input.businessName,
+        p_country: input.country,
+        p_currency: input.currency,
+        p_timezone: input.timezone,
+        p_tax_rate_basis_points: 0,
+      });
+
+      if (!rpcError && rpcResult) {
+        return {
+          userId,
+          organizationId: rpcResult.organization_id,
+          organizationSlug: rpcResult.slug,
+        };
+      }
+    } catch {
+      // Fallback to manual transactional insert if RPC not applied
+    }
+
+    // Direct multi-step creation fallback
     const baseSlug = input.businessName
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
-      .slice(0, 50) || 'org';
+      .slice(0, 45) || 'org';
     const slug = `${baseSlug}-${Math.random().toString(36).substring(2, 7)}`;
 
-    // 4. Create Organization
     const { data: org, error: orgError } = await supabase
       .from('organizations')
       .insert({
@@ -72,7 +98,6 @@ export class AuthService {
       throw new Error(`Failed to create business workspace: ${orgError?.message}`);
     }
 
-    // 5. Create Owner Membership
     const { error: memberError } = await supabase
       .from('organization_members')
       .insert({
@@ -85,14 +110,20 @@ export class AuthService {
       throw new Error(`Failed to assign workspace ownership: ${memberError.message}`);
     }
 
-    // 6. Initialize 14-Day Free Trial Subscription
     const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
     await supabase.from('subscriptions').insert({
       organization_id: org.id,
       plan_id: 'starter_monthly',
       status: 'trialing',
+      trial_start: new Date().toISOString(),
       trial_end: trialEnd,
     });
+
+    await supabase.from('sequences').insert([
+      { organization_id: org.id, entity_type: 'quote', last_val: 0 },
+      { organization_id: org.id, entity_type: 'job', last_val: 0 },
+      { organization_id: org.id, entity_type: 'invoice', last_val: 0 },
+    ]);
 
     return {
       userId,
@@ -102,7 +133,7 @@ export class AuthService {
   }
 
   /**
-   * Authenticates user via email and password.
+   * Authenticates user via email and password using Supabase Auth.
    */
   static async loginUser(input: LoginInput) {
     const supabase = await createClient();
@@ -127,32 +158,45 @@ export class AuthService {
   }
 
   /**
+   * Triggers a password reset email via Supabase Auth.
+   */
+  static async requestPasswordReset(email: string, redirectTo: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  /**
+   * Updates user's password once reset token is verified.
+   */
+  static async resetPassword(newPassword: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  /**
    * Resolves the current authenticated user, active organization, and role.
+   * Guaranteed to read from real persistent Supabase session.
    */
   static async getCurrentContext(): Promise<UserOrgContext | null> {
-    // Check for active demo session
-    try {
-      const { cookies } = await import('next/headers');
-      const cookieStore = await cookies();
-      if (cookieStore.get('tradeflow_demo_session')?.value === '1') {
-        const { DEMO_USER, DEMO_ORGANIZATION } = await import('@/lib/demo/demo-store');
-        return {
-          user: DEMO_USER,
-          organization: DEMO_ORGANIZATION,
-          role: 'owner',
-        };
-      }
-    } catch {
-      // Not in request context
-    }
-
     try {
       const supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) return null;
 
-      // Fetch user profile
+      // Fetch user profile from public.users
       const { data: profile } = await supabase
         .from('users')
         .select('*')
@@ -161,7 +205,7 @@ export class AuthService {
 
       if (!profile) return null;
 
-      // Fetch primary organization membership
+      // Fetch primary organization membership with organization join
       const { data: member } = await supabase
         .from('organization_members')
         .select('*, organization:organizations(*)')

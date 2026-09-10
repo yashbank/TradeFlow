@@ -1,6 +1,7 @@
 'use server';
 
 import { QuoteService } from '@/services/QuoteService';
+import { AuthService } from '@/services/AuthService';
 import { NotificationService } from '@/services/NotificationService';
 import { CreateQuoteSchema, type CreateQuoteInput } from '@/lib/validations/quote';
 import { formatCurrency } from '@/lib/utils';
@@ -38,13 +39,14 @@ export async function sendQuoteAction(quoteId: string) {
     if (fullQuote && fullQuote.customer?.email) {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
       const publicUrl = `${baseUrl}/view/quote/${fullQuote.public_token}`;
+      const { organization } = await AuthService.requireContext();
 
       await NotificationService.sendQuoteEmail({
         customerEmail: fullQuote.customer.email,
         customerName: `${fullQuote.customer.first_name} ${fullQuote.customer.last_name}`,
-        businessName: 'Dave’s Plumbing',
+        businessName: organization?.name || 'TradeFlow Plumbing',
         quoteNumber: fullQuote.quote_number,
-        totalFormatted: formatCurrency(fullQuote.total_cents),
+        totalFormatted: formatCurrency(fullQuote.total_cents, organization?.currency),
         publicUrl,
       });
     }

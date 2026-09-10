@@ -20,21 +20,6 @@ export interface DashboardMetrics {
 export class DashboardService {
   static async getMetrics(): Promise<DashboardMetrics> {
     const { organization } = await AuthService.requireRole(['owner', 'admin']);
-
-    if (organization.id === 'demo-org-001') {
-      return {
-        revenueMtdCents: 198639, // $1,986.39
-        outstandingReceivablesCents: 48713, // $487.13
-        overdueInvoicesCount: 0,
-        overdueInvoicesCents: 0,
-        openQuotesCount: 1,
-        openQuotesTotalCents: 48713,
-        upcomingJobsTodayCount: 1,
-        quoteWinRatePercentage: 100,
-        currency: organization.currency || 'USD',
-      };
-    }
-
     const supabase = await createClient();
 
     const now = new Date();
@@ -138,16 +123,6 @@ export class DashboardService {
 
   static async getRecentActivity() {
     const { organization } = await AuthService.requireRole(['owner', 'admin']);
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      return {
-        recentJobs: DemoStore.jobs,
-        recentQuotes: DemoStore.quotes,
-        recentInvoices: DemoStore.invoices,
-      };
-    }
-
     const supabase = await createClient();
 
     const [jobsRes, quotesRes, invoicesRes] = await Promise.all([

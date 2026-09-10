@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { sendQuoteAction, convertQuoteToJobAction } from '@/actions/quotes';
-import { Send, CalendarCheck2, Copy, Check, ExternalLink } from 'lucide-react';
+import { Send, CalendarCheck2, Copy, Check, ExternalLink, Download } from 'lucide-react';
 import type { Quote } from '@/types/database';
 
 interface QuoteDetailActionsProps {
@@ -69,6 +69,13 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
           </Button>
         </a>
 
+        <a href={`/api/quotes/${quote.id}/pdf`} target="_blank" rel="noopener noreferrer">
+          <Button variant="outline" size="sm" className="min-h-[44px]">
+            <Download className="w-4 h-4 mr-1.5 text-slate-600" />
+            Download PDF
+          </Button>
+        </a>
+
         {quote.status === 'draft' && (
           <Button size="sm" onClick={handleSend} disabled={loading} className="min-h-[44px]">
             <Send className="w-4 h-4 mr-1.5" />
@@ -82,7 +89,7 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
             variant="success"
             onClick={handleConvertToJob}
             disabled={loading}
-            className="min-h-[44px] shadow-sm animate-pulse"
+            className="min-h-[44px] shadow-sm font-semibold"
           >
             <CalendarCheck2 className="w-4 h-4 mr-1.5" />
             {loading ? 'Converting...' : 'Convert to Active Job'}

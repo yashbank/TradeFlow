@@ -3,7 +3,6 @@
 // ==============================================================================
 
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthService } from './AuthService';
 import { calculateDocumentTotals } from '@/lib/finance/calculator';
 import { transitionInvoiceStatus } from '@/lib/state/machines';
@@ -41,17 +40,6 @@ export class InvoiceService {
    */
   static async list(status?: InvoiceStatus, limit = 50, offset = 0) {
     const { organization } = await AuthService.requireRole(['owner', 'admin']);
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      let filtered = DemoStore.invoices;
-      if (status) filtered = filtered.filter((i) => i.status === status);
-      return {
-        invoices: filtered.slice(offset, offset + limit) as Invoice[],
-        totalCount: filtered.length,
-      };
-    }
-
     const supabase = await createClient();
 
     let query = supabase
@@ -81,12 +69,6 @@ export class InvoiceService {
    */
   static async getById(invoiceId: string): Promise<Invoice | null> {
     const { organization } = await AuthService.requireRole(['owner', 'admin']);
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      return (DemoStore.invoices.find((i) => i.id === invoiceId) as Invoice) || null;
-    }
-
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -323,12 +305,6 @@ export class InvoiceService {
    */
   static async recordPayment(invoiceId: string, input: RecordPaymentInput) {
     const { organization, user } = await AuthService.requireRole(['owner', 'admin']);
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      return DemoStore.recordPayment(invoiceId, input);
-    }
-
     const supabase = await createClient();
 
     const invoice = await this.getById(invoiceId);
@@ -389,6 +365,20 @@ export class InvoiceService {
       throw new Error(`Failed to update invoice balance: ${updateError?.message}`);
     }
 
+    // 3. Write Audit Log
+    await supabase.from('audit_logs').insert({
+      organization_id: organization.id,
+      entity_type: 'invoice',
+      entity_id: invoiceId,
+      action: isPaidInFull ? 'payment_full' : 'payment_partial',
+      actor_id: user.id,
+      changes_json: {
+        amount_cents: input.amount_cents,
+        payment_method: input.payment_method,
+        balance_due_cents: newBalanceDueCents,
+      },
+    });
+
     return {
       payment,
       invoice: updatedInvoice as Invoice,
@@ -399,23 +389,7 @@ export class InvoiceService {
    * Public View: Retrieves invoice by public token.
    */
   static async getByPublicToken(token: string) {
-    if (token.startsWith('demo-')) {
-      const { DemoStore, DEMO_ORGANIZATION } = await import('@/lib/demo/demo-store');
-      const inv = DemoStore.invoices.find((x) => x.public_token === token);
-      if (inv) {
-        return {
-          ...inv,
-          organization: DEMO_ORGANIZATION,
-        };
-      }
-    }
-
-    let supabase;
-    try {
-      supabase = createAdminClient();
-    } catch {
-      supabase = await createClient();
-    }
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('invoices')

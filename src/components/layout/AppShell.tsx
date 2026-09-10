@@ -26,14 +26,21 @@ interface AppShellProps {
 export function AppShell({ children, organization, user, role }: AppShellProps) {
   const pathname = usePathname();
 
-  const navItems = [
-    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Customers', href: '/customers', icon: Users },
-    { label: 'Quotes', href: '/quotes', icon: FileText },
-    { label: 'Jobs', href: '/jobs', icon: CalendarCheck2 },
-    { label: 'Invoices', href: '/invoices', icon: Receipt },
-    { label: 'Settings', href: '/settings', icon: Settings },
-  ];
+  const isTechnician = role === 'technician';
+  const navItems = isTechnician
+    ? [
+        { label: 'Schedule', href: '/dashboard', icon: LayoutDashboard },
+        { label: 'My Jobs', href: '/jobs', icon: CalendarCheck2 },
+        { label: 'Customers', href: '/customers', icon: Users },
+      ]
+    : [
+        { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+        { label: 'Customers', href: '/customers', icon: Users },
+        { label: 'Quotes', href: '/quotes', icon: FileText },
+        { label: 'Jobs', href: '/jobs', icon: CalendarCheck2 },
+        { label: 'Invoices', href: '/invoices', icon: Receipt },
+        { label: 'Settings', href: '/settings', icon: Settings },
+      ];
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50">
@@ -97,9 +104,11 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
           <span className="font-bold text-slate-900 text-sm truncate max-w-[200px]">{organization.name}</span>
         </div>
         <div className="flex items-center space-x-2">
-          <Link href="/settings" className="text-xs font-medium text-slate-600 p-2">
-            Settings
-          </Link>
+          {!isTechnician && (
+            <Link href="/settings" className="text-xs font-medium text-slate-600 p-2">
+              Settings
+            </Link>
+          )}
           <form action={logoutUserAction}>
             <button type="submit" className="text-xs font-medium text-red-600 p-2">
               Logout
@@ -115,7 +124,7 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
 
       {/* Mobile Bottom Navigation Bar (Thumb ergonomic) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 z-40 px-1 shadow-lg">
-        {navItems.slice(0, 5).map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
 

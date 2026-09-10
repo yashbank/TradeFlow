@@ -13,26 +13,6 @@ export class CustomerService {
    */
   static async list(search?: string, limit = 50, offset = 0): Promise<{ customers: Customer[]; totalCount: number }> {
     const { organization } = await AuthService.requireContext();
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      let filtered = DemoStore.customers;
-      if (search && search.trim().length > 0) {
-        const q = search.toLowerCase();
-        filtered = filtered.filter(
-          (c) =>
-            c.first_name.toLowerCase().includes(q) ||
-            c.last_name.toLowerCase().includes(q) ||
-            c.phone.includes(q) ||
-            c.address_line1.toLowerCase().includes(q)
-        );
-      }
-      return {
-        customers: filtered.slice(offset, offset + limit),
-        totalCount: filtered.length,
-      };
-    }
-
     const supabase = await createClient();
 
     let query = supabase
@@ -63,12 +43,6 @@ export class CustomerService {
    */
   static async getById(customerId: string): Promise<Customer | null> {
     const { organization } = await AuthService.requireContext();
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      return DemoStore.customers.find((c) => c.id === customerId) || null;
-    }
-
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -87,25 +61,6 @@ export class CustomerService {
    */
   static async create(input: CustomerInput): Promise<Customer> {
     const { organization } = await AuthService.requireRole(['owner', 'admin']);
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      return DemoStore.addCustomer({
-        first_name: input.first_name,
-        last_name: input.last_name,
-        company_name: input.company_name || null,
-        email: input.email || null,
-        phone: input.phone,
-        address_line1: input.address_line1,
-        address_line2: input.address_line2 || null,
-        city: input.city,
-        state: input.state,
-        postal_code: input.postal_code,
-        country: input.country,
-        notes: input.notes || null,
-      });
-    }
-
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -180,16 +135,6 @@ export class CustomerService {
    */
   static async getTimeline(customerId: string) {
     const { organization } = await AuthService.requireContext();
-
-    if (organization.id === 'demo-org-001') {
-      const { DemoStore } = await import('@/lib/demo/demo-store');
-      return {
-        quotes: DemoStore.quotes.filter((q) => q.customer_id === customerId),
-        jobs: DemoStore.jobs.filter((j) => j.customer_id === customerId),
-        invoices: DemoStore.invoices.filter((i) => i.customer_id === customerId),
-      };
-    }
-
     const supabase = await createClient();
 
     const [quotesRes, jobsRes, invoicesRes] = await Promise.all([

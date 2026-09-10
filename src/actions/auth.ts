@@ -3,18 +3,7 @@
 import { AuthService } from '@/services/AuthService';
 import { RegisterSchema, LoginSchema } from '@/lib/validations/auth';
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
-
-export async function loginDemoAction() {
-  const cookieStore = await cookies();
-  cookieStore.set('tradeflow_demo_session', '1', {
-    path: '/',
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  });
-  redirect('/dashboard');
-}
+import { headers } from 'next/headers';
 
 export async function registerUserAction(formData: FormData) {
   const raw = {
@@ -35,36 +24,13 @@ export async function registerUserAction(formData: FormData) {
     };
   }
 
-  // If local dev with mock Supabase credentials, seamlessly create demo session
-  const isMockBackend = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('mock');
-
   try {
-    if (isMockBackend) {
-      const cookieStore = await cookies();
-      cookieStore.set('tradeflow_demo_session', '1', {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-      });
-    } else {
-      await AuthService.registerUser(parsed.data);
-    }
+    await AuthService.registerUser(parsed.data);
   } catch (err: any) {
-    if (isMockBackend || err.message?.includes('fetch failed') || err.message?.includes('Failed to fetch')) {
-      const cookieStore = await cookies();
-      cookieStore.set('tradeflow_demo_session', '1', {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-      });
-    } else {
-      return {
-        success: false,
-        error: err.message,
-      };
-    }
+    return {
+      success: false,
+      error: err.message || 'Failed to complete registration.',
+    };
   }
 
   redirect('/dashboard');
@@ -84,38 +50,12 @@ export async function loginUserAction(formData: FormData) {
     };
   }
 
-  // Pre-configured demo credentials or mock backend
-  const isMockBackend = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('mock');
-  const isDemoUser = email === 'demo@tradeflow.app' || email === 'dave@davesplumbing.com';
-
-  if (isDemoUser || isMockBackend) {
-    const cookieStore = await cookies();
-    cookieStore.set('tradeflow_demo_session', '1', {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-    redirect('/dashboard');
-  }
-
   try {
     await AuthService.loginUser(parsed.data);
   } catch (err: any) {
-    if (err.message?.includes('fetch failed') || err.message?.includes('Failed to fetch')) {
-      const cookieStore = await cookies();
-      cookieStore.set('tradeflow_demo_session', '1', {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-      });
-      redirect('/dashboard');
-    }
-
     return {
       success: false,
-      error: err.message,
+      error: err.message || 'Invalid email or password.',
     };
   }
 
@@ -123,12 +63,68 @@ export async function loginUserAction(formData: FormData) {
 }
 
 export async function logoutUserAction() {
-  const cookieStore = await cookies();
-  cookieStore.delete('tradeflow_demo_session');
   try {
     await AuthService.logoutUser();
-  } catch {
-    // Ignore signOut errors in offline/demo mode
+  } catch (err) {
+    console.error('Logout error:', err);
   }
   redirect('/login');
+}
+
+export async function requestPasswordResetAction(formData: FormData) {
+  const email = ((formData.get('email') as string) || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    return {
+      success: false,
+      error: 'Please enter a valid email address.',
+    };
+  }
+
+  const reqHeaders = await headers();
+  const host = reqHeaders.get('host') || 'localhost:3000';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  const redirectTo = `${protocol}://${host}/reset-password`;
+
+  try {
+    await AuthService.requestPasswordReset(email, redirectTo);
+    return {
+      success: true,
+      message: 'Password reset link sent. Please check your inbox.',
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || 'Failed to send password reset email.',
+    };
+  }
+}
+
+export async function resetPasswordAction(formData: FormData) {
+  const password = (formData.get('password') as string) || '';
+  const confirmPassword = (formData.get('confirmPassword') as string) || '';
+
+  if (password.length < 8) {
+    return {
+      success: false,
+      error: 'Password must be at least 8 characters.',
+    };
+  }
+
+  if (password !== confirmPassword) {
+    return {
+      success: false,
+      error: 'Passwords do not match.',
+    };
+  }
+
+  try {
+    await AuthService.resetPassword(password);
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || 'Failed to reset password.',
+    };
+  }
+
+  redirect('/login?reset=success');
 }

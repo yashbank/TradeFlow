@@ -81,15 +81,26 @@ export function PublicQuotePortal({ quote, token }: PublicQuotePortalProps) {
               <p className="text-xs text-slate-500">Official Plumbing Proposal</p>
             </div>
           </div>
-          {quote.organization?.phone && (
+          <div className="flex items-center space-x-2">
             <a
-              href={`tel:${quote.organization.phone}`}
-              className="inline-flex items-center text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-md hover:bg-blue-100 min-h-[44px]"
+              href={`/api/quotes/${quote.id}/pdf?token=${token}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-2 rounded-md hover:bg-slate-200 min-h-[44px]"
             >
-              <Phone className="w-3.5 h-3.5 mr-1.5" />
-              Call Office
+              <Download className="w-3.5 h-3.5 mr-1.5" />
+              PDF
             </a>
-          )}
+            {quote.organization?.phone && (
+              <a
+                href={`tel:${quote.organization.phone}`}
+                className="inline-flex items-center text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-md hover:bg-blue-100 min-h-[44px]"
+              >
+                <Phone className="w-3.5 h-3.5 mr-1.5" />
+                Call Office
+              </a>
+            )}
+          </div>
         </div>
 
         {/* Accepted Banner */}

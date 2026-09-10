@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { RecordPaymentModal } from './RecordPaymentModal';
 import { sendInvoiceAction, voidInvoiceAction } from '@/actions/invoices';
-import { Send, DollarSign, Ban, Copy, Check, ExternalLink } from 'lucide-react';
+import { Send, DollarSign, Ban, Copy, Check, ExternalLink, Download } from 'lucide-react';
 import type { Invoice } from '@/types/database';
 
 interface InvoiceDetailActionsProps {
@@ -73,6 +73,13 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
           <Button variant="secondary" size="sm" className="min-h-[44px]">
             <ExternalLink className="w-4 h-4 mr-1.5" />
             Public View
+          </Button>
+        </a>
+
+        <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer">
+          <Button variant="outline" size="sm" className="min-h-[44px]">
+            <Download className="w-4 h-4 mr-1.5 text-slate-600" />
+            Download PDF
           </Button>
         </a>
 

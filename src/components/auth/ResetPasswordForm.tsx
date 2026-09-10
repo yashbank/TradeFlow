@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { loginUserAction } from '@/actions/auth';
-import { Wrench } from 'lucide-react';
+import { resetPasswordAction } from '@/actions/auth';
+import { Wrench, ArrowLeft } from 'lucide-react';
 
-export function LoginForm() {
+export function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,10 +18,10 @@ export function LoginForm() {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
-    const res = await loginUserAction(formData);
+    const res = await resetPasswordAction(formData);
 
     if (res && !res.success) {
-      setError(res.error || 'Invalid email or password.');
+      setError(res.error || 'Failed to update password.');
       setLoading(false);
     }
   }
@@ -33,8 +33,10 @@ export function LoginForm() {
           <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
             <Wrench className="w-6 h-6" />
           </div>
-          <CardTitle className="text-2xl font-black text-slate-900">Sign In to TradeFlow</CardTitle>
-          <p className="text-xs text-slate-500 mt-1">Access your professional plumbing workspace</p>
+          <CardTitle className="text-2xl font-black text-slate-900">Set New Password</CardTitle>
+          <p className="text-xs text-slate-500 mt-1">
+            Choose a secure password for your TradeFlow account
+          </p>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
@@ -46,32 +48,28 @@ export function LoginForm() {
             )}
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Email Address</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">
+                New Password (minimum 8 characters)
+              </label>
               <Input
-                type="email"
-                name="email"
+                type="password"
+                name="password"
                 required
-                autoComplete="email"
-                placeholder="name@business.com"
+                minLength={8}
+                placeholder="••••••••"
                 className="h-11"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-slate-700">Password</label>
-                <Link
-                  href="/forgot-password"
-                  className="text-[11px] text-blue-600 hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">
+                Confirm New Password
+              </label>
               <Input
                 type="password"
-                name="password"
+                name="confirmPassword"
                 required
-                autoComplete="current-password"
+                minLength={8}
                 placeholder="••••••••"
                 className="h-11"
               />
@@ -85,14 +83,15 @@ export function LoginForm() {
               className="w-full font-bold shadow-md min-h-[44px]"
               disabled={loading}
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? 'Updating Password...' : 'Update Password'}
             </Button>
-            <p className="text-xs text-slate-500 text-center">
-              Don&apos;t have an account?{' '}
-              <Link href="/signup" className="text-blue-600 font-semibold hover:underline">
-                Start 14-Day Free Trial
-              </Link>
-            </p>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center text-xs text-slate-600 hover:text-slate-900 font-medium"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 mr-1" />
+              Back to Sign In
+            </Link>
           </CardFooter>
         </form>
       </Card>
