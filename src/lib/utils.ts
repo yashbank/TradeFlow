@@ -50,3 +50,16 @@ export function formatDateTime(dateString: string | null | undefined): string {
     return dateString;
   }
 }
+
+export function getAppBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return 'https://tradeflow-cyan-nu.vercel.app';
+}

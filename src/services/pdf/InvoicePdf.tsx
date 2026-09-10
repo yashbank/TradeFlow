@@ -175,8 +175,9 @@ interface InvoicePdfProps {
 }
 
 export function InvoicePdfDocument({ invoice, organization }: InvoicePdfProps) {
-  const currency = organization?.currency || 'USD';
-  const customer = invoice.customer as any;
+  const org = Array.isArray(organization) ? organization[0] : organization;
+  const currency = org?.currency || 'USD';
+  const customer = Array.isArray(invoice.customer) ? invoice.customer[0] : invoice.customer;
   const isPaid = invoice.status === 'paid' || invoice.balance_due_cents === 0;
 
   return (
@@ -185,12 +186,12 @@ export function InvoicePdfDocument({ invoice, organization }: InvoicePdfProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.businessName}>{organization?.name || 'TradeFlow Plumbing'}</Text>
-            {organization?.phone && <Text style={styles.businessDetails}>{organization.phone}</Text>}
-            {organization?.email && <Text style={styles.businessDetails}>{organization.email}</Text>}
-            {organization?.address_line1 && (
+            <Text style={styles.businessName}>{org?.name || 'TradeFlow Plumbing'}</Text>
+            {org?.phone && <Text style={styles.businessDetails}>{org.phone}</Text>}
+            {org?.email && <Text style={styles.businessDetails}>{org.email}</Text>}
+            {org?.address_line1 && (
               <Text style={styles.businessDetails}>
-                {organization.address_line1}, {organization.city}
+                {org.address_line1}, {org.city}
               </Text>
             )}
           </View>

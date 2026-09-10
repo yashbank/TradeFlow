@@ -50,7 +50,10 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
   const [declineReason, setDeclineReason] = useState('Price too high / Budget mismatch');
 
   function copyLink() {
-    navigator.clipboard.writeText(publicUrl);
+    const url = typeof window !== 'undefined'
+      ? `${window.location.origin}/view/quote/${quote.public_token}`
+      : publicUrl;
+    navigator.clipboard.writeText(url);
     setCopied(true);
     toast.success('Link Copied', 'Approval link copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
@@ -60,8 +63,14 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
     setDownloading(true);
     toast.info('Downloading Quote...', 'Preparing PDF proposal');
     try {
-      const res = await fetch(`/api/quotes/${quote.id}/pdf`);
-      if (!res.ok) throw new Error('PDF generation failed');
+      const endpoint = quote.public_token
+        ? `/api/quotes/${quote.id}/pdf?token=${quote.public_token}&download=1`
+        : `/api/quotes/${quote.id}/pdf?download=1`;
+      const res = await fetch(endpoint);
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => '');
+        throw new Error(errorText || 'PDF generation failed');
+      }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -167,7 +176,7 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
           {copied ? 'Link Copied!' : 'Copy Approval Link'}
         </Button>
 
-        <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+        <a href={`/view/quote/${quote.public_token}`} target="_blank" rel="noopener noreferrer">
           <Button variant="secondary" size="sm" className="min-h-[44px]">
             <ExternalLink className="w-4 h-4 mr-1.5" />
             View Portal

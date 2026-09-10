@@ -24,7 +24,10 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
   const [error, setError] = useState<string | null>(null);
 
   function copyLink() {
-    navigator.clipboard.writeText(publicUrl);
+    const url = typeof window !== 'undefined'
+      ? `${window.location.origin}/view/invoice/${invoice.public_token}`
+      : publicUrl;
+    navigator.clipboard.writeText(url);
     setCopied(true);
     toast.success('Link Copied', 'Public invoice link copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
@@ -34,8 +37,14 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
     setDownloading(true);
     toast.info('Downloading Invoice...', 'Preparing PDF file');
     try {
-      const res = await fetch(`/api/invoices/${invoice.id}/pdf`);
-      if (!res.ok) throw new Error('PDF generation failed');
+      const endpoint = invoice.public_token
+        ? `/api/invoices/${invoice.id}/pdf?token=${invoice.public_token}&download=1`
+        : `/api/invoices/${invoice.id}/pdf?download=1`;
+      const res = await fetch(endpoint);
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => '');
+        throw new Error(errorText || 'PDF generation failed');
+      }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -100,7 +109,7 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
           {copied ? 'Link Copied!' : 'Copy Link'}
         </Button>
 
-        <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+        <a href={`/view/invoice/${invoice.public_token}`} target="_blank" rel="noopener noreferrer">
           <Button variant="secondary" size="sm" className="min-h-[44px]">
             <ExternalLink className="w-4 h-4 mr-1.5" />
             Public View

@@ -5,7 +5,7 @@ import { InvoiceService } from '@/services/InvoiceService';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { InvoiceDetailActions } from '@/components/invoices/InvoiceDetailActions';
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
+import { formatCurrency, formatDate, formatDateTime, getAppBaseUrl } from '@/lib/utils';
 import { ArrowLeft, Phone, MapPin, CheckCircle2, AlertCircle, Ban } from 'lucide-react';
 
 interface InvoiceDetailPageProps {
@@ -20,7 +20,7 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
     notFound();
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = getAppBaseUrl();
   const publicUrl = `${baseUrl}/view/invoice/${invoice.public_token}`;
 
   return (

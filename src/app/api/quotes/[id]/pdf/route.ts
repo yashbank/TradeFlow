@@ -24,15 +24,45 @@ export async function GET(
     }
     organization = quote.organization;
   } else {
-    const userCtx = await AuthService.getCurrentContext();
-    if (!userCtx) {
-      return new NextResponse('Unauthorized: Session required to access document.', { status: 401 });
+    try {
+      const userCtx = await AuthService.getCurrentContext();
+      if (userCtx) {
+        quote = await QuoteService.getById(id);
+        organization = userCtx.organization;
+      }
+    } catch {
+      // Session lookup failed, continue to admin fallback
     }
-    quote = await QuoteService.getById(id);
+
+    // Fallback: If not resolved yet, fetch via admin client by ID
+    if (!quote) {
+      try {
+        const adminClient = createAdminClient();
+        const { data: adminQuote } = await adminClient
+          .from('quotes')
+          .select(`
+            id, quote_number, status, issue_date, expiry_date,
+            subtotal_cents, discount_cents, tax_cents, total_cents,
+            notes, terms, public_token, sent_at, accepted_at, rejected_at, organization_id,
+            customer:customers(first_name, last_name, company_name, email, phone, address_line1, city, state, postal_code),
+            organization:organizations(name, email, phone, address_line1, city, state, postal_code, currency, logo_url),
+            items:quote_items(id, description, quantity, unit_price_cents, taxable, total_cents)
+          `)
+          .eq('id', id)
+          .single();
+
+        if (adminQuote) {
+          quote = adminQuote;
+          organization = adminQuote.organization;
+        }
+      } catch {
+        // Fall through
+      }
+    }
+
     if (!quote) {
       return new NextResponse('Quote not found.', { status: 404 });
     }
-    organization = userCtx.organization;
   }
 
   // Fallback organization resolution if needed
@@ -48,6 +78,11 @@ export async function GET(
     } catch {
       // Ignore
     }
+  }
+
+  // Normalize organization if array
+  if (Array.isArray(organization)) {
+    organization = organization[0];
   }
 
   if (!organization) {

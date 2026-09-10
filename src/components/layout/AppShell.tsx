@@ -78,7 +78,7 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50/70 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col md:flex-row bg-transparent text-foreground transition-colors duration-200">
       {/* Desktop Animated Hover Sidebar */}
       <aside className="hidden md:flex flex-col w-[72px] hover:w-64 glass-panel-elevated min-h-screen p-3 sticky top-0 h-screen z-30 transition-all duration-300 ease-in-out group/sidebar overflow-hidden">
         {/* Brand Header */}

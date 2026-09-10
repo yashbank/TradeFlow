@@ -141,8 +141,9 @@ interface QuotePdfProps {
 }
 
 export function QuotePdfDocument({ quote, organization }: QuotePdfProps) {
-  const currency = organization?.currency || 'USD';
-  const customer = quote.customer as any;
+  const org = Array.isArray(organization) ? organization[0] : organization;
+  const currency = org?.currency || 'USD';
+  const customer = Array.isArray(quote.customer) ? quote.customer[0] : quote.customer;
 
   return (
     <Document>
@@ -150,12 +151,12 @@ export function QuotePdfDocument({ quote, organization }: QuotePdfProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.businessName}>{organization?.name || 'TradeFlow Plumbing'}</Text>
-            {organization?.phone && <Text style={styles.businessDetails}>{organization.phone}</Text>}
-            {organization?.email && <Text style={styles.businessDetails}>{organization.email}</Text>}
-            {organization?.address_line1 && (
+            <Text style={styles.businessName}>{org?.name || 'TradeFlow Plumbing'}</Text>
+            {org?.phone && <Text style={styles.businessDetails}>{org.phone}</Text>}
+            {org?.email && <Text style={styles.businessDetails}>{org.email}</Text>}
+            {org?.address_line1 && (
               <Text style={styles.businessDetails}>
-                {organization.address_line1}, {organization.city}
+                {org.address_line1}, {org.city}
               </Text>
             )}
           </View>

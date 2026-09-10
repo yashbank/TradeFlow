@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Wrench, Phone, CheckCircle2, AlertCircle, Download } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 interface PublicInvoicePageProps {
   params: Promise<{ token: string }>;
 }

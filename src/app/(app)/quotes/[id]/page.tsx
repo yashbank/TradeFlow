@@ -5,7 +5,7 @@ import { QuoteService } from '@/services/QuoteService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { QuoteDetailActions } from '@/components/quotes/QuoteDetailActions';
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
+import { formatCurrency, formatDate, formatDateTime, getAppBaseUrl } from '@/lib/utils';
 import { ArrowLeft, User, Phone, MapPin, Calendar, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface QuoteDetailPageProps {
@@ -20,7 +20,7 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
     notFound();
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = getAppBaseUrl();
   const publicUrl = `${baseUrl}/view/quote/${quote.public_token}`;
 
   return (

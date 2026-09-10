@@ -19,22 +19,22 @@
     --secondary: 204 94% 94%;
     --secondary-foreground: 200 98% 39%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 40%;
+    --muted-foreground: 215 25% 30%;
     --accent: 199 89% 48%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
     --ring: 199 89% 48%;
     --radius: 1rem;
 
     /* Glassmorphism Tokens */
-    --glass-bg: rgba(255, 255, 255, 0.85);
-    --glass-bg-hover: rgba(255, 255, 255, 0.95);
-    --glass-border: rgba(226, 232, 240, 0.85);
-    --glass-specular: rgba(255, 255, 255, 0.95);
-    --glass-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+    --glass-bg: rgba(255, 255, 255, 0.88);
+    --glass-bg-hover: rgba(255, 255, 255, 0.96);
+    --glass-border: rgba(203, 213, 225, 0.9);
+    --glass-specular: rgba(255, 255, 255, 0.98);
+    --glass-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
     --hydro-glow: rgba(14, 165, 233, 0.25);
   }
 
@@ -46,30 +46,30 @@
     --background: 224 71% 4%;
     --foreground: 210 40% 98%;
     --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card-foreground: 0 0% 100%;
     --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover-foreground: 0 0% 100%;
     --primary: 187 92% 49%;
     --primary-foreground: 222 47% 4%;
     --secondary: 217 33% 14%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 13%;
-    --muted-foreground: 215 20% 70%;
+    --muted-foreground: 215 25% 75%;
     --accent: 187 92% 49%;
     --accent-foreground: 222 47% 4%;
-    --destructive: 0 62% 45%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 16%;
-    --input: 217 33% 16%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
     --ring: 187 92% 49%;
 
     /* Glassmorphism Tokens */
-    --glass-bg: rgba(11, 15, 25, 0.82);
-    --glass-bg-hover: rgba(15, 23, 42, 0.9);
-    --glass-border: rgba(30, 41, 59, 0.8);
-    --glass-specular: rgba(255, 255, 255, 0.16);
-    --glass-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.6), 0 0 20px -3px rgba(6, 182, 212, 0.15);
-    --hydro-glow: rgba(6, 182, 212, 0.3);
+    --glass-bg: rgba(11, 15, 25, 0.85);
+    --glass-bg-hover: rgba(15, 23, 42, 0.94);
+    --glass-border: rgba(30, 41, 59, 0.85);
+    --glass-specular: rgba(255, 255, 255, 0.18);
+    --glass-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.65), 0 0 20px -3px rgba(6, 182, 212, 0.18);
+    --hydro-glow: rgba(6, 182, 212, 0.35);
   }
 
   /* ==========================================================================
@@ -88,22 +88,22 @@
     --secondary: 265 35% 18%;
     --secondary-foreground: 0 0% 100%;
     --muted: 265 30% 15%;
-    --muted-foreground: 250 25% 82%;
+    --muted-foreground: 250 35% 88%;
     --accent: 326 90% 64%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 90% 65%;
     --destructive-foreground: 0 0% 100%;
-    --border: 268 40% 24%;
-    --input: 268 40% 24%;
+    --border: 268 40% 28%;
+    --input: 268 40% 28%;
     --ring: 275 88% 68%;
 
     /* Glassmorphism Tokens */
-    --glass-bg: rgba(22, 12, 44, 0.82);
-    --glass-bg-hover: rgba(30, 16, 60, 0.92);
-    --glass-border: rgba(168, 85, 247, 0.35);
-    --glass-specular: rgba(255, 255, 255, 0.22);
-    --glass-shadow: 0 14px 35px -8px rgba(9, 4, 20, 0.7), 0 0 25px -4px rgba(168, 85, 247, 0.25);
-    --hydro-glow: rgba(168, 85, 247, 0.4);
+    --glass-bg: rgba(22, 12, 44, 0.85);
+    --glass-bg-hover: rgba(30, 16, 60, 0.94);
+    --glass-border: rgba(168, 85, 247, 0.4);
+    --glass-specular: rgba(255, 255, 255, 0.25);
+    --glass-shadow: 0 14px 35px -8px rgba(9, 4, 20, 0.75), 0 0 25px -4px rgba(168, 85, 247, 0.3);
+    --hydro-glow: rgba(168, 85, 247, 0.45);
   }
 }
 

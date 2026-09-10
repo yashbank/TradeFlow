@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { QuoteService } from '@/services/QuoteService';
 import { PublicQuotePortal } from '@/components/portal/PublicQuotePortal';
 
+export const dynamic = 'force-dynamic';
+
 interface PublicQuotePageProps {
   params: Promise<{ token: string }>;
 }

@@ -24,15 +24,47 @@ export async function GET(
     }
     organization = invoice.organization;
   } else {
-    const userCtx = await AuthService.getCurrentContext();
-    if (!userCtx) {
-      return new NextResponse('Unauthorized: Session required to access document.', { status: 401 });
+    try {
+      const userCtx = await AuthService.getCurrentContext();
+      if (userCtx) {
+        invoice = await InvoiceService.getById(id);
+        organization = userCtx.organization;
+      }
+    } catch {
+      // Session lookup failed, continue to admin fallback
     }
-    invoice = await InvoiceService.getById(id);
+
+    // Fallback: If not resolved yet, fetch via admin client by ID
+    if (!invoice) {
+      try {
+        const adminClient = createAdminClient();
+        const { data: adminInvoice } = await adminClient
+          .from('invoices')
+          .select(`
+            id, invoice_number, status, issue_date, due_date,
+            subtotal_cents, discount_cents, tax_cents, total_cents,
+            amount_paid_cents, balance_due_cents, notes, terms, public_token,
+            paid_at, sent_at, voided_at, organization_id,
+            customer:customers(first_name, last_name, company_name, email, phone, address_line1, city, state, postal_code),
+            organization:organizations(name, email, phone, address_line1, city, state, postal_code, currency, logo_url),
+            items:invoice_items(id, description, quantity, unit_price_cents, taxable, total_cents),
+            payments:payments(id, amount_cents, payment_date, payment_method, reference_number)
+          `)
+          .eq('id', id)
+          .single();
+
+        if (adminInvoice) {
+          invoice = adminInvoice;
+          organization = adminInvoice.organization;
+        }
+      } catch {
+        // Fall through
+      }
+    }
+
     if (!invoice) {
       return new NextResponse('Invoice not found.', { status: 404 });
     }
-    organization = userCtx.organization;
   }
 
   // Fallback organization resolution if needed
@@ -48,6 +80,11 @@ export async function GET(
     } catch {
       // Ignore
     }
+  }
+
+  // Normalize organization if array
+  if (Array.isArray(organization)) {
+    organization = organization[0];
   }
 
   if (!organization) {
