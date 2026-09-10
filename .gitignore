@@ -39,3 +39,6 @@ test-results/
 # OS
 .DS_Store
 *.pem
+
+# Supabase CLI
+supabase/.temp/

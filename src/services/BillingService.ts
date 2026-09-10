@@ -35,6 +35,11 @@ export class BillingService {
 
     const priceId = process.env.STRIPE_STARTER_PRICE_ID || 'price_starter_monthly_39';
 
+    // Gracefully handle Stripe Payment Link URLs if configured instead of a raw Price ID
+    if (priceId.startsWith('http://') || priceId.startsWith('https://')) {
+      return priceId;
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
