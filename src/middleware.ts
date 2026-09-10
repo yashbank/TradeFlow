@@ -29,24 +29,30 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data?.user || null;
+  } catch {
+    user = null;
+  }
 
+  const isDemoSession = request.cookies.get('tradeflow_demo_session')?.value === '1';
+  const isAuthenticated = !!user || isDemoSession;
   const path = request.nextUrl.pathname;
 
   // Protect internal authenticated workspace routes
   const protectedPrefixes = ['/dashboard', '/customers', '/quotes', '/jobs', '/invoices', '/settings'];
   const isProtected = protectedPrefixes.some((prefix) => path.startsWith(prefix));
 
-  if (isProtected && !user) {
+  if (isProtected && !isAuthenticated) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', path);
     return NextResponse.redirect(loginUrl);
   }
 
   // If already authenticated and visiting /login or /signup, redirect to dashboard
-  if (user && (path === '/login' || path === '/signup')) {
+  if (isAuthenticated && (path === '/login' || path === '/signup')) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

@@ -130,36 +130,56 @@ export class AuthService {
    * Resolves the current authenticated user, active organization, and role.
    */
   static async getCurrentContext(): Promise<UserOrgContext | null> {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    // Check for active demo session
+    try {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      if (cookieStore.get('tradeflow_demo_session')?.value === '1') {
+        const { DEMO_USER, DEMO_ORGANIZATION } = await import('@/lib/demo/demo-store');
+        return {
+          user: DEMO_USER,
+          organization: DEMO_ORGANIZATION,
+          role: 'owner',
+        };
+      }
+    } catch {
+      // Not in request context
+    }
 
-    if (!user) return null;
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
 
-    // Fetch user profile
-    const { data: profile } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+      if (!user) return null;
 
-    if (!profile) return null;
+      // Fetch user profile
+      const { data: profile } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-    // Fetch primary organization membership
-    const { data: member } = await supabase
-      .from('organization_members')
-      .select('*, organization:organizations(*)')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .single();
+      if (!profile) return null;
 
-    if (!member || !member.organization) return null;
+      // Fetch primary organization membership
+      const { data: member } = await supabase
+        .from('organization_members')
+        .select('*, organization:organizations(*)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .single();
 
-    return {
-      user: profile as UserProfile,
-      organization: member.organization as Organization,
-      role: member.role as UserRole,
-    };
+      if (!member || !member.organization) return null;
+
+      return {
+        user: profile as UserProfile,
+        organization: member.organization as Organization,
+        role: member.role as UserRole,
+      };
+    } catch {
+      return null;
+    }
   }
 
   /**

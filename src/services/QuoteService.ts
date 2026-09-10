@@ -42,6 +42,17 @@ export class QuoteService {
    */
   static async list(status?: QuoteStatus, limit = 50, offset = 0) {
     const { organization } = await AuthService.requireContext();
+
+    if (organization.id === 'demo-org-001') {
+      const { DemoStore } = await import('@/lib/demo/demo-store');
+      let filtered = DemoStore.quotes;
+      if (status) filtered = filtered.filter((q) => q.status === status);
+      return {
+        quotes: filtered.slice(offset, offset + limit) as Quote[],
+        totalCount: filtered.length,
+      };
+    }
+
     const supabase = await createClient();
 
     let query = supabase
@@ -71,6 +82,12 @@ export class QuoteService {
    */
   static async getById(quoteId: string): Promise<Quote | null> {
     const { organization } = await AuthService.requireContext();
+
+    if (organization.id === 'demo-org-001') {
+      const { DemoStore } = await import('@/lib/demo/demo-store');
+      return (DemoStore.quotes.find((q) => q.id === quoteId) as Quote) || null;
+    }
+
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -89,6 +106,32 @@ export class QuoteService {
    */
   static async create(input: CreateQuoteInput): Promise<Quote> {
     const { organization, user } = await AuthService.requireRole(['owner', 'admin']);
+
+    if (organization.id === 'demo-org-001') {
+      const { calculateDocumentTotals } = await import('@/lib/finance/calculator');
+      const { DemoStore } = await import('@/lib/demo/demo-store');
+      const calc = calculateDocumentTotals(
+        input.items,
+        input.discount_cents,
+        0,
+        organization.tax_rate_basis_points
+      );
+      return DemoStore.addQuote(
+        {
+          customer_id: input.customer_id,
+          issue_date: input.issue_date,
+          expiry_date: input.expiry_date,
+          subtotal_cents: calc.subtotalCents,
+          discount_cents: calc.discountCents,
+          tax_cents: calc.taxCents,
+          total_cents: calc.totalCents,
+          tax_rate_basis_points: organization.tax_rate_basis_points,
+          notes: input.notes || null,
+        },
+        input.items
+      );
+    }
+
     const supabase = await createClient();
 
     // Verify customer belongs to organization
@@ -194,6 +237,17 @@ export class QuoteService {
    * Public View: Retrieves quote by public token (no authentication required).
    */
   static async getByPublicToken(token: string) {
+    if (token.startsWith('demo-')) {
+      const { DemoStore, DEMO_ORGANIZATION } = await import('@/lib/demo/demo-store');
+      const q = DemoStore.quotes.find((x) => x.public_token === token);
+      if (q) {
+        return {
+          ...q,
+          organization: DEMO_ORGANIZATION,
+        };
+      }
+    }
+
     // Uses admin client or anon client since public portal is unauthenticated
     let supabase;
     try {
@@ -223,6 +277,22 @@ export class QuoteService {
    * Public Portal: Accept or reject a quote via public token.
    */
   static async respondPublic(token: string, input: PublicQuoteRespondInput, ip?: string) {
+    if (token.startsWith('demo-')) {
+      const { DemoStore } = await import('@/lib/demo/demo-store');
+      const q = DemoStore.quotes.find((x) => x.public_token === token);
+      if (!q) throw new Error('Quote not found or invalid token.');
+      if (input.action === 'accept') {
+        q.status = 'accepted';
+        q.accepted_at = new Date().toISOString();
+        q.accepted_by_name = input.signer_name || 'Customer';
+      } else {
+        q.status = 'rejected';
+        q.rejected_at = new Date().toISOString();
+        q.rejection_reason = input.rejection_reason || null;
+      }
+      return { success: true };
+    }
+
     let supabase;
     try {
       supabase = createAdminClient();
@@ -280,6 +350,39 @@ export class QuoteService {
     scheduledEnd?: string
   ) {
     const { organization, user } = await AuthService.requireRole(['owner', 'admin']);
+
+    if (organization.id === 'demo-org-001') {
+      const { DemoStore } = await import('@/lib/demo/demo-store');
+      const quote = await this.getById(quoteId);
+      if (!quote) throw new Error('Quote not found.');
+      const cust = DemoStore.customers.find((c) => c.id === quote.customer_id) || DemoStore.customers[0];
+      const newJob: any = {
+        id: `demo-job-${Date.now()}`,
+        organization_id: 'demo-org-001',
+        customer_id: quote.customer_id,
+        quote_id: quote.id,
+        job_number: `J-2026-${String(DemoStore.jobs.length + 1).padStart(4, '0')}`,
+        title: `Job from Quote ${quote.quote_number}`,
+        description: quote.notes || 'Work converted from approved quote.',
+        status: 'scheduled',
+        scheduled_start: scheduledStart || new Date().toISOString(),
+        scheduled_end: scheduledEnd || new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
+        technician_id: assignedTechId || user.id,
+        address_line1: cust.address_line1,
+        address_line2: cust.address_line2,
+        city: cust.city,
+        state: cust.state,
+        postal_code: cust.postal_code,
+        completion_notes: null,
+        completed_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        customer: cust,
+      };
+      DemoStore.jobs.unshift(newJob);
+      return newJob;
+    }
+
     const supabase = await createClient();
 
     const quote = await this.getById(quoteId);
