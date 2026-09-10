@@ -14,8 +14,8 @@ export default async function NewQuotePage({ searchParams }: NewQuotePageProps) 
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Create New Quote</h1>
-      <p className="text-sm text-slate-500">Draft professional plumbing proposal with instant calculations.</p>
+      <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-zinc-100">Create New Quote</h1>
+      <p className="text-sm text-slate-500 dark:text-zinc-400">Draft professional plumbing proposal with instant calculations.</p>
       <QuoteBuilder
         customers={customers}
         defaultCustomerId={customer_id}

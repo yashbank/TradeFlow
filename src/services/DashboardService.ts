@@ -8,12 +8,16 @@ import { AuthService } from './AuthService';
 export interface DashboardMetrics {
   revenueMtdCents: number;
   outstandingReceivablesCents: number;
+  totalInvoicedMtdCents: number;
   overdueInvoicesCount: number;
   overdueInvoicesCents: number;
   openQuotesCount: number;
   openQuotesTotalCents: number;
   upcomingJobsTodayCount: number;
+  completedJobsCount: number;
+  totalJobsCount: number;
   quoteWinRatePercentage: number;
+  weeklyRevenue: number[];
   currency: string;
 }
 
@@ -26,9 +30,10 @@ export class DashboardService {
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
     const todayStr = now.toISOString().split('T')[0];
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const sevenDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     // Parallel aggregate queries
-    const [paymentsRes, outstandingRes, overdueRes, quotesRes, jobsRes, trailingQuotesRes] =
+    const [paymentsRes, outstandingRes, overdueRes, quotesRes, jobsRes, trailingQuotesRes, weeklyPaymentsRes, allJobsRes] =
       await Promise.all([
         // 1. Revenue MTD
         supabase
@@ -72,6 +77,19 @@ export class DashboardService {
           .select('status')
           .eq('organization_id', organization.id)
           .gte('created_at', thirtyDaysAgo),
+
+        // 7. Trailing 7-Day Payments for Sparkline
+        supabase
+          .from('payments')
+          .select('amount_cents, payment_date')
+          .eq('organization_id', organization.id)
+          .gte('payment_date', sevenDaysAgo),
+
+        // 8. Total & Completed Jobs for SLA
+        supabase
+          .from('jobs')
+          .select('status')
+          .eq('organization_id', organization.id),
       ]);
 
     const revenueMtdCents = (paymentsRes.data || []).reduce(
@@ -83,6 +101,8 @@ export class DashboardService {
       (sum, inv) => sum + Number(inv.balance_due_cents),
       0
     );
+
+    const totalInvoicedMtdCents = revenueMtdCents + outstandingReceivablesCents;
 
     const overdueInvoicesCount = overdueRes.data ? overdueRes.data.length : 0;
     const overdueInvoicesCents = (overdueRes.data || []).reduce(
@@ -98,6 +118,11 @@ export class DashboardService {
 
     const upcomingJobsTodayCount = jobsRes.count || 0;
 
+    // SLA Dispatch execution calculation
+    const allJobs = allJobsRes.data || [];
+    const totalJobsCount = allJobs.length;
+    const completedJobsCount = allJobs.filter((j) => j.status === 'completed').length;
+
     // Quote Win Rate calculation
     const trailingQuotes = trailingQuotesRes.data || [];
     const acceptedCount = trailingQuotes.filter((q) => q.status === 'accepted').length;
@@ -108,15 +133,30 @@ export class DashboardService {
     const quoteWinRatePercentage =
       closedCount > 0 ? Math.round((acceptedCount / closedCount) * 100) : 0;
 
+    // 7-day revenue aggregation
+    const weeklyRevenue: number[] = [0, 0, 0, 0, 0, 0, 0];
+    const weeklyData = weeklyPaymentsRes.data || [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const dayTotal = weeklyData
+        .filter((p) => p.payment_date?.startsWith(d))
+        .reduce((sum, p) => sum + Number(p.amount_cents), 0);
+      weeklyRevenue[i] = dayTotal;
+    }
+
     return {
       revenueMtdCents,
       outstandingReceivablesCents,
+      totalInvoicedMtdCents,
       overdueInvoicesCount,
       overdueInvoicesCents,
       openQuotesCount,
       openQuotesTotalCents,
       upcomingJobsTodayCount,
+      completedJobsCount,
+      totalJobsCount,
       quoteWinRatePercentage,
+      weeklyRevenue,
       currency: organization.currency,
     };
   }

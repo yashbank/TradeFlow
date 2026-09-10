@@ -161,19 +161,19 @@ export function QuoteBuilder({
       )}
 
       {/* Customer & Dates Section */}
-      <Card>
+      <Card className="glass-panel text-card-foreground">
         <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">Select Customer *</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Select Customer *</label>
             {customers.length === 0 ? (
-              <p className="text-xs text-amber-600 font-medium py-2">
+              <p className="text-xs text-amber-600 dark:text-amber-400 font-medium py-2">
                 No customers found. <Link href="/customers" className="underline font-bold">Add a customer first.</Link>
               </p>
             ) : (
               <select
                 value={customerId}
                 onChange={(e) => setCustomerId(e.target.value)}
-                className="w-full h-11 rounded-md border border-slate-300 bg-white px-3 text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full h-11 rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 px-3 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 dark:focus:ring-sky-400 shadow-2xs"
               >
                 {customers.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -185,7 +185,7 @@ export function QuoteBuilder({
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">Issue Date</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Issue Date</label>
             <Input
               type="date"
               value={issueDate}
@@ -194,7 +194,7 @@ export function QuoteBuilder({
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">Expiry Date (Valid Until)</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Expiry Date (Valid Until)</label>
             <Input
               type="date"
               value={expiryDate}
@@ -206,35 +206,35 @@ export function QuoteBuilder({
 
       {/* 1-Tap Quick Preset Buttons */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold text-slate-500 flex items-center mr-1">
+        <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400 flex items-center mr-1">
           <Sparkles className="w-3.5 h-3.5 mr-1 text-amber-500" />
           Quick Presets:
         </span>
         <button
           type="button"
           onClick={() => addItem('50-Gallon Water Heater Supply & Installation', 1, 1650.0, true)}
-          className="text-xs bg-white border border-slate-200 hover:border-blue-400 px-3 py-1.5 rounded-md font-medium text-slate-700 transition-colors shadow-sm"
+          className="text-xs bg-white dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-sky-400 dark:hover:border-sky-500 px-3 py-1.5 rounded-xl font-medium text-slate-700 dark:text-zinc-300 transition-colors shadow-2xs"
         >
           + Water Heater ($1,650)
         </button>
         <button
           type="button"
           onClick={() => addItem('Main Sewer Line Snaking & Clear Blockage', 1, 180.0, true)}
-          className="text-xs bg-white border border-slate-200 hover:border-blue-400 px-3 py-1.5 rounded-md font-medium text-slate-700 transition-colors shadow-sm"
+          className="text-xs bg-white dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-sky-400 dark:hover:border-sky-500 px-3 py-1.5 rounded-xl font-medium text-slate-700 dark:text-zinc-300 transition-colors shadow-2xs"
         >
           + Drain Snaking ($180)
         </button>
         <button
           type="button"
           onClick={() => addItem('Garbage Disposal Replacement', 1, 280.0, true)}
-          className="text-xs bg-white border border-slate-200 hover:border-blue-400 px-3 py-1.5 rounded-md font-medium text-slate-700 transition-colors shadow-sm"
+          className="text-xs bg-white dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-sky-400 dark:hover:border-sky-500 px-3 py-1.5 rounded-xl font-medium text-slate-700 dark:text-zinc-300 transition-colors shadow-2xs"
         >
           + Garbage Disposal ($280)
         </button>
         <button
           type="button"
           onClick={() => addItem('Plumbing Labor Service (Hourly)', 2, 110.0, true)}
-          className="text-xs bg-white border border-slate-200 hover:border-blue-400 px-3 py-1.5 rounded-md font-medium text-slate-700 transition-colors shadow-sm"
+          className="text-xs bg-white dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-sky-400 dark:hover:border-sky-500 px-3 py-1.5 rounded-xl font-medium text-slate-700 dark:text-zinc-300 transition-colors shadow-2xs"
         >
           + Labor 2 hrs ($220)
         </button>
@@ -251,10 +251,10 @@ export function QuoteBuilder({
             return (
               <div
                 key={item.id}
-                className="grid grid-cols-12 gap-2 sm:gap-3 items-center bg-slate-50/70 p-3 rounded-lg border border-slate-200"
+                className="grid grid-cols-12 gap-2 sm:gap-3 items-center bg-slate-50/70 dark:bg-zinc-800/60 p-3 rounded-lg border border-slate-200 dark:border-zinc-700/80"
               >
                 <div className="col-span-12 sm:col-span-6">
-                  <label className="text-[11px] font-semibold text-slate-500 block mb-1">
+                  <label className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1">
                     Description #{index + 1}
                   </label>
                   <Input
@@ -265,7 +265,7 @@ export function QuoteBuilder({
                 </div>
 
                 <div className="col-span-4 sm:col-span-2">
-                  <label className="text-[11px] font-semibold text-slate-500 block mb-1">Qty</label>
+                  <label className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1">Qty</label>
                   <Input
                     type="number"
                     step="0.1"
@@ -276,7 +276,7 @@ export function QuoteBuilder({
                 </div>
 
                 <div className="col-span-4 sm:col-span-2">
-                  <label className="text-[11px] font-semibold text-slate-500 block mb-1">Unit Price ($)</label>
+                  <label className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1">Unit Price ($)</label>
                   <Input
                     type="number"
                     step="0.01"
@@ -287,7 +287,7 @@ export function QuoteBuilder({
                 </div>
 
                 <div className="col-span-3 sm:col-span-1 text-center">
-                  <label className="text-[11px] font-semibold text-slate-500 block mb-1">Tax</label>
+                  <label className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1">Tax</label>
                   <input
                     type="checkbox"
                     checked={item.taxable}
@@ -301,7 +301,7 @@ export function QuoteBuilder({
                     type="button"
                     onClick={() => removeItem(item.id)}
                     disabled={items.length <= 1}
-                    className="text-slate-400 hover:text-red-600 disabled:opacity-30 p-1"
+                    className="text-slate-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-30 p-1"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -320,45 +320,45 @@ export function QuoteBuilder({
       {/* Calculations Summary & Notes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
-          <CardHeader className="p-4 border-b border-slate-100">
+          <CardHeader className="p-4 border-b border-slate-100 dark:border-zinc-800">
             <CardTitle className="text-sm font-semibold">Terms & Notes</CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Customer Notes / Warranty</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Customer Notes / Warranty</label>
               <textarea
                 rows={2}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full text-xs rounded-md border border-slate-300 p-2.5 focus:ring-2 focus:ring-blue-500"
+                className="w-full text-xs rounded-md border border-slate-300 dark:border-zinc-700 p-2.5 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Payment Terms</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Payment Terms</label>
               <textarea
                 rows={2}
                 value={terms}
                 onChange={(e) => setTerms(e.target.value)}
-                className="w-full text-xs rounded-md border border-slate-300 p-2.5 focus:ring-2 focus:ring-blue-500"
+                className="w-full text-xs rounded-md border border-slate-300 dark:border-zinc-700 p-2.5 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </CardContent>
         </Card>
 
         {/* Financial Calculation Totals Box */}
-        <Card className="bg-slate-900 text-white">
-          <CardHeader className="p-5 pb-3 border-b border-slate-800">
-            <CardTitle className="text-base font-semibold text-slate-100">Financial Summary</CardTitle>
+        <Card className="bg-slate-900 dark:bg-zinc-900/95 border border-slate-800 dark:border-zinc-750 text-white">
+          <CardHeader className="p-5 pb-3 border-b border-slate-800 dark:border-zinc-800">
+            <CardTitle className="text-base font-semibold text-slate-100 dark:text-zinc-100">Financial Summary</CardTitle>
           </CardHeader>
           <CardContent className="p-5 space-y-3">
-            <div className="flex justify-between text-sm text-slate-400">
+            <div className="flex justify-between text-sm text-slate-400 dark:text-zinc-400">
               <span>Subtotal:</span>
-              <span className="font-semibold text-slate-100">
+              <span className="font-semibold text-slate-100 dark:text-zinc-100">
                 {formatCurrency(calculations.subtotalCents, currency)}
               </span>
             </div>
 
-            <div className="flex items-center justify-between text-sm text-slate-400">
+            <div className="flex items-center justify-between text-sm text-slate-400 dark:text-zinc-400">
               <span>Discount ($):</span>
               <input
                 type="number"
@@ -366,18 +366,18 @@ export function QuoteBuilder({
                 step="1"
                 value={discountAmount}
                 onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                className="w-24 px-2 py-1 text-xs text-right bg-slate-800 text-white rounded border border-slate-700"
+                className="w-24 px-2 py-1 text-xs text-right bg-slate-800 dark:bg-zinc-800 text-white rounded border border-slate-700 dark:border-zinc-600"
               />
             </div>
 
-            <div className="flex justify-between text-sm text-slate-400">
+            <div className="flex justify-between text-sm text-slate-400 dark:text-zinc-400">
               <span>Tax ({taxRateBasisPoints / 100}%):</span>
-              <span className="font-semibold text-slate-100">
+              <span className="font-semibold text-slate-100 dark:text-zinc-100">
                 {formatCurrency(calculations.taxCents, currency)}
               </span>
             </div>
 
-            <div className="pt-3 border-t border-slate-800 flex justify-between items-baseline">
+            <div className="pt-3 border-t border-slate-800 dark:border-zinc-800 flex justify-between items-baseline">
               <span className="text-base font-bold text-white">Total Amount:</span>
               <span className="text-2xl font-black text-emerald-400">
                 {formatCurrency(calculations.totalCents, currency)}

@@ -162,7 +162,7 @@ export function JobScheduler({
       <div>
         <Link
           href="/jobs"
-          className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800"
+          className="inline-flex items-center text-sm font-medium text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back to Jobs
@@ -177,9 +177,9 @@ export function JobScheduler({
       )}
 
       {/* Plumbing Service Presets */}
-      <Card className="border-blue-100 bg-blue-50/40">
+      <Card className="border-blue-100 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20">
         <CardContent className="p-4 sm:p-5 space-y-3">
-          <div className="flex items-center gap-2 text-blue-900 font-semibold text-sm">
+          <div className="flex items-center gap-2 text-blue-900 dark:text-blue-300 font-semibold text-sm">
             <Sparkles className="w-4 h-4 text-blue-600" />
             <span>Quick-Fill Plumbing Service Presets</span>
           </div>
@@ -192,7 +192,7 @@ export function JobScheduler({
                 className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all text-left ${
                   title === preset.title
                     ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                    : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50'
+                    : 'bg-white dark:bg-zinc-800/90 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-zinc-800'
                 }`}
               >
                 {preset.title}
@@ -204,8 +204,8 @@ export function JobScheduler({
 
       {/* Job Details Card */}
       <Card>
-        <CardHeader className="pb-3 border-b border-slate-100">
-          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900">
+        <CardHeader className="pb-3 border-b border-slate-100 dark:border-zinc-800">
+          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-zinc-100">
             <Wrench className="w-5 h-5 text-blue-600" />
             Job & Customer Assignment
           </CardTitle>
@@ -214,13 +214,13 @@ export function JobScheduler({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Customer select */}
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Customer <span className="text-red-500">*</span>
               </label>
               <select
                 value={customerId}
                 onChange={(e) => handleCustomerChange(e.target.value)}
-                className="w-full h-11 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-11 px-3 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {customers.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -232,13 +232,13 @@ export function JobScheduler({
 
             {/* Assigned Technician */}
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Assigned Plumber / Technician
               </label>
               <select
                 value={assignedToUserId}
                 onChange={(e) => setAssignedToUserId(e.target.value)}
-                className="w-full h-11 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-11 px-3 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Unassigned (Open Dispatch)</option>
                 {teamMembers.map((m) => (
@@ -252,7 +252,7 @@ export function JobScheduler({
 
           {/* Job Title */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
               Job Title / Service Summary <span className="text-red-500">*</span>
             </label>
             <Input
@@ -265,7 +265,7 @@ export function JobScheduler({
 
           {/* Scope Description */}
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
               Work Scope & Diagnosis Instructions
             </label>
             <textarea
@@ -273,7 +273,7 @@ export function JobScheduler({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detail specific tasks, materials needed, access codes, or diagnostic history..."
-              className="w-full p-3 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </CardContent>
@@ -281,8 +281,8 @@ export function JobScheduler({
 
       {/* Schedule & Dispatch Timing */}
       <Card>
-        <CardHeader className="pb-3 border-b border-slate-100">
-          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900">
+        <CardHeader className="pb-3 border-b border-slate-100 dark:border-zinc-800">
+          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-zinc-100">
             <Clock className="w-5 h-5 text-blue-600" />
             Schedule & Dispatch Timing
           </CardTitle>
@@ -290,7 +290,7 @@ export function JobScheduler({
         <CardContent className="p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Scheduled Arrival Time
               </label>
               <Input
@@ -301,7 +301,7 @@ export function JobScheduler({
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Estimated Completion Time
               </label>
               <Input
@@ -317,8 +317,8 @@ export function JobScheduler({
 
       {/* Service Job Location */}
       <Card>
-        <CardHeader className="pb-3 border-b border-slate-100">
-          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900">
+        <CardHeader className="pb-3 border-b border-slate-100 dark:border-zinc-800">
+          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-zinc-100">
             <MapPin className="w-5 h-5 text-blue-600" />
             Site Service Location
           </CardTitle>
@@ -326,7 +326,7 @@ export function JobScheduler({
         <CardContent className="p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Street Address <span className="text-red-500">*</span>
               </label>
               <Input
@@ -337,7 +337,7 @@ export function JobScheduler({
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Suite / Unit / Apt
               </label>
               <Input
@@ -351,7 +351,7 @@ export function JobScheduler({
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 City <span className="text-red-500">*</span>
               </label>
               <Input
@@ -362,7 +362,7 @@ export function JobScheduler({
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 State <span className="text-red-500">*</span>
               </label>
               <Input
@@ -373,7 +373,7 @@ export function JobScheduler({
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Postal Code <span className="text-red-500">*</span>
               </label>
               <Input
@@ -386,7 +386,7 @@ export function JobScheduler({
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
               Internal Dispatch Notes (Gate codes, dog warning, special tools)
             </label>
             <textarea
@@ -394,7 +394,7 @@ export function JobScheduler({
               value={internalNotes}
               onChange={(e) => setInternalNotes(e.target.value)}
               placeholder="e.g. Gate code #4829, watch out for German Shepherd in back yard, bring 100ft snake."
-              className="w-full p-3 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </CardContent>
@@ -419,7 +419,7 @@ export function JobScheduler({
       </div>
 
       {/* Sticky Mobile Bar */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl flex items-center justify-between gap-2">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur border-t border-slate-200 dark:border-zinc-800 z-50 shadow-2xl flex items-center justify-between gap-2">
         <Link href="/jobs" className="flex-1">
           <Button variant="outline" size="sm" type="button" className="w-full min-h-[44px]">
             Cancel

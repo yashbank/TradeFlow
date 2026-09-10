@@ -200,7 +200,7 @@ export function InvoiceBuilder({
       <div>
         <Link
           href="/invoices"
-          className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800"
+          className="inline-flex items-center text-sm font-medium text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back to Invoices
@@ -215,9 +215,9 @@ export function InvoiceBuilder({
       )}
 
       {/* Plumbing Service Presets */}
-      <Card className="border-blue-100 bg-blue-50/40">
+      <Card className="border-blue-100 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20">
         <CardContent className="p-4 sm:p-5 space-y-3">
-          <div className="flex items-center gap-2 text-blue-900 font-semibold text-sm">
+          <div className="flex items-center gap-2 text-blue-900 dark:text-blue-300 font-semibold text-sm">
             <Sparkles className="w-4 h-4 text-blue-600" />
             <span>1-Click Add Plumbing Service Presets</span>
           </div>
@@ -227,7 +227,7 @@ export function InvoiceBuilder({
                 key={preset.description}
                 type="button"
                 onClick={() => addItem(preset.description, 1, preset.price, preset.taxable)}
-                className="text-xs px-3 py-1.5 rounded-lg border bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50 font-medium transition-colors shadow-xs"
+                className="text-xs px-3 py-1.5 rounded-lg border bg-white dark:bg-zinc-800/90 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-zinc-800 font-medium transition-colors shadow-xs"
               >
                 + {preset.description.split('&')[0]} ({formatCurrency(preset.price * 100, currency)})
               </button>
@@ -238,8 +238,8 @@ export function InvoiceBuilder({
 
       {/* Invoice Meta Card */}
       <Card>
-        <CardHeader className="pb-3 border-b border-slate-100">
-          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900">
+        <CardHeader className="pb-3 border-b border-slate-100 dark:border-zinc-800">
+          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-zinc-100">
             <Receipt className="w-5 h-5 text-blue-600" />
             Invoice Details & Customer
           </CardTitle>
@@ -247,13 +247,13 @@ export function InvoiceBuilder({
         <CardContent className="p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="sm:col-span-1">
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Customer <span className="text-red-500">*</span>
               </label>
               <select
                 value={customerId}
                 onChange={(e) => setCustomerId(e.target.value)}
-                className="w-full h-11 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-11 px-3 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {customers.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -264,7 +264,7 @@ export function InvoiceBuilder({
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Issue Date
               </label>
               <Input
@@ -276,7 +276,7 @@ export function InvoiceBuilder({
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 Payment Due Date
               </label>
               <Input
@@ -292,8 +292,8 @@ export function InvoiceBuilder({
 
       {/* Line Items Card */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100">
-          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-zinc-100">
             <FileText className="w-5 h-5 text-blue-600" />
             Line Items & Services
           </CardTitle>
@@ -312,23 +312,23 @@ export function InvoiceBuilder({
           {items.map((item, idx) => (
             <div
               key={item.id}
-              className="p-3 sm:p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3"
+              className="p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50/50 dark:bg-zinc-800/60 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3"
             >
               <div className="flex-1">
-                <label className="text-xs font-semibold text-slate-500 sm:hidden block mb-1">
+                <label className="text-xs font-semibold text-slate-500 dark:text-zinc-400 sm:hidden block mb-1">
                   Item Description #{idx + 1}
                 </label>
                 <Input
                   value={item.description}
                   onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                   placeholder="e.g. Cleared main drain blockage with heavy snake"
-                  className="min-h-[40px] bg-white"
+                  className="min-h-[40px]"
                 />
               </div>
 
               <div className="flex items-center gap-2">
                 <div className="w-20">
-                  <label className="text-xs font-semibold text-slate-500 sm:hidden block mb-1">
+                  <label className="text-xs font-semibold text-slate-500 dark:text-zinc-400 sm:hidden block mb-1">
                     Qty
                   </label>
                   <Input
@@ -337,12 +337,12 @@ export function InvoiceBuilder({
                     step="1"
                     value={item.quantity}
                     onChange={(e) => updateItem(item.id, 'quantity', Math.max(1, parseInt(e.target.value) || 1))}
-                    className="min-h-[40px] bg-white text-center"
+                    className="min-h-[40px] text-center"
                   />
                 </div>
 
                 <div className="w-28">
-                  <label className="text-xs font-semibold text-slate-500 sm:hidden block mb-1">
+                  <label className="text-xs font-semibold text-slate-500 dark:text-zinc-400 sm:hidden block mb-1">
                     Price ({currency})
                   </label>
                   <Input
@@ -351,11 +351,11 @@ export function InvoiceBuilder({
                     step="0.01"
                     value={item.unitPrice}
                     onChange={(e) => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                    className="min-h-[40px] bg-white text-right"
+                    className="min-h-[40px] text-right"
                   />
                 </div>
 
-                <div className="w-28 text-right font-bold text-slate-800 text-sm hidden sm:block">
+                <div className="w-28 text-right font-bold text-slate-800 dark:text-zinc-200 text-sm hidden sm:block">
                   {formatCurrency(
                     Math.round((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0) * 100),
                     currency
@@ -368,8 +368,8 @@ export function InvoiceBuilder({
                     onClick={() => updateItem(item.id, 'taxable', !item.taxable)}
                     className={`px-2 py-1 text-[11px] font-semibold rounded border transition-colors ${
                       item.taxable
-                        ? 'bg-blue-50 text-blue-700 border-blue-200'
-                        : 'bg-slate-100 text-slate-400 border-slate-200'
+                        ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                        : 'bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-400 border-slate-200 dark:border-zinc-700'
                     }`}
                     title="Taxable item toggle"
                   >
@@ -380,7 +380,7 @@ export function InvoiceBuilder({
                     type="button"
                     onClick={() => removeItem(item.id)}
                     disabled={items.length <= 1}
-                    className="p-2 text-slate-400 hover:text-red-600 disabled:opacity-30 rounded"
+                    className="p-2 text-slate-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-30 rounded"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -390,15 +390,15 @@ export function InvoiceBuilder({
           ))}
 
           {/* Totals & Calculations Breakdown */}
-          <div className="pt-4 border-t border-slate-200 flex flex-col items-end space-y-2 text-sm">
-            <div className="flex justify-between w-64 text-slate-600">
+          <div className="pt-4 border-t border-slate-200 dark:border-zinc-700 flex flex-col items-end space-y-2 text-sm">
+            <div className="flex justify-between w-64 text-slate-600 dark:text-zinc-400">
               <span>Subtotal:</span>
-              <span className="font-medium text-slate-900">
+              <span className="font-medium text-slate-900 dark:text-zinc-100">
                 {formatCurrency(calculations.subtotalCents, currency)}
               </span>
             </div>
 
-            <div className="flex items-center justify-between w-64 text-slate-600">
+            <div className="flex items-center justify-between w-64 text-slate-600 dark:text-zinc-400">
               <span>Discount ({currency}):</span>
               <div className="w-24">
                 <Input
@@ -412,16 +412,16 @@ export function InvoiceBuilder({
               </div>
             </div>
 
-            <div className="flex justify-between w-64 text-slate-600">
+            <div className="flex justify-between w-64 text-slate-600 dark:text-zinc-400">
               <span>Tax ({(taxRateBasisPoints / 100).toFixed(2)}%):</span>
-              <span className="font-medium text-slate-900">
+              <span className="font-medium text-slate-900 dark:text-zinc-100">
                 {formatCurrency(calculations.taxCents, currency)}
               </span>
             </div>
 
-            <div className="flex justify-between w-64 pt-2 border-t border-slate-200 text-base font-bold text-slate-900">
+            <div className="flex justify-between w-64 pt-2 border-t border-slate-200 dark:border-zinc-700 text-base font-bold text-slate-900 dark:text-zinc-100">
               <span>Total Due:</span>
-              <span className="text-xl text-blue-600">
+              <span className="text-xl text-blue-600 dark:text-blue-400">
                 {formatCurrency(calculations.totalCents, currency)}
               </span>
             </div>
@@ -431,14 +431,14 @@ export function InvoiceBuilder({
 
       {/* Notes & Terms */}
       <Card>
-        <CardHeader className="pb-3 border-b border-slate-100">
-          <CardTitle className="text-base font-semibold text-slate-800">
+        <CardHeader className="pb-3 border-b border-slate-100 dark:border-zinc-800">
+          <CardTitle className="text-base font-semibold text-slate-800 dark:text-zinc-200">
             Invoice Notes & Payment Terms
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 space-y-4">
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
               Customer Visible Notes
             </label>
             <Input
@@ -450,14 +450,14 @@ export function InvoiceBuilder({
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
+            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
               Payment Terms & Remittance Details
             </label>
             <textarea
               rows={2}
               value={terms}
               onChange={(e) => setTerms(e.target.value)}
-              className="w-full p-3 rounded-md border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </CardContent>
@@ -493,7 +493,7 @@ export function InvoiceBuilder({
       </div>
 
       {/* Sticky Mobile Bar */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl flex items-center justify-between gap-2">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur border-t border-slate-200 dark:border-zinc-800 z-50 shadow-2xl flex items-center justify-between gap-2">
         <Button
           type="button"
           variant="outline"

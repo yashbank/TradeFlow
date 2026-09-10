@@ -15,10 +15,10 @@ export default async function NewInvoicePage({ searchParams }: NewInvoicePagePro
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
           Create New Invoice
         </h1>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500 dark:text-zinc-400">
           Direct billing & quick invoice generation with live tax calculation.
         </p>
       </div>
