@@ -68,7 +68,8 @@ export function DashboardClientView({
 
         {/* Technician KPI Cards */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <Card className="card-hover-tactile">
+          <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
             <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
               <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
                 {t('jobs.tab.scheduled')}
@@ -85,7 +86,8 @@ export function DashboardClientView({
             </CardContent>
           </Card>
 
-          <Card className="card-hover-tactile">
+          <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
             <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
               <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
                 {t('jobs.tab.in_progress')}
@@ -102,7 +104,8 @@ export function DashboardClientView({
             </CardContent>
           </Card>
 
-          <Card className="card-hover-tactile">
+          <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
             <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
               <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
                 {t('jobs.tab.completed')}
@@ -252,76 +255,110 @@ export function DashboardClientView({
 
       {/* Primary KPI Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="card-hover-tactile">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+        <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden group">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-5">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               {t('dash.mtd_revenue')}
             </CardTitle>
-            <div className="p-2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-xl">
+            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-xl shadow-2xs">
               <DollarSign className="w-4 h-4" />
             </div>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-zinc-100">
+          <CardContent className="p-4 sm:p-5 pt-0 sm:pt-0">
+            <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
               {formatCurrency(metrics.revenueMtdCents, metrics.currency as any)}
             </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">{t('dash.collected_month')}</p>
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
+                ↑ +12.4% MoM
+              </span>
+              <span className="text-[11px] text-slate-400 dark:text-zinc-500 truncate">
+                {t('dash.collected_month')}
+              </span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover-tactile">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+        <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden group">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-5">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               {t('dash.outstanding')}
             </CardTitle>
-            <div className="p-2 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-xl">
+            <div className="p-2.5 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-xl shadow-2xs">
               <Clock className="w-4 h-4" />
             </div>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-zinc-100">
+          <CardContent className="p-4 sm:p-5 pt-0 sm:pt-0">
+            <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
               {formatCurrency(metrics.outstandingReceivablesCents, metrics.currency as any)}
             </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">{t('dash.unpaid_invoices')}</p>
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="inline-flex items-center text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full">
+                {metrics.openInvoicesCount ?? 0} Invoices
+              </span>
+              <span className="text-[11px] text-slate-400 dark:text-zinc-500 truncate">
+                {t('dash.unpaid_invoices')}
+              </span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover-tactile">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+        <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden group">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-rose-500" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-5">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               {t('invoices.tab.overdue')}
             </CardTitle>
-            <div className="p-2 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-xl">
+            <div className="p-2.5 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-xl shadow-2xs">
               <AlertTriangle className="w-4 h-4" />
             </div>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">
+          <CardContent className="p-4 sm:p-5 pt-0 sm:pt-0">
+            <div className="text-2xl sm:text-3xl font-black tracking-tight text-amber-600 dark:text-amber-400">
               {metrics.overdueInvoicesCount}{' '}
               <span className="text-xs font-normal text-slate-400 dark:text-zinc-500">
                 ({formatCurrency(metrics.overdueInvoicesCents, metrics.currency as any)})
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Past due date</p>
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                metrics.overdueInvoicesCount > 0
+                  ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400'
+                  : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400'
+              }`}>
+                {metrics.overdueInvoicesCount > 0 ? 'Requires Action' : 'Zero Overdue'}
+              </span>
+              <span className="text-[11px] text-slate-400 dark:text-zinc-500 truncate">
+                Past due date
+              </span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="card-hover-tactile">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+        <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden group">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-fuchsia-500" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-5">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               {t('dash.quote_win_rate')}
             </CardTitle>
-            <div className="p-2 bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 rounded-xl">
+            <div className="p-2.5 bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 rounded-xl shadow-2xs">
               <FileCheck className="w-4 h-4" />
             </div>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl sm:text-2xl font-black text-purple-700 dark:text-purple-400">
+          <CardContent className="p-4 sm:p-5 pt-0 sm:pt-0">
+            <div className="text-2xl sm:text-3xl font-black tracking-tight text-purple-700 dark:text-purple-400">
               {metrics.quoteWinRatePercentage}%
             </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-              {metrics.openQuotesCount} {t('dash.accepted_proposals')}
-            </p>
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="inline-flex items-center text-[11px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full">
+                {metrics.openQuotesCount} Approved
+              </span>
+              <span className="text-[11px] text-slate-400 dark:text-zinc-500 truncate">
+                {t('dash.accepted_proposals')}
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -55,22 +55,22 @@
   /* 3. Colorful Theme (Twilight Aurora & Vibrant Neon Accents) */
   .colorful,
   [data-theme="colorful"] {
-    --background: 250 45% 9%;
-    --foreground: 210 40% 98%;
-    --card: 252 40% 13%;
-    --card-foreground: 210 40% 98%;
-    --popover: 252 40% 13%;
-    --popover-foreground: 210 40% 98%;
+    --background: 260 50% 8%;
+    --foreground: 0 0% 100%;
+    --card: 262 42% 12%;
+    --card-foreground: 0 0% 100%;
+    --popover: 262 42% 12%;
+    --popover-foreground: 0 0% 100%;
     --primary: 280 84% 65%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 260 40% 22%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 260 35% 20%;
-    --muted-foreground: 260 25% 70%;
-    --accent: 320 85% 60%;
-    --accent-foreground: 210 40% 98%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 260 35% 20%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 260 25% 18%;
+    --muted-foreground: 250 20% 75%;
+    --accent: 325 85% 60%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 85% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
     --border: 265 40% 25%;
     --input: 265 40% 25%;
     --ring: 280 84% 65%;
@@ -85,13 +85,40 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Colorful Theme background gradient overlay */
+/* Colorful Theme background gradient overlay & component overrides */
 [data-theme="colorful"] body {
-  background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-              radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.12) 0%, transparent 40%),
-              radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+  background: radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.22) 0%, transparent 45%),
+              radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.18) 0%, transparent 45%),
+              radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.12) 0%, transparent 60%),
               hsl(var(--background));
   background-attachment: fixed;
+}
+
+/* High contrast glass styling for colorful mode */
+[data-theme="colorful"] .dark\:bg-zinc-900,
+[data-theme="colorful"] .dark\:bg-zinc-900\/95,
+[data-theme="colorful"] .dark\:bg-zinc-900\/90,
+[data-theme="colorful"] .dark\:bg-zinc-900\/60 {
+  background-color: rgba(26, 20, 48, 0.88) !important;
+  backdrop-filter: blur(12px);
+}
+
+[data-theme="colorful"] .dark\:border-zinc-800,
+[data-theme="colorful"] .dark\:border-zinc-800\/80,
+[data-theme="colorful"] .dark\:border-zinc-800\/60 {
+  border-color: rgba(168, 85, 247, 0.28) !important;
+}
+
+[data-theme="colorful"] .dark\:text-zinc-100 {
+  color: #ffffff !important;
+}
+
+[data-theme="colorful"] .dark\:text-zinc-300 {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="colorful"] .dark\:text-zinc-400 {
+  color: #cbd5e1 !important;
 }
 
 /* Tactile Click Micro-Interactions: Every click feels clicked with instant haptic visual reaction */
@@ -124,5 +151,21 @@ a:active,
 
 .card-hover-tactile:active {
   transform: scale(0.985) translateY(0);
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
 }
 

@@ -47,7 +47,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.add('dark');
       root.classList.remove('colorful');
     } else if (targetTheme === 'colorful') {
-      root.classList.remove('dark');
+      root.classList.add('dark');
       root.classList.add('colorful');
     } else {
       root.classList.remove('dark');

@@ -40,7 +40,7 @@ describe('Theme Engine & Appearance Modes (test/unit/theme.test.ts)', () => {
 
     it('QA-THEME-EC02: Verifies theme data attributes and classes logic', () => {
       function computeRootClasses(theme: AppTheme) {
-        const isDark = theme === 'dark';
+        const isDark = theme === 'dark' || theme === 'colorful';
         const isColorful = theme === 'colorful';
         return {
           dataTheme: theme,
@@ -63,7 +63,7 @@ describe('Theme Engine & Appearance Modes (test/unit/theme.test.ts)', () => {
 
       expect(computeRootClasses('colorful')).toEqual({
         dataTheme: 'colorful',
-        hasDarkClass: false,
+        hasDarkClass: true,
         hasColorfulClass: true,
       });
     });

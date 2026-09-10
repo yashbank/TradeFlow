@@ -24,14 +24,13 @@ export function LanguageSelector() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Change Language"
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-white/90 dark:bg-zinc-800/90 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 text-xs font-semibold shadow-2xs hover:shadow-xs transition-all active:scale-95 min-h-[36px]"
+        aria-label={`Current language: ${currentLanguage.nativeName}. Click to change.`}
+        title={`Language: ${currentLanguage.nativeName}`}
+        className="flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200/80 hover:border-slate-300 bg-white/90 dark:bg-zinc-800/90 dark:border-zinc-700/80 text-slate-700 dark:text-zinc-200 shadow-2xs hover:shadow-xs transition-all active:scale-90 hover:scale-105"
       >
-        <span className="text-base leading-none" role="img" aria-label={currentLanguage.name}>
+        <span className="text-lg leading-none select-none" role="img" aria-label={currentLanguage.name}>
           {currentLanguage.flag}
         </span>
-        <span className="hidden sm:inline font-medium">{currentLanguage.nativeName}</span>
-        <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-400" />
       </button>
 
       {isOpen && (
