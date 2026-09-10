@@ -6,6 +6,8 @@ export const metadata = {
   description: 'Update your TradeFlow account password',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function ResetPasswordPage() {
   return <ResetPasswordForm />;
 }

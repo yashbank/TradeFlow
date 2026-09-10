@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
+const isVercel = Boolean(process.env.VERCEL);
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  output: "standalone",
+  serverExternalPackages: ["@react-pdf/renderer"],
+  ...(isVercel ? {} : { output: "standalone" }),
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",
