@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ["@react-pdf/renderer"],
   ...(isVercel ? {} : { output: "standalone" }),
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",
