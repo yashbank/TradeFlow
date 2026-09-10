@@ -8,6 +8,7 @@ import { updateOrganizationAction } from '@/actions/organization';
 import { createCheckoutSessionAction, createPortalSessionAction } from '@/actions/billing';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Save, Check } from 'lucide-react';
+import { TeamManagement } from '@/components/team/TeamManagement';
 import type { Organization, Subscription } from '@/types/database';
 
 interface SettingsFormProps {
@@ -241,6 +242,9 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
           </CardFooter>
         </form>
       </Card>
+
+      {/* Field Technicians & Crew Management */}
+      <TeamManagement />
     </div>
   );
 }

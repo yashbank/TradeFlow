@@ -26,6 +26,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 88%;
     --input: 214 32% 88%;
+    --placeholder: 215 25% 38%;
     --ring: 199 89% 48%;
     --radius: 1rem;
 
@@ -61,6 +62,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 217 33% 18%;
     --input: 217 33% 18%;
+    --placeholder: 215 20% 75%;
     --ring: 187 92% 49%;
 
     /* Glassmorphism Tokens */
@@ -95,6 +97,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 268 40% 28%;
     --input: 268 40% 28%;
+    --placeholder: 250 35% 85%;
     --ring: 275 88% 68%;
 
     /* Glassmorphism Tokens */

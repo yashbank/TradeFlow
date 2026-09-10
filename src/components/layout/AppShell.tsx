@@ -17,6 +17,7 @@ import {
 import { logoutUserAction } from '@/actions/auth';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { LanguageSelector } from '@/components/i18n/LanguageSelector';
+import { CurrencySelector } from '@/components/currency/CurrencySelector';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import type { Organization, UserProfile, UserRole } from '@/types/database';
@@ -172,10 +173,11 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
           </span>
         </div>
 
-        {/* Controls: Theme, Language, Logout */}
-        <div className="flex items-center gap-2">
+        {/* Controls: Theme, Language, Currency, Logout */}
+        <div className="flex items-center gap-1.5">
           <ThemeToggle />
           <LanguageSelector />
+          <CurrencySelector />
           <form action={logoutUserAction}>
             <button
               type="submit"
@@ -203,6 +205,7 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <LanguageSelector />
+            <CurrencySelector />
           </div>
         </div>
 
