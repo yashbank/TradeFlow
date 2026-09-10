@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { RecordPaymentModal } from './RecordPaymentModal';
 import { sendInvoiceAction, voidInvoiceAction } from '@/actions/invoices';
 import { Send, DollarSign, Ban, Copy, Check, ExternalLink, Download } from 'lucide-react';
+import { useToast } from '@/lib/toast/ToastContext';
 import type { Invoice } from '@/types/database';
 
 interface InvoiceDetailActionsProps {
@@ -15,15 +16,41 @@ interface InvoiceDetailActionsProps {
 
 export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailActionsProps) {
   const router = useRouter();
+  const toast = useToast();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function copyLink() {
     navigator.clipboard.writeText(publicUrl);
     setCopied(true);
+    toast.success('Link Copied', 'Public invoice link copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleDownloadPdf() {
+    setDownloading(true);
+    toast.info('Downloading Invoice...', 'Preparing PDF file');
+    try {
+      const res = await fetch(`/api/invoices/${invoice.id}/pdf`);
+      if (!res.ok) throw new Error('PDF generation failed');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${invoice.invoice_number || invoice.id.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Invoice Downloaded', 'PDF saved to your device');
+    } catch (err: any) {
+      toast.error('Download Failed', err.message || 'Could not download PDF');
+    } finally {
+      setDownloading(false);
+    }
   }
 
   async function handleSend() {
@@ -33,7 +60,9 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
     setLoading(false);
     if (!res.success) {
       setError(res.error || 'Failed to send invoice');
+      toast.error('Failed to Send', res.error || 'Failed to send invoice');
     } else {
+      toast.success('Invoice Sent', 'Customer has been notified');
       router.refresh();
     }
   }
@@ -48,7 +77,9 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
     setLoading(false);
     if (!res.success) {
       setError(res.error || 'Failed to void invoice');
+      toast.error('Void Failed', res.error || 'Failed to void invoice');
     } else {
+      toast.info('Invoice Voided', 'Invoice status updated to void');
       router.refresh();
     }
   }
@@ -76,12 +107,16 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
           </Button>
         </a>
 
-        <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer">
-          <Button variant="outline" size="sm" className="min-h-[44px]">
-            <Download className="w-4 h-4 mr-1.5 text-slate-600" />
-            Download PDF
-          </Button>
-        </a>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDownloadPdf}
+          disabled={downloading}
+          className="min-h-[44px]"
+        >
+          <Download className="w-4 h-4 mr-1.5 text-slate-600" />
+          {downloading ? 'Downloading...' : 'Download PDF'}
+        </Button>
 
         {invoice.status === 'draft' && (
           <Button size="sm" onClick={handleSend} disabled={loading} className="min-h-[44px]">
@@ -118,12 +153,18 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
 
       {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl flex items-center justify-between gap-2">
-        <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer" className="flex-1">
-          <Button variant="outline" size="sm" className="w-full min-h-[44px]">
+        <div className="flex-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPdf}
+            disabled={downloading}
+            className="w-full min-h-[44px]"
+          >
             <Download className="w-4 h-4 mr-1" />
-            PDF
+            {downloading ? 'PDF...' : 'PDF'}
           </Button>
-        </a>
+        </div>
 
         {invoice.status === 'draft' && (
           <Button

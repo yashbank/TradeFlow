@@ -68,7 +68,7 @@ export function DashboardClientView({
 
         {/* Technician KPI Cards */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden">
+          <Card className="glass-card-interactive card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
             <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
               <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
@@ -86,7 +86,7 @@ export function DashboardClientView({
             </CardContent>
           </Card>
 
-          <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden">
+          <Card className="glass-card-interactive card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
             <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
               <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
@@ -104,7 +104,7 @@ export function DashboardClientView({
             </CardContent>
           </Card>
 
-          <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden">
+          <Card className="glass-card-interactive card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 shadow-xs relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
             <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
               <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
@@ -255,7 +255,7 @@ export function DashboardClientView({
 
       {/* Primary KPI Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden group">
+        <Card className="glass-card-interactive card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 shadow-xs relative overflow-hidden group">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-5">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
@@ -280,7 +280,7 @@ export function DashboardClientView({
           </CardContent>
         </Card>
 
-        <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden group">
+        <Card className="glass-card-interactive card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 shadow-xs relative overflow-hidden group">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-5">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
@@ -305,7 +305,7 @@ export function DashboardClientView({
           </CardContent>
         </Card>
 
-        <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden group">
+        <Card className="glass-card-interactive card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 shadow-xs relative overflow-hidden group">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-rose-500" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-5">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
@@ -337,7 +337,7 @@ export function DashboardClientView({
           </CardContent>
         </Card>
 
-        <Card className="card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/90 shadow-xs relative overflow-hidden group">
+        <Card className="glass-card-interactive card-hover-tactile rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 shadow-xs relative overflow-hidden group">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-fuchsia-500" />
           <CardHeader className="flex flex-row items-center justify-between pb-2 p-4 sm:p-5">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">

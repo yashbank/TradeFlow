@@ -3,6 +3,7 @@
 // ==============================================================================
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthService } from './AuthService';
 import { calculateDocumentTotals } from '@/lib/finance/calculator';
 import { transitionInvoiceStatus } from '@/lib/state/machines';
@@ -389,7 +390,7 @@ export class InvoiceService {
    * Public View: Retrieves invoice by public token.
    */
   static async getByPublicToken(token: string) {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
       .from('invoices')

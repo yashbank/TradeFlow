@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { respondToQuotePublicAction } from '@/actions/public-quotes';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { CheckCircle2, XCircle, Phone, Mail, Wrench, ShieldCheck, Download } from 'lucide-react';
+import { useToast } from '@/lib/toast/ToastContext';
 
 interface PublicQuotePortalProps {
   quote: any;
@@ -14,6 +15,7 @@ interface PublicQuotePortalProps {
 }
 
 export function PublicQuotePortal({ quote, token }: PublicQuotePortalProps) {
+  const toast = useToast();
   const [currentStatus, setCurrentStatus] = useState<string>(quote.status);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -22,11 +24,36 @@ export function PublicQuotePortal({ quote, token }: PublicQuotePortalProps) {
   );
   const [rejectionReason, setRejectionReason] = useState('');
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleDownloadPdf() {
+    setDownloading(true);
+    toast.info('Downloading Proposal...', 'Preparing PDF file');
+    try {
+      const res = await fetch(`/api/quotes/${quote.id}/pdf?token=${token}`);
+      if (!res.ok) throw new Error('PDF generation failed');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `quote-${quote.quote_number || quote.id.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Quote Downloaded', 'PDF saved to your device');
+    } catch (err: any) {
+      toast.error('Download Failed', err.message || 'Could not download PDF');
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   async function handleAccept() {
     if (!signerName.trim()) {
       setError('Please type your full name to approve this quote.');
+      toast.error('Name Required', 'Please type your full name to approve this quote');
       return;
     }
 
@@ -42,8 +69,10 @@ export function PublicQuotePortal({ quote, token }: PublicQuotePortalProps) {
     if (res.success) {
       setCurrentStatus('accepted');
       setShowAcceptModal(false);
+      toast.success('Quote Approved!', 'Thank you! The plumbing team will contact you shortly.');
     } else {
       setError(res.error || 'Failed to approve quote');
+      toast.error('Approval Error', res.error || 'Failed to approve quote');
     }
   }
 
@@ -60,8 +89,10 @@ export function PublicQuotePortal({ quote, token }: PublicQuotePortalProps) {
     if (res.success) {
       setCurrentStatus('rejected');
       setShowRejectModal(false);
+      toast.info('Quote Declined', 'Thank you for your feedback.');
     } else {
       setError(res.error || 'Failed to decline quote');
+      toast.error('Decline Error', res.error || 'Failed to decline quote');
     }
   }
 
@@ -82,15 +113,16 @@ export function PublicQuotePortal({ quote, token }: PublicQuotePortalProps) {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <a
-              href={`/api/quotes/${quote.id}/pdf?token=${token}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-2 rounded-md hover:bg-slate-200 min-h-[44px]"
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadPdf}
+              disabled={downloading}
+              className="text-xs font-semibold text-slate-700 bg-slate-100 min-h-[44px]"
             >
               <Download className="w-3.5 h-3.5 mr-1.5" />
-              PDF
-            </a>
+              {downloading ? 'Downloading...' : 'PDF'}
+            </Button>
             {quote.organization?.phone && (
               <a
                 href={`tel:${quote.organization.phone}`}

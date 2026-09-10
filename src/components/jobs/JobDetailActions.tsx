@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { updateJobStatusAction, convertJobToInvoiceAction } from '@/actions/jobs';
 import { Play, CheckCircle, Receipt, X } from 'lucide-react';
+import { useToast } from '@/lib/toast/ToastContext';
 import type { Job } from '@/types/database';
 
 interface JobDetailActionsProps {
@@ -14,6 +15,7 @@ interface JobDetailActionsProps {
 
 export function JobDetailActions({ job }: JobDetailActionsProps) {
   const router = useRouter();
+  const toast = useToast();
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [internalNotes, setInternalNotes] = useState(job.internal_notes || '');
   const [loading, setLoading] = useState(false);
@@ -26,7 +28,9 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
     setLoading(false);
     if (!res.success) {
       setError(res.error || 'Failed to start job');
+      toast.error('Start Failed', res.error || 'Failed to start job');
     } else {
+      toast.success('Job Started', `Work order #${job.job_number || ''} is now In Progress`);
       router.refresh();
     }
   }
@@ -38,7 +42,9 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
     setLoading(false);
     if (!res.success) {
       setError(res.error || 'Failed to complete job');
+      toast.error('Completion Failed', res.error || 'Failed to complete job');
     } else {
+      toast.success('Job Completed', `Work order #${job.job_number || ''} marked complete`);
       setShowCompleteModal(false);
       router.refresh();
     }
@@ -51,7 +57,9 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
     setLoading(false);
     if (!res.success || !res.data) {
       setError(res.error || 'Failed to convert job to invoice');
+      toast.error('Invoice Creation Failed', res.error || 'Failed to convert job to invoice');
     } else {
+      toast.success('Invoice Created', `Invoice #${res.data.invoice_number || ''} generated`);
       router.push(`/invoices/${res.data.id}`);
     }
   }

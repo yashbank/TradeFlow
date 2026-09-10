@@ -23,6 +23,7 @@ import {
   X,
   PhoneCall,
 } from 'lucide-react';
+import { useToast } from '@/lib/toast/ToastContext';
 import type { Quote } from '@/types/database';
 
 interface QuoteDetailActionsProps {
@@ -32,8 +33,10 @@ interface QuoteDetailActionsProps {
 
 export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps) {
   const router = useRouter();
+  const toast = useToast();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // In-app quote approval & decline modal states
@@ -49,7 +52,31 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
   function copyLink() {
     navigator.clipboard.writeText(publicUrl);
     setCopied(true);
+    toast.success('Link Copied', 'Approval link copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleDownloadPdf() {
+    setDownloading(true);
+    toast.info('Downloading Quote...', 'Preparing PDF proposal');
+    try {
+      const res = await fetch(`/api/quotes/${quote.id}/pdf`);
+      if (!res.ok) throw new Error('PDF generation failed');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `quote-${quote.quote_number || quote.id.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Quote Downloaded', 'PDF saved to your device');
+    } catch (err: any) {
+      toast.error('Download Failed', err.message || 'Could not download PDF');
+    } finally {
+      setDownloading(false);
+    }
   }
 
   async function handleSend() {
@@ -59,7 +86,9 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
     setLoading(false);
     if (!res.success) {
       setError(res.error || 'Failed to send quote');
+      toast.error('Failed to Send', res.error || 'Failed to send quote');
     } else {
+      toast.success('Quote Sent', 'Customer has received the proposal');
       router.refresh();
     }
   }
@@ -71,13 +100,17 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
     if (!res.success) {
       setLoading(false);
       setError(res.error || 'Failed to approve quote');
+      toast.error('Approval Failed', res.error || 'Failed to approve quote');
       return;
     }
+
+    toast.success('Quote Approved', 'Proposal has been approved');
 
     if (autoConvert) {
       const convRes = await convertQuoteToJobAction(quote.id);
       setLoading(false);
       if (convRes.success && convRes.data) {
+        toast.success('Job Created', `Job #${convRes.data.job_number || ''} created from quote`);
         router.push(`/jobs/${convRes.data.id}`);
         return;
       }
@@ -95,7 +128,9 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
     setLoading(false);
     if (!res.success) {
       setError(res.error || 'Failed to decline quote');
+      toast.error('Decline Failed', res.error || 'Failed to decline quote');
     } else {
+      toast.info('Quote Declined', 'Quote marked as rejected');
       setShowDeclineModal(false);
       router.refresh();
     }
@@ -108,7 +143,9 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
     setLoading(false);
     if (!res.success || !res.data) {
       setError(res.error || 'Failed to convert quote to job');
+      toast.error('Conversion Failed', res.error || 'Failed to convert quote');
     } else {
+      toast.success('Job Created', `Work order #${res.data.job_number || ''} is now active`);
       router.push(`/jobs/${res.data.id}`);
     }
   }
@@ -137,12 +174,16 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
           </Button>
         </a>
 
-        <a href={`/api/quotes/${quote.id}/pdf`} target="_blank" rel="noopener noreferrer">
-          <Button variant="outline" size="sm" className="min-h-[44px]">
-            <Download className="w-4 h-4 mr-1.5 text-slate-600" />
-            Download PDF
-          </Button>
-        </a>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDownloadPdf}
+          disabled={downloading}
+          className="min-h-[44px]"
+        >
+          <Download className="w-4 h-4 mr-1.5 text-slate-600" />
+          {downloading ? 'Downloading...' : 'Download PDF'}
+        </Button>
 
         {quote.status === 'draft' && (
           <Button variant="outline" size="sm" onClick={handleSend} disabled={loading} className="min-h-[44px]">
@@ -193,12 +234,18 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
 
       {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur border-t border-slate-200 z-50 shadow-2xl flex items-center justify-between gap-2">
-        <a href={`/api/quotes/${quote.id}/pdf`} target="_blank" rel="noopener noreferrer" className="flex-1">
-          <Button variant="outline" size="sm" className="w-full min-h-[44px]">
+        <div className="flex-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPdf}
+            disabled={downloading}
+            className="w-full min-h-[44px]"
+          >
             <Download className="w-4 h-4 mr-1" />
-            PDF
+            {downloading ? 'PDF...' : 'PDF'}
           </Button>
-        </a>
+        </div>
 
         {isPending && (
           <Button

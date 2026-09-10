@@ -3,6 +3,7 @@
 // ==============================================================================
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthService } from './AuthService';
 import { calculateDocumentTotals } from '@/lib/finance/calculator';
 import { transitionQuoteStatus } from '@/lib/state/machines';
@@ -193,7 +194,7 @@ export class QuoteService {
    * Public View: Retrieves quote by public token (no authentication required).
    */
   static async getByPublicToken(token: string) {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
       .from('quotes')
@@ -216,7 +217,7 @@ export class QuoteService {
    * Public Portal: Accept or reject a quote via public token.
    */
   static async respondPublic(token: string, input: PublicQuoteRespondInput, ip?: string) {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // First try atomic RPC
     try {

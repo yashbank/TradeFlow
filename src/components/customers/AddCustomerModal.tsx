@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { createCustomerAction } from '@/actions/customers';
 import { Plus, X } from 'lucide-react';
+import { useToast } from '@/lib/toast/ToastContext';
 
 export function AddCustomerModal() {
+  const toast = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,9 +39,11 @@ export function AddCustomerModal() {
     setLoading(false);
 
     if (res.success) {
+      toast.success('Customer Created', `${payload.first_name} ${payload.last_name} added successfully`);
       setIsOpen(false);
     } else {
       setError(res.error || 'Failed to save customer');
+      toast.error('Failed to Create Customer', res.error || 'Failed to save customer');
     }
   }
 

@@ -3,77 +3,107 @@
 @tailwind utilities;
 
 @layer base {
-  /* 1. Light Theme (Default Crisp Daytime) */
+  /* ==========================================================================
+     THEME 1: FRESH STREAM (Crisp Aquatic Slate & Daylight Porcelain)
+     ========================================================================== */
   :root,
   [data-theme="light"] {
-    --background: 210 40% 98%;
+    --background: 210 50% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11.2%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 204 94% 94%;
+    --secondary-foreground: 200 98% 39%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222 47% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
-    --radius: 0.625rem;
+    --muted-foreground: 215 16% 40%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 199 89% 48%;
+    --radius: 1rem;
+
+    /* Glassmorphism Tokens */
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-bg-hover: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(226, 232, 240, 0.85);
+    --glass-specular: rgba(255, 255, 255, 0.95);
+    --glass-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+    --hydro-glow: rgba(14, 165, 233, 0.25);
   }
 
-  /* 2. Dark Theme (Midnight Obsidian & High Contrast Slate) */
+  /* ==========================================================================
+     THEME 2: DEEP DRAINAGE (Obsidian Midnight with Electric Cyan Glow)
+     ========================================================================== */
   .dark,
   [data-theme="dark"] {
     --background: 224 71% 4%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 9%;
+    --card: 222 47% 8%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 9%;
+    --popover: 222 47% 8%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 187 92% 49%;
+    --primary-foreground: 222 47% 4%;
+    --secondary: 217 33% 14%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 40.6%;
+    --muted: 217 33% 13%;
+    --muted-foreground: 215 20% 70%;
+    --accent: 187 92% 49%;
+    --accent-foreground: 222 47% 4%;
+    --destructive: 0 62% 45%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: 217 33% 16%;
+    --input: 217 33% 16%;
+    --ring: 187 92% 49%;
+
+    /* Glassmorphism Tokens */
+    --glass-bg: rgba(11, 15, 25, 0.82);
+    --glass-bg-hover: rgba(15, 23, 42, 0.9);
+    --glass-border: rgba(30, 41, 59, 0.8);
+    --glass-specular: rgba(255, 255, 255, 0.16);
+    --glass-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.6), 0 0 20px -3px rgba(6, 182, 212, 0.15);
+    --hydro-glow: rgba(6, 182, 212, 0.3);
   }
 
-  /* 3. Colorful Theme (Twilight Aurora & Vibrant Neon Accents) */
+  /* ==========================================================================
+     THEME 3: HYDRO NEON (Twilight Violet & Iridescent Liquid Aurora)
+     ========================================================================== */
   .colorful,
   [data-theme="colorful"] {
-    --background: 260 50% 8%;
+    --background: 265 55% 6%;
     --foreground: 0 0% 100%;
-    --card: 262 42% 12%;
+    --card: 268 45% 11%;
     --card-foreground: 0 0% 100%;
-    --popover: 262 42% 12%;
+    --popover: 268 45% 11%;
     --popover-foreground: 0 0% 100%;
-    --primary: 280 84% 65%;
+    --primary: 275 88% 68%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 260 35% 20%;
+    --secondary: 265 35% 18%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 260 25% 18%;
-    --muted-foreground: 250 20% 75%;
-    --accent: 325 85% 60%;
+    --muted: 265 30% 15%;
+    --muted-foreground: 250 25% 82%;
+    --accent: 326 90% 64%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 85% 60%;
+    --destructive: 0 90% 65%;
     --destructive-foreground: 0 0% 100%;
-    --border: 265 40% 25%;
-    --input: 265 40% 25%;
-    --ring: 280 84% 65%;
+    --border: 268 40% 24%;
+    --input: 268 40% 24%;
+    --ring: 275 88% 68%;
+
+    /* Glassmorphism Tokens */
+    --glass-bg: rgba(22, 12, 44, 0.82);
+    --glass-bg-hover: rgba(30, 16, 60, 0.92);
+    --glass-border: rgba(168, 85, 247, 0.35);
+    --glass-specular: rgba(255, 255, 255, 0.22);
+    --glass-shadow: 0 14px 35px -8px rgba(9, 4, 20, 0.7), 0 0 25px -4px rgba(168, 85, 247, 0.25);
+    --hydro-glow: rgba(168, 85, 247, 0.4);
   }
 }
 
@@ -85,43 +115,94 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Colorful Theme background gradient overlay & component overrides */
-[data-theme="colorful"] body {
-  background: radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.22) 0%, transparent 45%),
-              radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.18) 0%, transparent 45%),
-              radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.12) 0%, transparent 60%),
-              hsl(var(--background));
+/* Theme background overlays */
+[data-theme="light"] body {
+  background: 
+    radial-gradient(ellipse at top left, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(2, 132, 199, 0.06) 0%, transparent 50%),
+    #F8FAFC;
   background-attachment: fixed;
 }
 
-/* High contrast glass styling for colorful mode */
-[data-theme="colorful"] .dark\:bg-zinc-900,
-[data-theme="colorful"] .dark\:bg-zinc-900\/95,
-[data-theme="colorful"] .dark\:bg-zinc-900\/90,
-[data-theme="colorful"] .dark\:bg-zinc-900\/60 {
-  background-color: rgba(26, 20, 48, 0.88) !important;
-  backdrop-filter: blur(12px);
+[data-theme="dark"] body {
+  background: 
+    radial-gradient(circle at 18% 20%, rgba(6, 182, 212, 0.09) 0%, transparent 45%),
+    radial-gradient(circle at 82% 78%, rgba(14, 116, 144, 0.08) 0%, transparent 45%),
+    #030712;
+  background-attachment: fixed;
 }
 
-[data-theme="colorful"] .dark\:border-zinc-800,
-[data-theme="colorful"] .dark\:border-zinc-800\/80,
-[data-theme="colorful"] .dark\:border-zinc-800\/60 {
-  border-color: rgba(168, 85, 247, 0.28) !important;
+[data-theme="colorful"] body {
+  background: 
+    radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.22) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.18) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
+    #090414;
+  background-attachment: fixed;
 }
 
-[data-theme="colorful"] .dark\:text-zinc-100 {
-  color: #ffffff !important;
+/* ==========================================================================
+   OPTICAL GLASSMORPHISM & SPECULAR LIGHTING UTILITIES
+   ========================================================================== */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 
+    inset 0 1px 1px 0 var(--glass-specular),
+    var(--glass-shadow);
 }
 
-[data-theme="colorful"] .dark\:text-zinc-300 {
-  color: #f1f5f9 !important;
+.glass-panel-elevated {
+  background: var(--glass-bg);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 
+    inset 0 1.5px 1px 0 var(--glass-specular),
+    var(--glass-shadow);
 }
 
-[data-theme="colorful"] .dark\:text-zinc-400 {
-  color: #cbd5e1 !important;
+.glass-card-interactive {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 
+    inset 0 1px 1px 0 var(--glass-specular),
+    var(--glass-shadow);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.22s ease,
+              background-color 0.22s ease,
+              border-color 0.22s ease;
 }
 
-/* Tactile Click Micro-Interactions: Every click feels clicked with instant haptic visual reaction */
+.glass-card-interactive:hover {
+  transform: translateY(-2px);
+  background: var(--glass-bg-hover);
+}
+
+.glass-card-interactive:active {
+  transform: translateY(0) scale(0.985);
+}
+
+/* Fluid Spring Micro-Interactions on Icons */
+.spring-icon {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.25s ease;
+  transform-origin: center;
+}
+
+.group:hover .spring-icon,
+button:hover .spring-icon,
+a:hover .spring-icon {
+  transform: scale(1.15) rotate(-4deg);
+  filter: drop-shadow(0 2px 6px var(--hydro-glow));
+}
+
+/* Tactile Click Micro-Interactions */
 button,
 a,
 [role="button"],
@@ -140,7 +221,7 @@ a:active,
   transform: scale(0.965);
 }
 
-/* Smooth card transitions and hover elevations */
+/* Card hover tactile elevation */
 .card-hover-tactile {
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease, border-color 0.18s ease;
 }
@@ -153,7 +234,17 @@ a:active,
   transform: scale(0.985) translateY(0);
 }
 
-/* Custom minimal scrollbar */
+/* Toast Progress Countdown Bar */
+@keyframes shrinkWidth {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Minimal Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -168,4 +259,3 @@ a:active,
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.5);
 }
-

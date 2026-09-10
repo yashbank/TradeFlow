@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme, type AppTheme } from '@/lib/theme/ThemeContext';
-import { Sun, Moon, Palette, Check, ChevronDown } from 'lucide-react';
+import { Droplets, Shield, Sparkles, Check } from 'lucide-react';
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -23,29 +23,29 @@ export function ThemeToggle() {
     key: AppTheme;
     label: string;
     description: string;
-    icon: typeof Sun;
+    icon: typeof Droplets;
     pillClass: string;
   }[] = [
     {
       key: 'light',
-      label: 'Light Mode',
-      description: 'Crisp, high-contrast daytime UI',
-      icon: Sun,
-      pillClass: 'bg-amber-100 text-amber-600',
+      label: 'Fresh Stream',
+      description: 'Crisp aquatic slate & clean daylight',
+      icon: Droplets,
+      pillClass: 'bg-sky-100 text-sky-600 border border-sky-200/80',
     },
     {
       key: 'dark',
-      label: 'Dark Mode',
-      description: 'Deep zinc midnight palette',
-      icon: Moon,
-      pillClass: 'bg-indigo-900/60 text-indigo-300',
+      label: 'Deep Drainage',
+      description: 'Obsidian midnight with electric cyan glow',
+      icon: Shield,
+      pillClass: 'bg-cyan-950/70 text-cyan-400 border border-cyan-800/60 shadow-xs shadow-cyan-500/20',
     },
     {
       key: 'colorful',
-      label: 'Colorful Theme',
-      description: 'Vibrant neon gradients & rich accents',
-      icon: Palette,
-      pillClass: 'bg-gradient-to-r from-pink-500 to-purple-500 text-white',
+      label: 'Hydro Neon',
+      description: 'Twilight violet & iridescent liquid aurora',
+      icon: Sparkles,
+      pillClass: 'bg-gradient-to-tr from-purple-600 to-pink-500 text-white shadow-xs shadow-purple-500/30',
     },
   ];
 
@@ -57,23 +57,23 @@ export function ThemeToggle() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label={`Current theme: ${currentOption.label}. Click to switch appearance.`}
-        title={`Theme: ${currentOption.label}`}
-        className="flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200/80 hover:border-slate-300 bg-white/90 dark:bg-zinc-800/90 dark:border-zinc-700/80 text-slate-700 dark:text-zinc-200 shadow-2xs hover:shadow-xs transition-all active:scale-90 hover:scale-105"
+        aria-label={`Current identity: ${currentOption.label}. Click to switch theme.`}
+        title={`Fluid Theme: ${currentOption.label}`}
+        className="group flex items-center justify-center w-9 h-9 rounded-xl glass-panel-elevated hover:scale-105 active:scale-95 transition-all text-slate-800 dark:text-zinc-100"
       >
-        <div className={`p-1.5 rounded-lg ${currentOption.pillClass} transition-all`}>
+        <div className={`p-1.5 rounded-lg ${currentOption.pillClass} transition-all spring-icon`}>
           <CurrentIcon className="w-4 h-4" />
         </div>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-          <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 flex items-center gap-1.5">
-            <Palette className="w-3.5 h-3.5" />
-            <span>Select Appearance</span>
+        <div className="absolute right-0 mt-2.5 w-64 rounded-2xl glass-panel-elevated py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+          <div className="px-3.5 py-1.5 text-[10px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest border-b border-slate-200/50 dark:border-zinc-800/60 flex items-center gap-1.5">
+            <Droplets className="w-3.5 h-3.5 text-sky-500" />
+            <span>Fluid Atmosphere Engine</span>
           </div>
 
-          <div className="p-1 space-y-1">
+          <div className="p-1.5 space-y-1">
             {themeOptions.map((opt) => {
               const Icon = opt.icon;
               const isSelected = opt.key === theme;
@@ -85,22 +85,24 @@ export function ThemeToggle() {
                     setTheme(opt.key);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-colors text-left ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all text-left group ${
                     isSelected
-                      ? 'bg-blue-50 text-blue-700 font-semibold dark:bg-blue-950/60 dark:text-blue-300'
-                      : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                      ? 'bg-sky-500/15 text-sky-900 dark:text-sky-200 font-bold border border-sky-500/30'
+                      : 'text-slate-700 dark:text-zinc-200 hover:bg-slate-100/70 dark:hover:bg-zinc-800/60'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className={`p-1.5 rounded-md ${opt.pillClass}`}>
+                    <div className={`p-1.5 rounded-lg ${opt.pillClass} spring-icon`}>
                       <Icon className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="font-semibold leading-tight">{opt.label}</p>
-                      <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5">{opt.description}</p>
+                      <p className="font-bold leading-tight">{opt.label}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5 leading-snug">
+                        {opt.description}
+                      </p>
                     </div>
                   </div>
-                  {isSelected && <Check className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />}
+                  {isSelected && <Check className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0 ml-1" />}
                 </button>
               );
             })}

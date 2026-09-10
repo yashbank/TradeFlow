@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Wrench,
 } from 'lucide-react';
+import { useToast } from '@/lib/toast/ToastContext';
 import type { Customer } from '@/types/database';
 
 interface TeamMember {
@@ -65,6 +66,7 @@ export function JobScheduler({
   defaultCustomerId,
 }: JobSchedulerProps) {
   const router = useRouter();
+  const toast = useToast();
 
   const selectedInitialCustomer = defaultCustomerId
     ? customers.find((c) => c.id === defaultCustomerId) || customers[0]
@@ -147,7 +149,9 @@ export function JobScheduler({
 
     if (!res.success || !res.data) {
       setError(res.error || 'Failed to schedule job.');
+      toast.error('Scheduling Failed', res.error || 'Failed to schedule job.');
     } else {
+      toast.success('Job Created', `Job #${res.data.job_number || ''} scheduled successfully`);
       router.push(`/jobs/${res.data.id}`);
     }
   }

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { recordPaymentAction } from '@/actions/invoices';
 import { DollarSign, X } from 'lucide-react';
+import { useToast } from '@/lib/toast/ToastContext';
 import type { Invoice, PaymentMethod } from '@/types/database';
 
 interface RecordPaymentModalProps {
@@ -17,6 +18,7 @@ interface RecordPaymentModalProps {
 
 export function RecordPaymentModal({ invoice, isOpen, onClose }: RecordPaymentModalProps) {
   const router = useRouter();
+  const toast = useToast();
   const [amount, setAmount] = useState<number>(invoice.balance_due_cents / 100);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('credit_card');
@@ -50,7 +52,9 @@ export function RecordPaymentModal({ invoice, isOpen, onClose }: RecordPaymentMo
     setLoading(false);
     if (!res.success) {
       setError(res.error || 'Failed to record payment');
+      toast.error('Payment Failed', res.error || 'Failed to record payment');
     } else {
+      toast.success('Payment Recorded', `Successfully recorded $${amount} payment`);
       onClose();
       router.refresh();
     }
