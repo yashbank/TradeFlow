@@ -24,6 +24,7 @@ import {
   PhoneCall,
 } from 'lucide-react';
 import { useToast } from '@/lib/toast/ToastContext';
+import { EditQuoteModal } from './EditQuoteModal';
 import type { Quote } from '@/types/database';
 
 interface QuoteDetailActionsProps {
@@ -203,6 +204,7 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
 
         {isPending && (
           <>
+            <EditQuoteModal quote={quote} />
             <Button
               size="sm"
               variant="success"

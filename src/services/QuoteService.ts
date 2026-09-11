@@ -40,7 +40,7 @@ export class QuoteService {
   /**
    * Lists quotes for the active organization.
    */
-  static async list(status?: QuoteStatus, limit = 50, offset = 0) {
+  static async list(status?: QuoteStatus, search?: string, limit = 50, offset = 0) {
     const { organization } = await AuthService.requireContext();
     const supabase = await createClient();
 
@@ -53,6 +53,11 @@ export class QuoteService {
 
     if (status) {
       query = query.eq('status', status);
+    }
+
+    if (search && search.trim().length > 0) {
+      const term = `%${search.trim()}%`;
+      query = query.or(`quote_number.ilike.${term},notes.ilike.${term}`);
     }
 
     const { data, count, error } = await query;
@@ -161,6 +166,79 @@ export class QuoteService {
     }
 
     return quote as Quote;
+  }
+
+  /**
+   * Updates an existing quote and its line items.
+   * Allowed when quote is in 'draft' or 'sent' status.
+   */
+  static async update(quoteId: string, input: CreateQuoteInput): Promise<Quote> {
+    const { organization } = await AuthService.requireRole(['owner', 'admin']);
+    const supabase = await createClient();
+
+    const existing = await this.getById(quoteId);
+    if (!existing) {
+      throw new Error('RESOURCE_NOT_FOUND: Quote not found.');
+    }
+
+    if (existing.status === 'accepted' || existing.status === 'rejected') {
+      throw new Error(`STATE_CONFLICT: Cannot edit a quote in ${existing.status} status.`);
+    }
+
+    // Deterministic Financial Calculations
+    const calc = calculateDocumentTotals(
+      input.items,
+      input.discount_cents,
+      0,
+      organization.tax_rate_basis_points
+    );
+
+    // Update Quote header
+    const { data: updatedQuote, error: updateError } = await supabase
+      .from('quotes')
+      .update({
+        customer_id: input.customer_id,
+        issue_date: input.issue_date,
+        expiry_date: input.expiry_date,
+        subtotal_cents: calc.subtotalCents,
+        discount_cents: calc.discountCents,
+        tax_cents: calc.taxCents,
+        total_cents: calc.totalCents,
+        notes: input.notes || null,
+        terms: input.terms || organization.invoice_terms || null,
+      })
+      .eq('id', quoteId)
+      .eq('organization_id', organization.id)
+      .select('*, customer:customers(*)')
+      .single();
+
+    if (updateError || !updatedQuote) {
+      throw new Error(`Failed to update quote: ${updateError?.message}`);
+    }
+
+    // Replace line items
+    await supabase.from('quote_items').delete().eq('quote_id', quoteId);
+
+    const itemsToInsert = input.items.map((item, idx) => ({
+      organization_id: organization.id,
+      quote_id: quoteId,
+      description: item.description,
+      quantity: item.quantity,
+      unit_price_cents: item.unit_price_cents,
+      taxable: item.taxable,
+      total_cents: calc.itemTotals[idx],
+      sort_order: idx,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from('quote_items')
+      .insert(itemsToInsert);
+
+    if (itemsError) {
+      throw new Error(`Failed to update quote line items: ${itemsError.message}`);
+    }
+
+    return updatedQuote as Quote;
   }
 
   /**

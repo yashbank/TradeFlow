@@ -39,7 +39,7 @@ export class InvoiceService {
   /**
    * Lists invoices for current organization.
    */
-  static async list(status?: InvoiceStatus, limit = 50, offset = 0) {
+  static async list(status?: InvoiceStatus, search?: string, limit = 50, offset = 0) {
     const { organization } = await AuthService.requireRole(['owner', 'admin']);
     const supabase = await createClient();
 
@@ -52,6 +52,11 @@ export class InvoiceService {
 
     if (status) {
       query = query.eq('status', status);
+    }
+
+    if (search && search.trim().length > 0) {
+      const term = `%${search.trim()}%`;
+      query = query.or(`invoice_number.ilike.${term},notes.ilike.${term}`);
     }
 
     const { data, count, error } = await query;

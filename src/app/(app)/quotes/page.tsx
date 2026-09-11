@@ -6,16 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, ChevronRight, FileText } from 'lucide-react';
+import { ListSearchBar } from '@/components/common/ListSearchBar';
 import type { QuoteStatus } from '@/types/database';
 
 interface QuotesPageProps {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }
 
 export default async function QuotesPage({ searchParams }: QuotesPageProps) {
-  const { status } = await searchParams;
+  const { status, q } = await searchParams;
   const validStatus = status as QuoteStatus | undefined;
-  const { quotes, totalCount } = await QuoteService.list(validStatus);
+  const { quotes, totalCount } = await QuoteService.list(validStatus, q);
 
   const filterTabs = [
     { label: 'All', value: '' },
@@ -41,14 +42,24 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
         </Link>
       </div>
 
+      {/* Search Input Bar */}
+      <ListSearchBar
+        placeholder="Search quotes by #, customer, notes..."
+        defaultSearch={q || ''}
+        totalCount={totalCount}
+      />
+
       {/* Filter Tabs */}
       <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-zinc-800 pb-2 overflow-x-auto">
         {filterTabs.map((tab) => {
           const isActive = (!status && tab.value === '') || status === tab.value;
+          const href = tab.value
+            ? (q ? `/quotes?status=${tab.value}&q=${encodeURIComponent(q)}` : `/quotes?status=${tab.value}`)
+            : (q ? `/quotes?q=${encodeURIComponent(q)}` : '/quotes');
           return (
             <Link
               key={tab.value}
-              href={tab.value ? `/quotes?status=${tab.value}` : '/quotes'}
+              href={href}
               className={`px-3 py-1.5 text-xs font-bold rounded-xl whitespace-nowrap transition-all active:scale-95 ${
                 isActive
                   ? 'bg-blue-600 text-white shadow-xs shadow-blue-500/30'

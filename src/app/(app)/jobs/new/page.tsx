@@ -4,6 +4,8 @@ import { AuthService } from '@/services/AuthService';
 import { JobService } from '@/services/JobService';
 import { JobScheduler } from '@/components/jobs/JobScheduler';
 
+import { QuoteService } from '@/services/QuoteService';
+
 interface NewJobPageProps {
   searchParams: Promise<{ customer_id?: string }>;
 }
@@ -12,10 +14,11 @@ export default async function NewJobPage({ searchParams }: NewJobPageProps) {
   const { customer_id } = await searchParams;
   await AuthService.requireRole(['owner', 'admin']);
 
-  const [{ customers }, teamMembers, { jobs: scheduledJobs }] = await Promise.all([
+  const [{ customers }, teamMembers, { jobs: scheduledJobs }, quotesRes] = await Promise.all([
     CustomerService.list('', 100),
     JobService.getTeamMembers(),
-    JobService.list('scheduled', 10, 0),
+    JobService.list('scheduled', '', 10, 0),
+    QuoteService.list('accepted', '', 50, 0).catch(() => ({ quotes: [], totalCount: 0 })),
   ]);
 
   return (
@@ -34,6 +37,7 @@ export default async function NewJobPage({ searchParams }: NewJobPageProps) {
         teamMembers={teamMembers}
         defaultCustomerId={customer_id}
         scheduledJobs={scheduledJobs}
+        acceptedQuotes={quotesRes.quotes || []}
       />
     </div>
   );

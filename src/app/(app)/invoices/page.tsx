@@ -6,16 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Receipt, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ListSearchBar } from '@/components/common/ListSearchBar';
 import type { InvoiceStatus } from '@/types/database';
 
 interface InvoicesPageProps {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }
 
 export default async function InvoicesPage({ searchParams }: InvoicesPageProps) {
-  const { status } = await searchParams;
+  const { status, q } = await searchParams;
   const validStatus = status as InvoiceStatus | undefined;
-  const { invoices, totalCount } = await InvoiceService.list(validStatus);
+  const { invoices, totalCount } = await InvoiceService.list(validStatus, q);
 
   const filterTabs = [
     { label: 'All', value: '' },
@@ -44,14 +45,24 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
         </Link>
       </div>
 
+      {/* Search Input Bar */}
+      <ListSearchBar
+        placeholder="Search invoices by #, notes..."
+        defaultSearch={q || ''}
+        totalCount={totalCount}
+      />
+
       {/* Filter Tabs */}
       <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-zinc-800 pb-2 overflow-x-auto">
         {filterTabs.map((tab) => {
           const isActive = (!status && tab.value === '') || status === tab.value;
+          const href = tab.value
+            ? (q ? `/invoices?status=${tab.value}&q=${encodeURIComponent(q)}` : `/invoices?status=${tab.value}`)
+            : (q ? `/invoices?q=${encodeURIComponent(q)}` : '/invoices');
           return (
             <Link
               key={tab.value}
-              href={tab.value ? `/invoices?status=${tab.value}` : '/invoices'}
+              href={href}
               className={`px-3 py-1.5 text-xs font-bold rounded-xl whitespace-nowrap transition-all active:scale-95 ${
                 isActive
                   ? 'bg-blue-600 text-white shadow-xs shadow-blue-500/30'

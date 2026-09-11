@@ -29,6 +29,8 @@ interface InvoiceBuilderProps {
   taxRateBasisPoints: number;
   currency: SupportedCurrency;
   defaultTerms?: string | null;
+  completedJobs?: any[];
+  acceptedQuotes?: any[];
 }
 
 interface LineItemState {
@@ -78,6 +80,8 @@ export function InvoiceBuilder({
   taxRateBasisPoints,
   currency,
   defaultTerms,
+  completedJobs = [],
+  acceptedQuotes = [],
 }: InvoiceBuilderProps) {
   const router = useRouter();
   const toast = useToast();
@@ -142,6 +146,57 @@ export function InvoiceBuilder({
     setItems((prev) =>
       prev.map((i) => (i.id === id ? { ...i, [field]: value } : i))
     );
+  }
+
+  function handleImportFromJob(job: any) {
+    if (job.customer_id) {
+      setCustomerId(job.customer_id);
+    }
+    const laborLine: LineItemState = {
+      id: `job-${job.id}-labor`,
+      description: `${job.title} — Completed Work Order #${job.job_number}`,
+      quantity: 1,
+      unitPrice: 220.0,
+      taxable: false,
+    };
+    setItems([laborLine]);
+    if (job.description) {
+      setNotes(`Work completed for order #${job.job_number}: ${job.description}`);
+    }
+    toast.success('Job Imported', `Work order #${job.job_number} imported into invoice.`);
+  }
+
+  function handleImportFromQuote(quote: any) {
+    if (quote.customer_id) {
+      setCustomerId(quote.customer_id);
+    }
+    if (quote.items && quote.items.length > 0) {
+      const importedLines: LineItemState[] = quote.items.map((it: any, idx: number) => ({
+        id: `quote-item-${idx}`,
+        description: it.description || 'Plumbing Service',
+        quantity: Number(it.quantity) || 1,
+        unitPrice: (it.unit_price_cents || 0) / 100,
+        taxable: Boolean(it.taxable),
+      }));
+      setItems(importedLines);
+    } else {
+      setItems([
+        {
+          id: `quote-${quote.id}-scope`,
+          description: `Approved Service Scope from Quote #${quote.quote_number}`,
+          quantity: 1,
+          unitPrice: (quote.subtotal_cents || 25000) / 100,
+          taxable: true,
+        },
+      ]);
+    }
+    if (quote.discount_cents) {
+      setDiscountAmount(quote.discount_cents / 100);
+    }
+    if (quote.notes) {
+      setNotes(quote.notes);
+    }
+    toast.success('Quote Imported', `Populated line items from accepted quote #${quote.quote_number}.`);
   }
 
   async function handleSave(andSend: boolean = false) {
@@ -218,6 +273,94 @@ export function InvoiceBuilder({
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
+      )}
+
+      {/* 1-Click Import from Completed Job or Accepted Quote */}
+      {((completedJobs && completedJobs.length > 0) || (acceptedQuotes && acceptedQuotes.length > 0)) && (
+        <Card className="glass-panel border-emerald-500/40 dark:border-emerald-500/30">
+          <CardHeader className="pb-3 border-b border-slate-100 dark:border-zinc-800 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-500" />
+              <CardTitle className="text-base font-bold text-slate-900 dark:text-zinc-100">
+                1-Click Import from Completed Job or Accepted Quote
+              </CardTitle>
+            </div>
+            <span className="text-xs text-slate-500 dark:text-zinc-400 hidden sm:inline">
+              Auto-fill customer, line items, and pricing
+            </span>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-5 space-y-3">
+            {completedJobs && completedJobs.length > 0 && (
+              <div>
+                <p className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">
+                  Completed Work Orders Ready for Invoicing:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {completedJobs.slice(0, 4).map((j) => (
+                    <button
+                      key={j.id}
+                      type="button"
+                      onClick={() => handleImportFromJob(j)}
+                      className="p-3 rounded-xl border border-sky-200/80 dark:border-sky-900/40 bg-sky-50/40 dark:bg-sky-950/20 hover:border-sky-500/60 transition-all text-left flex items-center justify-between active:scale-[0.98]"
+                    >
+                      <div className="min-w-0 flex-1 mr-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
+                            {j.job_number}
+                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-sky-500/10 text-sky-700 dark:text-sky-300">
+                            Completed
+                          </span>
+                        </div>
+                        <p className="font-semibold text-xs text-slate-800 dark:text-zinc-100 truncate mt-0.5">
+                          {j.title}
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-sky-600 dark:text-sky-400 shrink-0">
+                        Import →
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {acceptedQuotes && acceptedQuotes.length > 0 && (
+              <div className="pt-2">
+                <p className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">
+                  Accepted Quotes Ready for Billing:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {acceptedQuotes.slice(0, 4).map((q) => (
+                    <button
+                      key={q.id}
+                      type="button"
+                      onClick={() => handleImportFromQuote(q)}
+                      className="p-3 rounded-xl border border-emerald-200/80 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/20 hover:border-emerald-500/60 transition-all text-left flex items-center justify-between active:scale-[0.98]"
+                    >
+                      <div className="min-w-0 flex-1 mr-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                            {q.quote_number}
+                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                            Accepted
+                          </span>
+                        </div>
+                        <p className="font-semibold text-xs text-slate-800 dark:text-zinc-100 truncate mt-0.5">
+                          {q.customer ? `${q.customer.first_name || ''} ${q.customer.last_name || ''}`.trim() : 'Customer'} • {formatCurrency(q.total_amount_cents, currency)}
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                        Import →
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Plumbing Service Presets */}

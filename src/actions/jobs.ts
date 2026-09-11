@@ -39,6 +39,7 @@ export async function updateJobStatusAction(
     const job = await JobService.updateStatus(jobId, targetStatus, internalNotes);
     revalidatePath('/jobs');
     revalidatePath(`/jobs/${jobId}`);
+    revalidatePath('/dashboard');
     return {
       success: true,
       data: job,

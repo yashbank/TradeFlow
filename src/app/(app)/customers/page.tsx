@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { CustomerService } from '@/services/CustomerService';
 import { Card, CardContent } from '@/components/ui/card';
 import { AddCustomerModal } from '@/components/customers/AddCustomerModal';
-import { Phone, MapPin, Search, ChevronRight, User } from 'lucide-react';
+import { PurgeCustomersModal } from '@/components/customers/PurgeCustomersModal';
+import { ListSearchBar } from '@/components/common/ListSearchBar';
+import { Phone, MapPin, ChevronRight, User } from 'lucide-react';
 
 interface CustomersPageProps {
   searchParams: Promise<{ q?: string }>;
@@ -25,24 +27,18 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
             {totalCount} customer record{totalCount === 1 ? '' : 's'} managed
           </p>
         </div>
-        <AddCustomerModal />
+        <div className="flex items-center gap-2">
+          <PurgeCustomersModal />
+          <AddCustomerModal />
+        </div>
       </div>
 
-      {/* Search Input Filter */}
-      <Card className="glass-panel text-card-foreground">
-        <CardContent className="p-3">
-          <form method="GET" className="relative flex items-center">
-            <Search className="w-4 h-4 text-slate-400 dark:text-zinc-500 absolute left-3 pointer-events-none" />
-            <input
-              type="text"
-              name="q"
-              defaultValue={q || ''}
-              placeholder="Search by name, phone, or address..."
-              className="w-full pl-9 pr-4 py-2 text-sm bg-transparent border-0 focus:outline-none text-slate-900 dark:text-zinc-100 placeholder:text-slate-500 dark:placeholder:text-zinc-300"
-            />
-          </form>
-        </CardContent>
-      </Card>
+      {/* Responsive Filter & Search Bar */}
+      <ListSearchBar
+        placeholder="Search customers by name, phone, city, address..."
+        defaultSearch={q || ''}
+        totalCount={totalCount}
+      />
 
       {/* Customer List */}
       <div className="grid grid-cols-1 gap-3">

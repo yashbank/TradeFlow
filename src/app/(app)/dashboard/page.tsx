@@ -14,25 +14,29 @@ export default async function DashboardPage() {
   const isTechnician = context.role === 'technician';
 
   const [metrics, activity, jobsRes, teamMembers] = await Promise.all([
-    DashboardService.getMetrics().catch(() => ({
-      currency: context.organization.currency || 'USD',
-      revenueMtdCents: 0,
-      outstandingReceivablesCents: 0,
-      totalInvoicedMtdCents: 0,
-      openInvoicesCount: 0,
-      overdueInvoicesCount: 0,
-      overdueInvoicesCents: 0,
-      openQuotesCount: 0,
-      openQuotesTotalCents: 0,
-      upcomingJobsTodayCount: 0,
-      completedJobsCount: 0,
-      totalJobsCount: 0,
-      quoteWinRatePercentage: 0,
-      weeklyRevenue: [0, 0, 0, 0, 0, 0, 0],
-    })),
-    DashboardService.getRecentActivity().catch(() => ({ recentJobs: [], recentQuotes: [] })),
+    isTechnician
+      ? Promise.resolve(null)
+      : DashboardService.getMetrics().catch(() => ({
+          currency: context.organization.currency || 'USD',
+          revenueMtdCents: 0,
+          outstandingReceivablesCents: 0,
+          totalInvoicedMtdCents: 0,
+          openInvoicesCount: 0,
+          overdueInvoicesCount: 0,
+          overdueInvoicesCents: 0,
+          openQuotesCount: 0,
+          openQuotesTotalCents: 0,
+          upcomingJobsTodayCount: 0,
+          completedJobsCount: 0,
+          totalJobsCount: 0,
+          quoteWinRatePercentage: 0,
+          weeklyRevenue: [0, 0, 0, 0, 0, 0, 0],
+        })),
+    isTechnician
+      ? Promise.resolve({ recentJobs: [], recentQuotes: [] })
+      : DashboardService.getRecentActivity().catch(() => ({ recentJobs: [], recentQuotes: [] })),
     JobService.list().catch(() => ({ jobs: [], totalCount: 0 })),
-    JobService.getTeamMembers().catch(() => []),
+    isTechnician ? Promise.resolve([]) : JobService.getTeamMembers().catch(() => []),
   ]);
 
   return (

@@ -32,6 +32,7 @@ interface JobSchedulerProps {
   teamMembers: TeamMember[];
   defaultCustomerId?: string;
   scheduledJobs?: Job[];
+  acceptedQuotes?: any[];
 }
 
 const PLUMBING_JOB_PRESETS = [
@@ -66,6 +67,7 @@ export function JobScheduler({
   teamMembers,
   defaultCustomerId,
   scheduledJobs = [],
+  acceptedQuotes = [],
 }: JobSchedulerProps) {
   const router = useRouter();
   const toast = useToast();
@@ -114,6 +116,25 @@ export function JobScheduler({
     setDescription(preset.description);
   }
 
+  function handleImportFromQuote(q: any) {
+    if (q.customer_id) {
+      setCustomerId(q.customer_id);
+    }
+    const cust = q.customer || customers.find((c) => c.id === q.customer_id);
+    if (cust) {
+      setAddressLine1(cust.address_line1 || '');
+      setAddressLine2(cust.address_line2 || '');
+      setCity(cust.city || '');
+      setState(cust.state || 'CA');
+      setPostalCode(cust.postal_code || '');
+    }
+    setTitle(`Approved Work Order (${q.quote_number})`);
+    if (q.notes) {
+      setDescription(q.notes);
+    }
+    toast.success('Quote Imported', `Scope and customer details loaded from ${q.quote_number}`);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!customerId) {
@@ -136,9 +157,9 @@ export function JobScheduler({
       customer_id: customerId,
       title: title.trim(),
       description: description.trim() || undefined,
-      assigned_to_user_id: assignedToUserId || undefined,
       scheduled_start: scheduledStart ? new Date(scheduledStart).toISOString() : undefined,
       scheduled_end: scheduledEnd ? new Date(scheduledEnd).toISOString() : undefined,
+      assigned_to_user_id: assignedToUserId || undefined,
       address_line1: addressLine1.trim(),
       address_line2: addressLine2.trim() || undefined,
       city: city.trim(),
@@ -176,6 +197,57 @@ export function JobScheduler({
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
+      )}
+
+      {/* 1-Click Import from Accepted Quote */}
+      {acceptedQuotes && acceptedQuotes.length > 0 && (
+        <Card className="glass-panel border-emerald-500/40 dark:border-emerald-500/30">
+          <CardHeader className="pb-3 border-b border-slate-100 dark:border-zinc-800 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-500" />
+              <CardTitle className="text-base font-bold text-slate-900 dark:text-zinc-100">
+                1-Click Import from Accepted Quote ({acceptedQuotes.length})
+              </CardTitle>
+            </div>
+            <span className="text-xs text-slate-500 dark:text-zinc-400 hidden sm:inline">
+              Auto-fill customer, scope, and service address
+            </span>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {acceptedQuotes.slice(0, 4).map((q) => (
+                <button
+                  key={q.id}
+                  type="button"
+                  onClick={() => handleImportFromQuote(q)}
+                  className="p-3.5 rounded-xl border border-emerald-200/80 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/20 hover:border-emerald-500/60 transition-all text-left flex flex-col justify-between active:scale-[0.98]"
+                >
+                  <div className="space-y-1 w-full">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                        {q.quote_number}
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                        Accepted
+                      </span>
+                    </div>
+                    <p className="font-bold text-xs text-slate-800 dark:text-zinc-100 line-clamp-1">
+                      {q.customer ? `${q.customer.first_name || ''} ${q.customer.last_name || ''}`.trim() : 'Customer'}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 line-clamp-1">
+                      {q.notes || 'Approved plumbing work order scope'}
+                    </p>
+                  </div>
+                  <div className="pt-2 mt-2 border-t border-emerald-100/60 dark:border-emerald-900/30 flex items-center justify-between w-full">
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                      Click to Import Scope & Customer →
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Already Created Jobs Section (Quick-Assign & Customization) */}

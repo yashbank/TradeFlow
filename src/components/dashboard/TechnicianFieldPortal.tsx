@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import { useCurrency } from '@/lib/currency/CurrencyContext';
 import { updateJobStatusAction } from '@/actions/jobs';
 import {
   Navigation,
+  Navigation2,
   Phone,
   MapPin,
   Clock,
@@ -31,8 +33,34 @@ import {
   Plus,
   Minus,
   Trash2,
+  Copy,
+  ExternalLink,
+  User,
+  FileText,
 } from 'lucide-react';
 import type { UserProfile, Organization } from '@/types/database';
+
+export interface StoredStopwatchState {
+  isRunning: boolean;
+  startTime: number | null;
+  accumulatedSeconds: number;
+}
+
+/**
+ * Computes wall-clock elapsed time in seconds.
+ * Even if the device slept or the tab was closed, this evaluates against current time.
+ */
+export function computeElapsedSeconds(
+  state: StoredStopwatchState | null | undefined,
+  now: number = Date.now()
+): number {
+  if (!state) return 0;
+  const runningBonus =
+    state.isRunning && state.startTime
+      ? Math.max(0, Math.floor((now - state.startTime) / 1000))
+      : 0;
+  return (state.accumulatedSeconds || 0) + runningBonus;
+}
 
 interface TechnicianFieldPortalProps {
   myJobs?: any[];
@@ -93,6 +121,7 @@ export function TechnicianFieldPortal({
   user,
   organization,
 }: TechnicianFieldPortalProps) {
+  const router = useRouter();
   const toast = useToast();
   const { formatConverted } = useCurrency();
 
@@ -107,29 +136,107 @@ export function TechnicianFieldPortal({
 
   // Field delivery states: 'scheduled' -> 'en_route' -> 'arrived' -> 'in_progress' -> 'completed'
   const [fieldState, setFieldState] = useState<'scheduled' | 'en_route' | 'arrived' | 'in_progress' | 'completed'>(
-    activeJob?.status === 'in_progress' ? 'in_progress' : 'scheduled'
+    activeJob?.status === 'in_progress' ? 'in_progress' : activeJob?.status === 'completed' ? 'completed' : 'scheduled'
   );
 
-  // Labor stopwatch timer
+  // Update field state when activeJob changes
+  useEffect(() => {
+    if (activeJob) {
+      if (activeJob.status === 'completed') setFieldState('completed');
+      else if (activeJob.status === 'in_progress') setFieldState('in_progress');
+      else setFieldState('scheduled');
+    }
+  }, [activeJob]);
+
+  // Persistent Labor stopwatch timer with localStorage & wall-clock math
+  const storageKey = activeJob?.id ? `tradeflow_stopwatch_${activeJob.id}` : null;
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
+
+  // Load stopwatch state from localStorage on job selection change
+  useEffect(() => {
+    if (typeof window === 'undefined' || !storageKey) {
+      setTimerSeconds(0);
+      setTimerRunning(false);
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const state: StoredStopwatchState = JSON.parse(raw);
+        setTimerSeconds(computeElapsedSeconds(state, Date.now()));
+        setTimerRunning(state.isRunning);
+      } else {
+        setTimerSeconds(0);
+        setTimerRunning(false);
+      }
+    } catch {
+      setTimerSeconds(0);
+      setTimerRunning(false);
+    }
+  }, [storageKey]);
+
+  // Wall-clock interval sync
+  useEffect(() => {
+    let interval: any = null;
+    if (timerRunning) {
+      interval = setInterval(() => {
+        if (storageKey) {
+          try {
+            const raw = localStorage.getItem(storageKey);
+            if (raw) {
+              const state: StoredStopwatchState = JSON.parse(raw);
+              setTimerSeconds(computeElapsedSeconds(state, Date.now()));
+              return;
+            }
+          } catch {}
+        }
+        setTimerSeconds((sec) => sec + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [timerRunning, storageKey]);
+
+  const startStopwatch = useCallback(() => {
+    const now = Date.now();
+    setTimerRunning(true);
+    if (typeof window !== 'undefined' && storageKey) {
+      const state: StoredStopwatchState = {
+        isRunning: true,
+        startTime: now,
+        accumulatedSeconds: timerSeconds,
+      };
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+  }, [storageKey, timerSeconds]);
+
+  const pauseStopwatch = useCallback(() => {
+    setTimerRunning(false);
+    if (typeof window !== 'undefined' && storageKey) {
+      const state: StoredStopwatchState = {
+        isRunning: false,
+        startTime: null,
+        accumulatedSeconds: timerSeconds,
+      };
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+  }, [storageKey, timerSeconds]);
+
+  const resetStopwatch = useCallback(() => {
+    setTimerRunning(false);
+    setTimerSeconds(0);
+    if (typeof window !== 'undefined' && storageKey) {
+      localStorage.removeItem(storageKey);
+    }
+  }, [storageKey]);
 
   // Parts logged for this job
   const [loggedParts, setLoggedParts] = useState<{ name: string; priceCents: number; qty: number }[]>([]);
   const [completionNotes, setCompletionNotes] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
-
-  useEffect(() => {
-    let interval: any = null;
-    if (timerRunning) {
-      interval = setInterval(() => {
-        setTimerSeconds((sec) => sec + 1);
-      }, 1000);
-    } else if (!timerRunning && timerSeconds !== 0) {
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [timerRunning, timerSeconds]);
 
   function formatStopwatch(totalSeconds: number) {
     const hrs = Math.floor(totalSeconds / 3600);
@@ -177,46 +284,69 @@ export function TechnicianFieldPortal({
     toast.info('Part Removed', `${partName} removed from order.`);
   }
 
-  // Address and Navigation details
+  // Address and Customer details resolution
   const customer = activeJob?.customer;
+  const customerFullName = customer
+    ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.company_name || 'Valued Customer'
+    : 'Valued Customer';
+
   const customerAddress = customer
-    ? `${customer.address_line1 || ''}, ${customer.city || ''}, ${customer.state || ''} ${customer.postal_code || ''}`.trim()
+    ? `${customer.address_line1 || ''}${customer.city ? `, ${customer.city}` : ''}${customer.state ? `, ${customer.state}` : ''} ${customer.postal_code || ''}`.trim()
     : '742 Evergreen Terrace, Springfield, OR';
 
   const customerPhone = customer?.phone || '(555) 019-2834';
-  const customerName = customer?.name || 'Homeowner';
+  const customerEmail = customer?.email || '';
+  const customerNotes = customer?.notes || activeJob?.description || '';
 
-  // Navigation URL for native GPS
+  // Multi-GPS Navigation URLs
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(customerAddress)}`;
+  const appleMapsUrl = `https://maps.apple.com/?daddr=${encodeURIComponent(customerAddress)}`;
+  const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(customerAddress)}&navigate=yes`;
 
   // Direct 1-tap call and prefilled SMS dispatch update
   const normalizedPhone = normalizePhoneForUri(customerPhone);
-  const smsUrl = generateSmsDispatchUrl(customerPhone, user.full_name, customerName, customerAddress);
+  const smsUrl = generateSmsDispatchUrl(customerPhone, user.full_name, customerFullName, customerAddress);
+
+  const copyAddressToClipboard = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(customerAddress);
+      toast.success('Address Copied', 'Service address copied to clipboard.');
+    }
+  };
 
   async function handleEnRoute() {
     setFieldState('en_route');
-    toast.info('En Route Dispatched', `Traveling to ${customerName}. Estimated arrival: 8 mins.`);
+    toast.info('En Route Dispatched', `Traveling to ${customerFullName}. Estimated arrival: 8 mins.`);
     if (activeJob?.id) {
       await updateJobStatusAction(activeJob.id, 'in_progress', 'Technician en route to location.');
+      router.refresh();
     }
   }
 
-  function handleArrived() {
+  async function handleArrived() {
     setFieldState('arrived');
     toast.success('Arrived on Site', `Checked in at ${customerAddress}.`);
+    if (activeJob?.id) {
+      await updateJobStatusAction(activeJob.id, 'in_progress', 'Technician arrived on site.');
+      router.refresh();
+    }
   }
 
-  function handleStartWork() {
+  async function handleStartWork() {
     setFieldState('in_progress');
-    setTimerRunning(true);
-    toast.success('Work Started', 'Labor timer running. You are on the clock.');
+    startStopwatch();
+    toast.success('Work Started', 'Labor stopwatch started. You are on the clock.');
+    if (activeJob?.id) {
+      await updateJobStatusAction(activeJob.id, 'in_progress', 'Technician started work (labor stopwatch running).');
+      router.refresh();
+    }
   }
 
   async function handleCompleteJob() {
     if (!activeJob?.id) {
       toast.success('Job Marked Completed', 'Work order finished successfully.');
       setFieldState('completed');
-      setTimerRunning(false);
+      resetStopwatch();
       return;
     }
 
@@ -229,7 +359,8 @@ export function TechnicianFieldPortal({
 
     if (res.success) {
       setFieldState('completed');
-      setTimerRunning(false);
+      resetStopwatch();
+      router.refresh();
       toast.success('Job Complete!', `Work order ${activeJob.job_number || 'J-2025'} completed and synced with Dispatch.`);
     } else {
       toast.error('Error', res.error || 'Failed to update job status.');
@@ -330,7 +461,7 @@ export function TechnicianFieldPortal({
           </div>
 
           {/* Destination Marker (Client Site) */}
-          <div className="absolute right-[18%] top-[60px] -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
+          <div className="absolute right-[20%] top-[60px] -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
             <div className="relative">
               <div className="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/50 border-2 border-white animate-pulse">
                 <MapPin className="w-5 h-5" />
@@ -338,7 +469,7 @@ export function TechnicianFieldPortal({
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-400 rounded-full animate-ping" />
             </div>
             <span className="text-[10px] font-bold text-white bg-slate-900/90 px-2.5 py-0.5 rounded-full mt-1 border border-rose-400/40 whitespace-nowrap">
-              {customerName}
+              {customerFullName}
             </span>
           </div>
 
@@ -355,30 +486,48 @@ export function TechnicianFieldPortal({
             </div>
           </div>
 
-          {/* GPS Quick Action Overlay */}
-          <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2">
+          {/* GPS Quick Action Launch Bar */}
+          <div className="absolute bottom-4 right-4 z-20 flex flex-wrap items-center gap-2">
             <a
               href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-sky-500/40 flex items-center gap-1.5 transition-transform active:scale-95"
+              className="bg-sky-500 hover:bg-sky-600 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-lg shadow-sky-500/40 flex items-center gap-1.5 transition-transform active:scale-95"
             >
-              <Compass className="w-4 h-4 animate-spin" />
-              Start GPS Navigation
+              <Compass className="w-3.5 h-3.5" />
+              Google Maps
+            </a>
+            <a
+              href={appleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-lg border border-slate-700 flex items-center gap-1.5 transition-transform active:scale-95"
+            >
+              <Navigation2 className="w-3.5 h-3.5 text-blue-400" />
+              Apple Maps
+            </a>
+            <a
+              href={wazeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-cyan-600 hover:bg-cyan-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-lg shadow-cyan-600/30 flex items-center gap-1.5 transition-transform active:scale-95"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Waze
             </a>
           </div>
         </div>
 
         {/* Customer Stop Card & Quick Contact */}
         <div className="p-5 bg-white/95 dark:bg-zinc-900/95 border-t border-slate-200/80 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="space-y-1 max-w-xl">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
-                Stop #1 of {myJobs.length || 1}
+                Stop #{myJobs.findIndex((j) => j.id === activeJob?.id) + 1 || 1} of {myJobs.length || 1}
               </span>
               <span className="text-slate-400">•</span>
-              <span className="text-xs font-mono font-bold text-slate-500">
-                {activeJob?.job_number || 'J-2025-001'}
+              <span className="text-xs font-mono font-bold text-slate-500 dark:text-zinc-400">
+                {activeJob?.job_number || 'J-2026-0001'}
               </span>
               {activeJob?.title?.toLowerCase().includes('emergency') && (
                 <Badge variant="destructive" className="text-[10px] py-0">
@@ -387,21 +536,47 @@ export function TechnicianFieldPortal({
               )}
             </div>
 
-            <h3 className="text-base font-black text-slate-900 dark:text-zinc-100 mt-0.5">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100">
               {activeJob?.title || 'Emergency Leak Inspection & Pipe Repair'}
             </h3>
 
-            <p className="text-xs text-slate-600 dark:text-zinc-300 flex items-center gap-1.5 mt-1">
+            <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-zinc-300 pt-0.5">
+              <User className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+              <span className="font-bold text-slate-900 dark:text-zinc-100">{customerFullName}</span>
+              {customer?.company_name && (
+                <span className="text-slate-400">({customer.company_name})</span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-zinc-300">
               <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-              {customerAddress}
-            </p>
+              <span className="truncate">{customerAddress}</span>
+              <button
+                type="button"
+                onClick={copyAddressToClipboard}
+                title="Copy Address"
+                className="text-sky-600 hover:text-sky-700 dark:text-sky-400 p-0.5 rounded hover:bg-sky-50 dark:hover:bg-sky-950/50"
+              >
+                <Copy className="w-3 h-3" />
+              </button>
+            </div>
+
+            {customerNotes && (
+              <div className="text-[11px] text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 p-2 rounded-xl border border-amber-200 dark:border-amber-800/60 mt-2 flex items-start gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">Client Instructions: </span>
+                  {customerNotes}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Quick Action Dial, SMS & Direction Buttons */}
+          {/* Quick Action Dial, SMS & Directions */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <a
               href={`tel:${normalizedPhone}`}
-              className="p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95"
+              className="p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 shadow-xs"
             >
               <Phone className="w-4 h-4" />
               Call Customer
@@ -409,20 +584,10 @@ export function TechnicianFieldPortal({
 
             <a
               href={smsUrl}
-              className="p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95"
+              className="p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 shadow-xs"
             >
               <MessageSquare className="w-4 h-4" />
-              SMS Dispatch
-            </a>
-
-            <a
-              href={googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-3 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95"
-            >
-              <Navigation className="w-4 h-4" />
-              Directions
+              SMS Alert
             </a>
           </div>
         </div>
@@ -535,7 +700,7 @@ export function TechnicianFieldPortal({
               <div className="flex items-center justify-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setTimerRunning(!timerRunning)}
+                  onClick={timerRunning ? pauseStopwatch : startStopwatch}
                   className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 ${
                     timerRunning
                       ? 'bg-amber-500 hover:bg-amber-600 text-white'
@@ -547,7 +712,7 @@ export function TechnicianFieldPortal({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setTimerSeconds(0)}
+                  onClick={resetStopwatch}
                   className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 active:scale-95"
                   title="Reset Timer"
                 >
@@ -679,6 +844,10 @@ export function TechnicianFieldPortal({
                 const isCurrent = job.id === selectedJobId;
                 const isDone = job.status === 'completed';
 
+                const jobCustomerName = job.customer
+                  ? `${job.customer.first_name || ''} ${job.customer.last_name || ''}`.trim() || job.customer.company_name || 'Valued Customer'
+                  : 'Valued Customer';
+
                 return (
                   <div
                     key={job.id}
@@ -713,7 +882,7 @@ export function TechnicianFieldPortal({
                           </Badge>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                          {job.customer?.name} • {job.customer?.city || 'Springfield'}
+                          {jobCustomerName} • {job.customer?.city || 'Local Area'}
                         </p>
                       </div>
                     </div>

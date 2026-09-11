@@ -129,3 +129,35 @@ export async function rejectQuoteAction(quoteId: string, reason?: string) {
     };
   }
 }
+
+export async function updateQuoteAction(quoteId: string, input: CreateQuoteInput, resend = false) {
+  const parsed = CreateQuoteSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0].message,
+    };
+  }
+
+  try {
+    const quote = await QuoteService.update(quoteId, parsed.data);
+
+    if (resend) {
+      await sendQuoteAction(quoteId);
+    }
+
+    revalidatePath('/quotes');
+    revalidatePath(`/quotes/${quoteId}`);
+    revalidatePath('/dashboard');
+
+    return {
+      success: true,
+      data: quote,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}

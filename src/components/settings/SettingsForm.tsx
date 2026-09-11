@@ -9,6 +9,7 @@ import { createCheckoutSessionAction, createPortalSessionAction } from '@/action
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Save, Check } from 'lucide-react';
 import { TeamManagement } from '@/components/team/TeamManagement';
+import { DataManagementCard } from './DataManagementCard';
 import type { Organization, Subscription } from '@/types/database';
 
 interface SettingsFormProps {
@@ -245,6 +246,9 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
 
       {/* Field Technicians & Crew Management */}
       <TeamManagement />
+
+      {/* Workspace Data Management & Danger Zone */}
+      <DataManagementCard />
     </div>
   );
 }

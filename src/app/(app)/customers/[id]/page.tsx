@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CustomerService } from '@/services/CustomerService';
+import { EditCustomerModal } from '@/components/customers/EditCustomerModal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,12 +44,15 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back to Customers
         </Link>
-        <Link href={`/quotes/new?customer_id=${customer.id}`}>
-          <Button size="sm">
-            <Plus className="w-4 h-4 mr-1.5" />
-            Create Quote
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <EditCustomerModal customer={customer} />
+          <Link href={`/quotes/new?customer_id=${customer.id}`}>
+            <Button size="sm">
+              <Plus className="w-4 h-4 mr-1.5" />
+              Create Quote
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Customer Profile Card */}

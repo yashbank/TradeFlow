@@ -36,7 +36,7 @@ export class JobService {
   /**
    * Lists jobs. Technicians only see their assigned jobs.
    */
-  static async list(status?: JobStatus, limit = 50, offset = 0) {
+  static async list(status?: JobStatus, search?: string, limit = 50, offset = 0) {
     const { organization, user, role } = await AuthService.requireContext();
     const supabase = await createClient();
 
@@ -53,6 +53,11 @@ export class JobService {
 
     if (status) {
       query = query.eq('status', status);
+    }
+
+    if (search && search.trim().length > 0) {
+      const term = `%${search.trim()}%`;
+      query = query.or(`job_number.ilike.${term},title.ilike.${term},description.ilike.${term}`);
     }
 
     const { data, count, error } = await query;

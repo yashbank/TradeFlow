@@ -6,16 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import { CalendarCheck2, MapPin, ChevronRight, Clock, User, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ListSearchBar } from '@/components/common/ListSearchBar';
 import type { JobStatus } from '@/types/database';
 
 interface JobsPageProps {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }
 
 export default async function JobsPage({ searchParams }: JobsPageProps) {
-  const { status } = await searchParams;
+  const { status, q } = await searchParams;
   const validStatus = status as JobStatus | undefined;
-  const { jobs, totalCount } = await JobService.list(validStatus);
+  const { jobs, totalCount } = await JobService.list(validStatus, q);
 
   const filterTabs = [
     { label: 'All', value: '' },
@@ -43,14 +44,24 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
         </Link>
       </div>
 
+      {/* Search Input Bar */}
+      <ListSearchBar
+        placeholder="Search jobs by #, title, description..."
+        defaultSearch={q || ''}
+        totalCount={totalCount}
+      />
+
       {/* Filter Tabs */}
       <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-zinc-800 pb-2 overflow-x-auto">
         {filterTabs.map((tab) => {
           const isActive = (!status && tab.value === '') || status === tab.value;
+          const href = tab.value
+            ? (q ? `/jobs?status=${tab.value}&q=${encodeURIComponent(q)}` : `/jobs?status=${tab.value}`)
+            : (q ? `/jobs?q=${encodeURIComponent(q)}` : '/jobs');
           return (
             <Link
               key={tab.value}
-              href={tab.value ? `/jobs?status=${tab.value}` : '/jobs'}
+              href={href}
               className={`px-3 py-1.5 text-xs font-bold rounded-xl whitespace-nowrap transition-all active:scale-95 ${
                 isActive
                   ? 'bg-blue-600 text-white shadow-xs shadow-blue-500/30'
