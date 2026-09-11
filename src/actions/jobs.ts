@@ -89,3 +89,19 @@ export async function updateJobAction(
     };
   }
 }
+
+export async function deleteJobAction(jobId: string) {
+  try {
+    await JobService.delete(jobId);
+    revalidatePath('/jobs');
+    revalidatePath('/dashboard');
+    return {
+      success: true,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}

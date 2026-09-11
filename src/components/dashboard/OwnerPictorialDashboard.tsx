@@ -210,6 +210,65 @@ export function OwnerPictorialDashboard({
         </div>
       </div>
 
+      {/* Zero-State Quick-Start Onboarding Checklist (when organization has 0 jobs and 0 revenue) */}
+      {totalJobs === 0 && totalInvoicedCents === 0 && (
+        <Card className="glass-panel-elevated p-6 rounded-3xl border-2 border-dashed border-sky-500/40 bg-gradient-to-r from-sky-500/5 via-blue-500/5 to-teal-500/5 shadow-lg">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-1.5 max-w-xl">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                  <Sparkles className="w-5 h-5" />
+                </span>
+                <h3 className="text-lg font-black text-slate-900 dark:text-zinc-100">
+                  Welcome to TradeFlow • Ready for First Dispatch
+                </h3>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                Your workspace is active and synced to the database. Kickstart your field service pipeline in 3 simple steps:
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
+              <Link
+                href="/customers"
+                className="p-4 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-slate-200 dark:border-zinc-700 hover:border-sky-500/60 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-black flex items-center justify-center">1</span>
+                  <Users className="w-4 h-4 text-sky-500 group-hover:scale-110 transition-transform" />
+                </div>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-sky-600">Add Customer</h4>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">Register client & property address</p>
+              </Link>
+
+              <Link
+                href="/quotes/new"
+                className="p-4 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-slate-200 dark:border-zinc-700 hover:border-sky-500/60 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-black flex items-center justify-center">2</span>
+                  <FileCheck className="w-4 h-4 text-sky-500 group-hover:scale-110 transition-transform" />
+                </div>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-sky-600">Create Estimate</h4>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">Draft quote with plumbing presets</p>
+              </Link>
+
+              <Link
+                href="/jobs/new"
+                className="p-4 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-slate-200 dark:border-zinc-700 hover:border-sky-500/60 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-black flex items-center justify-center">3</span>
+                  <CalendarCheck2 className="w-4 h-4 text-sky-500 group-hover:scale-110 transition-transform" />
+                </div>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-sky-600">Dispatch Tech</h4>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">Assign job order to field crew</p>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* 2. Real Visual Circular Radial Dials (Collection, Win Rate, SLA) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Dial 1: Cash Collection */}

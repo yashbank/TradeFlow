@@ -129,3 +129,19 @@ export async function recordPaymentAction(invoiceId: string, input: RecordPaymen
     };
   }
 }
+
+export async function deleteInvoiceAction(invoiceId: string) {
+  try {
+    await InvoiceService.delete(invoiceId);
+    revalidatePath('/invoices');
+    revalidatePath('/dashboard');
+    return {
+      success: true,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}

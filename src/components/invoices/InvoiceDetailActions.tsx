@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { RecordPaymentModal } from './RecordPaymentModal';
-import { sendInvoiceAction, voidInvoiceAction } from '@/actions/invoices';
-import { Send, DollarSign, Ban, Copy, Check, ExternalLink, Download } from 'lucide-react';
+import { sendInvoiceAction, voidInvoiceAction, deleteInvoiceAction } from '@/actions/invoices';
+import { Send, DollarSign, Ban, Copy, Check, ExternalLink, Download, Trash2 } from 'lucide-react';
 import { useToast } from '@/lib/toast/ToastContext';
+import { DeleteConfirmationModal } from '@/components/common/DeleteConfirmationModal';
 import type { Invoice } from '@/types/database';
 
 interface InvoiceDetailActionsProps {
@@ -18,10 +19,20 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
   const router = useRouter();
   const toast = useToast();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleDeleteInvoice() {
+    const res = await deleteInvoiceAction(invoice.id);
+    if (!res.success) {
+      throw new Error(res.error || 'Failed to delete invoice');
+    }
+    toast.success('Invoice Deleted', `Invoice ${invoice.invoice_number} has been deleted.`);
+    router.push('/invoices');
+  }
 
   function copyLink() {
     const url = typeof window !== 'undefined'
@@ -158,6 +169,16 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
             Void
           </Button>
         )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowDeleteModal(true)}
+          className="min-h-[44px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 border-rose-200 dark:border-rose-900"
+        >
+          <Trash2 className="w-4 h-4 mr-1.5" />
+          Delete
+        </Button>
       </div>
 
       {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
@@ -204,6 +225,16 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
         invoice={invoice}
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteInvoice}
+        title="Delete Invoice"
+        entityName={`Invoice ${invoice.invoice_number}`}
+        warningMessage={`Are you sure you want to permanently delete Invoice ${invoice.invoice_number}? Any line items and recorded payment ledger history for this invoice will be removed.`}
       />
     </div>
   );

@@ -161,3 +161,19 @@ export async function updateQuoteAction(quoteId: string, input: CreateQuoteInput
     };
   }
 }
+
+export async function deleteQuoteAction(quoteId: string) {
+  try {
+    await QuoteService.delete(quoteId);
+    revalidatePath('/quotes');
+    revalidatePath('/dashboard');
+    return {
+      success: true,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}

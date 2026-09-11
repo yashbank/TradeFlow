@@ -45,10 +45,26 @@ export async function updateCustomerAction(customerId: string, input: Partial<Cu
   }
 }
 
-export async function deleteCustomerAction(customerId: string) {
+export async function getCustomerLinkedCountsAction(customerId: string) {
   try {
-    await CustomerService.delete(customerId);
+    const counts = await CustomerService.getLinkedEntityCounts(customerId);
+    return {
+      success: true,
+      data: counts,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}
+
+export async function deleteCustomerAction(customerId: string, forceCascade: boolean = false) {
+  try {
+    await CustomerService.delete(customerId, forceCascade);
     revalidatePath('/customers');
+    revalidatePath('/dashboard');
     return {
       success: true,
     };

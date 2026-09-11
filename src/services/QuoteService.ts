@@ -505,4 +505,43 @@ export class QuoteService {
 
     return job;
   }
+
+  /**
+   * Deletes a single quote and its associated quote items.
+   */
+  static async delete(quoteId: string): Promise<void> {
+    const { organization } = await AuthService.requireRole(['owner', 'admin']);
+    const supabase = await createClient();
+    const admin = createAdminClient();
+
+    const existing = await this.getById(quoteId);
+    if (!existing) {
+      throw new Error('Quote not found.');
+    }
+
+    // Disassociate source_quote_id on jobs referencing this quote
+    await admin
+      .from('jobs')
+      .update({ source_quote_id: null })
+      .eq('source_quote_id', quoteId)
+      .eq('organization_id', organization.id);
+
+    // Delete quote line items
+    await admin
+      .from('quote_items')
+      .delete()
+      .eq('quote_id', quoteId)
+      .eq('organization_id', organization.id);
+
+    // Delete the quote
+    const { error } = await supabase
+      .from('quotes')
+      .delete()
+      .eq('id', quoteId)
+      .eq('organization_id', organization.id);
+
+    if (error) {
+      throw new Error(`Failed to delete quote: ${error.message}`);
+    }
+  }
 }

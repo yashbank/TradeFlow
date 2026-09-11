@@ -3,6 +3,7 @@
 // ==============================================================================
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthService } from './AuthService';
 import type { CustomerInput } from '@/lib/validations/customer';
 import type { Customer } from '@/types/database';
@@ -113,11 +114,76 @@ export class CustomerService {
   }
 
   /**
-   * Deletes a customer record if no linked jobs or invoices exist.
+   * Retrieves count of linked entities (quotes, jobs, invoices) for a customer.
    */
-  static async delete(customerId: string): Promise<void> {
+  static async getLinkedEntityCounts(customerId: string): Promise<{ quotesCount: number; jobsCount: number; invoicesCount: number }> {
+    const { organization } = await AuthService.requireContext();
+    const supabase = await createClient();
+
+    const [quotesRes, jobsRes, invoicesRes] = await Promise.all([
+      supabase.from('quotes').select('id', { count: 'exact', head: true }).eq('customer_id', customerId).eq('organization_id', organization.id),
+      supabase.from('jobs').select('id', { count: 'exact', head: true }).eq('customer_id', customerId).eq('organization_id', organization.id),
+      supabase.from('invoices').select('id', { count: 'exact', head: true }).eq('customer_id', customerId).eq('organization_id', organization.id),
+    ]);
+
+    return {
+      quotesCount: quotesRes.count || 0,
+      jobsCount: jobsRes.count || 0,
+      invoicesCount: invoicesRes.count || 0,
+    };
+  }
+
+  /**
+   * Deletes a customer record.
+   * If forceCascade is false and linked records exist, throws a descriptive error.
+   * If forceCascade is true, cleanly cascades all dependent transactions.
+   */
+  static async delete(customerId: string, forceCascade: boolean = false): Promise<void> {
     const { organization } = await AuthService.requireRole(['owner', 'admin']);
     const supabase = await createClient();
+    const admin = createAdminClient();
+
+    // Check linked records
+    const counts = await this.getLinkedEntityCounts(customerId);
+    const totalLinked = counts.quotesCount + counts.jobsCount + counts.invoicesCount;
+
+    if (!forceCascade && totalLinked > 0) {
+      throw new Error(
+        `Cannot delete customer: Customer has ${counts.quotesCount} quote(s), ${counts.jobsCount} job(s), and ${counts.invoicesCount} invoice(s). Confirm cascading deletion to remove all associated records.`
+      );
+    }
+
+    if (forceCascade && totalLinked > 0) {
+      // 1. Get invoice IDs for this customer
+      const { data: customerInvoices } = await admin
+        .from('invoices')
+        .select('id')
+        .eq('customer_id', customerId)
+        .eq('organization_id', organization.id);
+      
+      const invoiceIds = (customerInvoices || []).map((inv) => inv.id);
+      if (invoiceIds.length > 0) {
+        await admin.from('payments').delete().in('invoice_id', invoiceIds);
+        await admin.from('invoice_items').delete().in('invoice_id', invoiceIds);
+        await admin.from('invoices').delete().eq('customer_id', customerId).eq('organization_id', organization.id);
+      }
+
+      // 2. Delete jobs
+      await admin.from('jobs').delete().eq('customer_id', customerId).eq('organization_id', organization.id);
+
+      // 3. Delete quote items and quotes
+      const { data: customerQuotes } = await admin
+        .from('quotes')
+        .select('id')
+        .eq('customer_id', customerId)
+        .eq('organization_id', organization.id);
+      
+      const quoteIds = (customerQuotes || []).map((q) => q.id);
+      if (quoteIds.length > 0) {
+        await admin.from('quote_items').delete().in('quote_id', quoteIds);
+        await admin.from('quotes').delete().eq('customer_id', customerId).eq('organization_id', organization.id);
+      }
+    }
 
     const { error } = await supabase
       .from('customers')

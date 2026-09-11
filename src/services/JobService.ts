@@ -3,6 +3,7 @@
 // ==============================================================================
 
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { AuthService } from './AuthService';
 import { transitionJobStatus } from '@/lib/state/machines';
 import type { CreateJobInput } from '@/lib/validations/job';
@@ -237,6 +238,38 @@ export class JobService {
         email: m.user.email,
         role: m.role,
       }));
+  }
+
+  /**
+   * Deletes a single job and unlinks references.
+   */
+  static async delete(jobId: string): Promise<void> {
+    const { organization } = await AuthService.requireRole(['owner', 'admin']);
+    const supabase = await createClient();
+    const admin = createAdminClient();
+
+    const existing = await this.getById(jobId);
+    if (!existing) {
+      throw new Error('Job not found.');
+    }
+
+    // Nullify source_job_id on invoices referencing this job
+    await admin
+      .from('invoices')
+      .update({ source_job_id: null })
+      .eq('source_job_id', jobId)
+      .eq('organization_id', organization.id);
+
+    // Delete the job
+    const { error } = await supabase
+      .from('jobs')
+      .delete()
+      .eq('id', jobId)
+      .eq('organization_id', organization.id);
+
+    if (error) {
+      throw new Error(`Failed to delete job: ${error.message}`);
+    }
   }
 }
 

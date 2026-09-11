@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { updateJobStatusAction, convertJobToInvoiceAction, updateJobAction } from '@/actions/jobs';
-import { Play, CheckCircle, Receipt, X, Pencil, Clock, MapPin } from 'lucide-react';
+import { updateJobStatusAction, convertJobToInvoiceAction, updateJobAction, deleteJobAction } from '@/actions/jobs';
+import { Play, CheckCircle, Receipt, X, Pencil, Clock, MapPin, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/lib/toast/ToastContext';
+import { DeleteConfirmationModal } from '@/components/common/DeleteConfirmationModal';
 import type { Job } from '@/types/database';
 
 interface JobDetailActionsProps {
@@ -19,10 +20,20 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
   const toast = useToast();
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [internalNotes, setInternalNotes] = useState(job.internal_notes || '');
   const [loading, setLoading] = useState(false);
   const [isUpdatingJob, setIsUpdatingJob] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleDeleteJob() {
+    const res = await deleteJobAction(job.id);
+    if (!res.success) {
+      throw new Error(res.error || 'Failed to delete work order');
+    }
+    toast.success('Job Deleted', `Work order ${job.job_number} has been deleted.`);
+    router.push('/jobs');
+  }
 
   // Edit fields
   const [editTitle, setEditTitle] = useState(job.title);
@@ -155,6 +166,16 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
             {loading ? 'Generating...' : 'Create Invoice Now'}
           </Button>
         )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowDeleteModal(true)}
+          className="min-h-[44px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 border-rose-200 dark:border-rose-900"
+        >
+          <Trash2 className="w-4 h-4 mr-1.5" />
+          Delete
+        </Button>
       </div>
 
       {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
@@ -364,6 +385,16 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
           </Card>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteJob}
+        title="Delete Work Order"
+        entityName={`Job #${job.job_number || job.id.slice(0, 8)}`}
+        warningMessage={`Are you sure you want to permanently delete Work Order #${job.job_number}? Any dispatches, technician assignments, and job notes will be removed.`}
+      />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   convertQuoteToJobAction,
   approveQuoteAction,
   rejectQuoteAction,
+  deleteQuoteAction,
 } from '@/actions/quotes';
 import {
   Send,
@@ -22,9 +23,11 @@ import {
   XCircle,
   X,
   PhoneCall,
+  Trash2,
 } from 'lucide-react';
 import { useToast } from '@/lib/toast/ToastContext';
 import { EditQuoteModal } from './EditQuoteModal';
+import { DeleteConfirmationModal } from '@/components/common/DeleteConfirmationModal';
 import type { Quote } from '@/types/database';
 
 interface QuoteDetailActionsProps {
@@ -40,15 +43,24 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // In-app quote approval & decline modal states
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [signerName, setSignerName] = useState(
     `${quote.customer?.first_name || ''} ${quote.customer?.last_name || ''}`.trim()
   );
   const [approvalMethod, setApprovalMethod] = useState('Verbal / Phone Approval');
   const [autoConvert, setAutoConvert] = useState(true);
   const [declineReason, setDeclineReason] = useState('Price too high / Budget mismatch');
+
+  async function handleDeleteQuote() {
+    const res = await deleteQuoteAction(quote.id);
+    if (!res.success) {
+      throw new Error(res.error || 'Failed to delete quote');
+    }
+    toast.success('Quote Deleted', `Quote ${quote.quote_number} has been removed.`);
+    router.push('/quotes');
+  }
 
   function copyLink() {
     const url = typeof window !== 'undefined'
@@ -241,6 +253,16 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
             {loading ? 'Converting...' : 'Convert to Active Job'}
           </Button>
         )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowDeleteModal(true)}
+          className="min-h-[44px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 border-rose-200 dark:border-rose-900"
+        >
+          <Trash2 className="w-4 h-4 mr-1.5" />
+          Delete
+        </Button>
       </div>
 
       {/* Sticky Mobile Thumb-Zone Bottom Action Bar */}
@@ -438,6 +460,16 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
           </Card>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteQuote}
+        title="Delete Quote"
+        entityName={`Quote ${quote.quote_number}`}
+        warningMessage={`Are you sure you want to permanently delete Quote ${quote.quote_number}? All line items associated with this proposal will be removed.`}
+      />
     </div>
   );
 }

@@ -18,6 +18,8 @@ export function transitionQuoteStatus(
   current: QuoteStatus,
   target: QuoteStatus
 ): QuoteStatus {
+  if (current === target) return target;
+
   const allowedTransitions: Record<QuoteStatus, QuoteStatus[]> = {
     draft: ['sent'],
     sent: ['accepted', 'rejected', 'expired'],
@@ -40,6 +42,8 @@ export function transitionJobStatus(
   current: JobStatus,
   target: JobStatus
 ): JobStatus {
+  if (current === target) return target;
+
   const allowedTransitions: Record<JobStatus, JobStatus[]> = {
     scheduled: ['in_progress', 'cancelled'],
     in_progress: ['completed', 'cancelled'],
@@ -62,6 +66,8 @@ export function transitionInvoiceStatus(
   target: InvoiceStatus,
   hasPaymentsRecorded: boolean = false
 ): InvoiceStatus {
+  if (current === target) return target;
+
   if (current === 'paid' && target === 'void') {
     throw new Error("Cannot void an invoice in 'paid' status with recorded payments.");
   }
@@ -92,6 +98,8 @@ export function transitionSubscriptionStatus(
   current: SubscriptionStatus,
   target: SubscriptionStatus
 ): SubscriptionStatus {
+  if (current === target) return target;
+
   const allowedTransitions: Record<SubscriptionStatus, SubscriptionStatus[]> = {
     trialing: ['active', 'past_due', 'canceled'],
     active: ['past_due', 'canceled'],

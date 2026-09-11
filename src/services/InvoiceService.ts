@@ -415,4 +415,43 @@ export class InvoiceService {
     if (error || !data) return null;
     return data;
   }
+
+  /**
+   * Deletes a single invoice, its items, and recorded payments.
+   */
+  static async delete(invoiceId: string): Promise<void> {
+    const { organization } = await AuthService.requireRole(['owner', 'admin']);
+    const supabase = await createClient();
+    const admin = createAdminClient();
+
+    const existing = await this.getById(invoiceId);
+    if (!existing) {
+      throw new Error('Invoice not found.');
+    }
+
+    // Delete associated payments
+    await admin
+      .from('payments')
+      .delete()
+      .eq('invoice_id', invoiceId)
+      .eq('organization_id', organization.id);
+
+    // Delete associated invoice items
+    await admin
+      .from('invoice_items')
+      .delete()
+      .eq('invoice_id', invoiceId)
+      .eq('organization_id', organization.id);
+
+    // Delete the invoice
+    const { error } = await supabase
+      .from('invoices')
+      .delete()
+      .eq('id', invoiceId)
+      .eq('organization_id', organization.id);
+
+    if (error) {
+      throw new Error(`Failed to delete invoice: ${error.message}`);
+    }
+  }
 }

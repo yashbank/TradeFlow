@@ -37,7 +37,14 @@ import {
   ExternalLink,
   User,
   FileText,
+  Radio,
+  RefreshCw,
+  PenTool,
+  CheckCheck,
 } from 'lucide-react';
+import { SignaturePadModal } from '@/components/common/SignaturePadModal';
+import { JobPhotoGallery, type JobPhoto } from '@/components/jobs/JobPhotoGallery';
+import { DispatchNotificationModal } from '@/components/jobs/DispatchNotificationModal';
 import type { UserProfile, Organization } from '@/types/database';
 
 export interface StoredStopwatchState {
@@ -96,7 +103,8 @@ export function calculateQuarterHourRounding(seconds: number): {
 /**
  * Normalizes phone strings by removing formatting characters for mobile dialer schemes.
  */
-export function normalizePhoneForUri(phone: string): string {
+export function normalizePhoneForUri(phone?: string | null): string {
+  if (!phone) return '';
   return phone.replace(/[^0-9+]/g, '');
 }
 
@@ -147,6 +155,13 @@ export function TechnicianFieldPortal({
       else setFieldState('scheduled');
     }
   }, [activeJob]);
+
+  // Signature & Dispatch Alert Modal states
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [customerSignature, setCustomerSignature] = useState<string | null>(null);
+  const [customerSignerName, setCustomerSignerName] = useState<string>('');
+  const [showDispatchNotificationModal, setShowDispatchNotificationModal] = useState(false);
+  const [jobPhotos, setJobPhotos] = useState<JobPhoto[]>([]);
 
   // Persistent Labor stopwatch timer with localStorage & wall-clock math
   const storageKey = activeJob?.id ? `tradeflow_stopwatch_${activeJob.id}` : null;
@@ -284,31 +299,32 @@ export function TechnicianFieldPortal({
     toast.info('Part Removed', `${partName} removed from order.`);
   }
 
-  // Address and Customer details resolution
+  // Address and Customer details resolution (Strict: No Mock Fallback Data)
   const customer = activeJob?.customer;
   const customerFullName = customer
-    ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.company_name || 'Valued Customer'
-    : 'Valued Customer';
+    ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.company_name || 'Customer'
+    : '';
 
-  const customerAddress = customer
-    ? `${customer.address_line1 || ''}${customer.city ? `, ${customer.city}` : ''}${customer.state ? `, ${customer.state}` : ''} ${customer.postal_code || ''}`.trim()
-    : '742 Evergreen Terrace, Springfield, OR';
+  const customerAddress = activeJob
+    ? `${activeJob.address_line1 || customer?.address_line1 || ''}${activeJob.city || customer?.city ? `, ${activeJob.city || customer?.city}` : ''}${activeJob.state || customer?.state ? `, ${activeJob.state || customer?.state}` : ''} ${activeJob.postal_code || customer?.postal_code || ''}`.trim() || (activeJob ? 'Address Not Specified' : '')
+    : '';
 
-  const customerPhone = customer?.phone || '(555) 019-2834';
+  const customerPhone = customer?.phone || '';
   const customerEmail = customer?.email || '';
   const customerNotes = customer?.notes || activeJob?.description || '';
 
   // Multi-GPS Navigation URLs
-  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(customerAddress)}`;
-  const appleMapsUrl = `https://maps.apple.com/?daddr=${encodeURIComponent(customerAddress)}`;
-  const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(customerAddress)}&navigate=yes`;
+  const hasValidAddress = Boolean(customerAddress && customerAddress !== 'Address Not Specified');
+  const googleMapsUrl = hasValidAddress ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(customerAddress)}` : '#';
+  const appleMapsUrl = hasValidAddress ? `https://maps.apple.com/?daddr=${encodeURIComponent(customerAddress)}` : '#';
+  const wazeUrl = hasValidAddress ? `https://waze.com/ul?q=${encodeURIComponent(customerAddress)}&navigate=yes` : '#';
 
   // Direct 1-tap call and prefilled SMS dispatch update
-  const normalizedPhone = normalizePhoneForUri(customerPhone);
-  const smsUrl = generateSmsDispatchUrl(customerPhone, user.full_name, customerFullName, customerAddress);
+  const normalizedPhone = customerPhone ? normalizePhoneForUri(customerPhone) : '';
+  const smsUrl = (customerPhone && hasValidAddress) ? generateSmsDispatchUrl(customerPhone, user.full_name, customerFullName || 'Customer', customerAddress) : '#';
 
   const copyAddressToClipboard = () => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    if (customerAddress && typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(customerAddress);
       toast.success('Address Copied', 'Service address copied to clipboard.');
     }
@@ -316,7 +332,7 @@ export function TechnicianFieldPortal({
 
   async function handleEnRoute() {
     setFieldState('en_route');
-    toast.info('En Route Dispatched', `Traveling to ${customerFullName}. Estimated arrival: 8 mins.`);
+    toast.info('En Route Dispatched', `Traveling to ${customerFullName || 'service location'}. Estimated arrival: 8 mins.`);
     if (activeJob?.id) {
       await updateJobStatusAction(activeJob.id, 'in_progress', 'Technician en route to location.');
       router.refresh();
@@ -325,7 +341,7 @@ export function TechnicianFieldPortal({
 
   async function handleArrived() {
     setFieldState('arrived');
-    toast.success('Arrived on Site', `Checked in at ${customerAddress}.`);
+    toast.success('Arrived on Site', `Checked in at ${customerAddress || 'client property'}.`);
     if (activeJob?.id) {
       await updateJobStatusAction(activeJob.id, 'in_progress', 'Technician arrived on site.');
       router.refresh();
@@ -344,15 +360,15 @@ export function TechnicianFieldPortal({
 
   async function handleCompleteJob() {
     if (!activeJob?.id) {
-      toast.success('Job Marked Completed', 'Work order finished successfully.');
-      setFieldState('completed');
-      resetStopwatch();
+      toast.error('No Active Order', 'Cannot complete order without an assigned work order.');
       return;
     }
 
     setIsUpdating(true);
     const laborRounding = calculateQuarterHourRounding(timerSeconds);
-    const summaryNotes = `Technician: ${user.full_name}\nLabor Duration: ${formatStopwatch(timerSeconds)} (${laborRounding.formatted})\nParts Used: ${loggedParts.map((p) => `${p.qty}x ${p.name}`).join(', ') || 'None'}\nField Notes: ${completionNotes || 'Job completed smoothly.'}`;
+    const signatureSnippet = customerSignature ? `Customer Signature: Signed by ${customerSignerName || 'Customer'} (Captured on glass)\n` : '';
+    const photosSnippet = jobPhotos.length > 0 ? `Inspection Photos: ${jobPhotos.length} site photos attached\n` : '';
+    const summaryNotes = `Technician: ${user.full_name}\nLabor Duration: ${formatStopwatch(timerSeconds)} (${laborRounding.formatted})\nParts Used: ${loggedParts.map((p) => `${p.qty}x ${p.name}`).join(', ') || 'None'}\n${signatureSnippet}${photosSnippet}Field Notes: ${completionNotes || 'Job completed smoothly.'}`;
 
     const res = await updateJobStatusAction(activeJob.id, 'completed', summaryNotes);
     setIsUpdating(false);
@@ -361,7 +377,7 @@ export function TechnicianFieldPortal({
       setFieldState('completed');
       resetStopwatch();
       router.refresh();
-      toast.success('Job Complete!', `Work order ${activeJob.job_number || 'J-2025'} completed and synced with Dispatch.`);
+      toast.success('Job Complete!', `Work order ${activeJob.job_number || 'order'} completed and synced with Dispatch.`);
     } else {
       toast.error('Error', res.error || 'Failed to update job status.');
     }
@@ -421,405 +437,557 @@ export function TechnicianFieldPortal({
         </div>
       </div>
 
-      {/* 2. Swiggy/Zomato-Style Live Route Map Card */}
-      <Card className="glass-panel-elevated overflow-hidden border border-sky-500/30">
-        <div className="relative h-64 sm:h-72 w-full bg-slate-900 overflow-hidden select-none">
-          {/* Stylized Vector Map Grid Background */}
-          <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px] opacity-20" />
+      {/* 2. Standby Radar Screen when No Assigned Jobs vs. Active Dispatch Route Experience */}
+      {!activeJob || myJobs.length === 0 ? (
+        <Card className="glass-panel-elevated overflow-hidden border border-sky-500/30 p-8 sm:p-12 text-center space-y-6">
+          <div className="relative w-40 h-40 sm:w-48 sm:h-48 mx-auto flex items-center justify-center">
+            {/* Concentric Radar Rings */}
+            <div className="absolute inset-0 rounded-full border border-sky-500/20 animate-ping opacity-30" />
+            <div className="absolute inset-4 rounded-full border border-sky-500/30" />
+            <div className="absolute inset-10 rounded-full border border-sky-500/40" />
+            <div className="absolute inset-16 rounded-full border border-sky-500/50" />
 
-          {/* Road Polyline (SVG Route Map) */}
-          <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="routeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#10b981" stopOpacity="1" />
-              </linearGradient>
-            </defs>
-            {/* Road lines */}
-            <path d="M 0,200 Q 150,180 300,120 T 600,80 T 900,40" fill="none" stroke="#1e293b" strokeWidth="24" strokeLinecap="round" />
-            <path d="M 0,200 Q 150,180 300,120 T 600,80 T 900,40" fill="none" stroke="#334155" strokeWidth="18" strokeLinecap="round" />
-            {/* Active Route Polyline */}
-            <path
-              d="M 60,190 Q 180,170 320,115 T 620,75"
-              fill="none"
-              stroke="url(#routeGradient)"
-              strokeWidth="6"
-              strokeDasharray="8 6"
-              strokeLinecap="round"
-              className="animate-pulse"
-            />
-          </svg>
+            {/* Radar Sweep Beam */}
+            <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,transparent_0_300deg,rgba(14,165,233,0.35)_360deg)] animate-spin [animation-duration:3s]" />
 
-          {/* Van Position (Origin) */}
-          <div className="absolute left-[60px] top-[170px] -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center animate-bounce">
-            <div className="bg-sky-500 text-white p-2 rounded-2xl shadow-lg shadow-sky-500/50 border-2 border-white">
-              <Navigation className="w-5 h-5 rotate-45" />
-            </div>
-            <span className="text-[10px] font-bold text-white bg-slate-900/90 px-2 py-0.5 rounded-full mt-1 border border-sky-400/40">
-              Your Van
-            </span>
-          </div>
-
-          {/* Destination Marker (Client Site) */}
-          <div className="absolute right-[20%] top-[60px] -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/50 border-2 border-white animate-pulse">
-                <MapPin className="w-5 h-5" />
-              </div>
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-400 rounded-full animate-ping" />
-            </div>
-            <span className="text-[10px] font-bold text-white bg-slate-900/90 px-2.5 py-0.5 rounded-full mt-1 border border-rose-400/40 whitespace-nowrap">
-              {customerFullName}
-            </span>
-          </div>
-
-          {/* Delivery ETA Pill Overlay */}
-          <div className="absolute top-4 left-4 z-20 bg-slate-900/90 backdrop-blur-md border border-white/20 text-white px-3.5 py-2 rounded-2xl flex items-center gap-2.5 shadow-xl">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <div>
-              <p className="text-xs font-black tracking-tight flex items-center gap-1.5">
-                <span>8 mins</span>
-                <span className="text-slate-400">•</span>
-                <span>2.4 mi</span>
-              </p>
-              <p className="text-[10px] text-emerald-400 font-medium">Fastest Route • Normal Traffic</p>
+            {/* Center Blip */}
+            <div className="relative w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center shadow-lg shadow-sky-500/50">
+              <Radio className="w-6 h-6 animate-pulse" />
             </div>
           </div>
 
-          {/* GPS Quick Action Launch Bar */}
-          <div className="absolute bottom-4 right-4 z-20 flex flex-wrap items-center gap-2">
-            <a
-              href={googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-sky-500 hover:bg-sky-600 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-lg shadow-sky-500/40 flex items-center gap-1.5 transition-transform active:scale-95"
-            >
-              <Compass className="w-3.5 h-3.5" />
-              Google Maps
-            </a>
-            <a
-              href={appleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-lg border border-slate-700 flex items-center gap-1.5 transition-transform active:scale-95"
-            >
-              <Navigation2 className="w-3.5 h-3.5 text-blue-400" />
-              Apple Maps
-            </a>
-            <a
-              href={wazeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-lg shadow-cyan-600/30 flex items-center gap-1.5 transition-transform active:scale-95"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              Waze
-            </a>
-          </div>
-        </div>
-
-        {/* Customer Stop Card & Quick Contact */}
-        <div className="p-5 bg-white/95 dark:bg-zinc-900/95 border-t border-slate-200/80 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1 max-w-xl">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
-                Stop #{myJobs.findIndex((j) => j.id === activeJob?.id) + 1 || 1} of {myJobs.length || 1}
-              </span>
-              <span className="text-slate-400">•</span>
-              <span className="text-xs font-mono font-bold text-slate-500 dark:text-zinc-400">
-                {activeJob?.job_number || 'J-2026-0001'}
-              </span>
-              {activeJob?.title?.toLowerCase().includes('emergency') && (
-                <Badge variant="destructive" className="text-[10px] py-0">
-                  Emergency
-                </Badge>
-              )}
-            </div>
-
-            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100">
-              {activeJob?.title || 'Emergency Leak Inspection & Pipe Repair'}
+          <div className="space-y-2 max-w-md mx-auto">
+            <Badge variant="outline" className="text-sky-600 dark:text-sky-400 border-sky-500/30 py-1 px-3 text-xs font-bold uppercase tracking-wider">
+              {isOnDuty ? '⚡ Standby Queue • Telemetry Online' : '⏸️ Shift Paused • Offline'}
+            </Badge>
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-zinc-100">
+              No Active Work Orders Assigned
             </h3>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 leading-relaxed">
+              Your dispatch queue is completely clear. Newly scheduled or dispatched work orders from the owner panel will appear here in real-time.
+            </p>
+          </div>
 
-            <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-zinc-300 pt-0.5">
-              <User className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-              <span className="font-bold text-slate-900 dark:text-zinc-100">{customerFullName}</span>
-              {customer?.company_name && (
-                <span className="text-slate-400">({customer.company_name})</span>
-              )}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                router.refresh();
+                toast.info('Queue Refreshed', 'Checking dispatch server for new orders...');
+              }}
+              className="min-h-[44px] font-bold text-xs"
+            >
+              <RefreshCw className="w-4 h-4 mr-1.5" />
+              Refresh Dispatch Queue
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setIsOnDuty(!isOnDuty);
+                toast.info(isOnDuty ? 'Shift Paused' : 'Shift Resumed', isOnDuty ? 'Marked offline.' : 'Marked online for dispatches.');
+              }}
+              className={`min-h-[44px] font-bold text-xs ${
+                isOnDuty ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+              }`}
+            >
+              {isOnDuty ? 'Pause Duty Shift' : 'Go Online for Orders'}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 max-w-lg mx-auto text-left">
+            <div className="p-3.5 rounded-2xl bg-white/50 dark:bg-zinc-800/50 border border-slate-200/60 dark:border-zinc-700/60">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fleet Status</span>
+              <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 mt-0.5">GPS Active</p>
             </div>
-
-            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-zinc-300">
-              <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-              <span className="truncate">{customerAddress}</span>
-              <button
-                type="button"
-                onClick={copyAddressToClipboard}
-                title="Copy Address"
-                className="text-sky-600 hover:text-sky-700 dark:text-sky-400 p-0.5 rounded hover:bg-sky-50 dark:hover:bg-sky-950/50"
-              >
-                <Copy className="w-3 h-3" />
-              </button>
+            <div className="p-3.5 rounded-2xl bg-white/50 dark:bg-zinc-800/50 border border-slate-200/60 dark:border-zinc-700/60">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Assigned Orders</span>
+              <p className="text-xs font-black text-slate-900 dark:text-zinc-100 mt-0.5">0 Pending</p>
             </div>
+            <div className="p-3.5 rounded-2xl bg-white/50 dark:bg-zinc-800/50 border border-slate-200/60 dark:border-zinc-700/60">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Truck Stock</span>
+              <p className="text-xs font-black text-sky-600 dark:text-sky-400 mt-0.5">Inventory Ready</p>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <>
+          {/* 2. Swiggy/Zomato-Style Live Route Map Card */}
+          <Card className="glass-panel-elevated overflow-hidden border border-sky-500/30">
+            <div className="relative h-64 sm:h-72 w-full bg-slate-900 overflow-hidden select-none">
+              <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px] opacity-20" />
 
-            {customerNotes && (
-              <div className="text-[11px] text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 p-2 rounded-xl border border-amber-200 dark:border-amber-800/60 mt-2 flex items-start gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+              <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="routeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity="1" />
+                  </linearGradient>
+                </defs>
+                <path d="M 0,200 Q 150,180 300,120 T 600,80 T 900,40" fill="none" stroke="#1e293b" strokeWidth="24" strokeLinecap="round" />
+                <path d="M 0,200 Q 150,180 300,120 T 600,80 T 900,40" fill="none" stroke="#334155" strokeWidth="18" strokeLinecap="round" />
+                <path
+                  d="M 60,190 Q 180,170 320,115 T 620,75"
+                  fill="none"
+                  stroke="url(#routeGradient)"
+                  strokeWidth="6"
+                  strokeDasharray="8 6"
+                  strokeLinecap="round"
+                  className="animate-pulse"
+                />
+              </svg>
+
+              <div className="absolute left-[60px] top-[170px] -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center animate-bounce">
+                <div className="bg-sky-500 text-white p-2 rounded-2xl shadow-lg shadow-sky-500/50 border-2 border-white">
+                  <Navigation className="w-5 h-5 rotate-45" />
+                </div>
+                <span className="text-[10px] font-bold text-white bg-slate-900/90 px-2 py-0.5 rounded-full mt-1 border border-sky-400/40">
+                  Your Van
+                </span>
+              </div>
+
+              <div className="absolute right-[20%] top-[60px] -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/50 border-2 border-white animate-pulse">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-400 rounded-full animate-ping" />
+                </div>
+                <span className="text-[10px] font-bold text-white bg-slate-900/90 px-2.5 py-0.5 rounded-full mt-1 border border-rose-400/40 whitespace-nowrap">
+                  {customerFullName || 'Service Site'}
+                </span>
+              </div>
+
+              <div className="absolute top-4 left-4 z-20 bg-slate-900/90 backdrop-blur-md border border-white/20 text-white px-3.5 py-2 rounded-2xl flex items-center gap-2.5 shadow-xl">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
                 <div>
-                  <span className="font-bold">Client Instructions: </span>
-                  {customerNotes}
+                  <p className="text-xs font-black tracking-tight flex items-center gap-1.5">
+                    <span>8 mins</span>
+                    <span className="text-slate-400">•</span>
+                    <span>2.4 mi</span>
+                  </p>
+                  <p className="text-[10px] text-emerald-400 font-medium">Fastest Route • Normal Traffic</p>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Quick Action Dial, SMS & Directions */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <a
-              href={`tel:${normalizedPhone}`}
-              className="p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 shadow-xs"
-            >
-              <Phone className="w-4 h-4" />
-              Call Customer
-            </a>
+              {hasValidAddress && (
+                <div className="absolute bottom-4 right-4 z-20 flex flex-wrap items-center gap-2">
+                  <a
+                    href={googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-sky-500 hover:bg-sky-600 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-lg shadow-sky-500/40 flex items-center gap-1.5 transition-transform active:scale-95"
+                  >
+                    <Compass className="w-3.5 h-3.5" />
+                    Google Maps
+                  </a>
+                  <a
+                    href={appleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-lg border border-slate-700 flex items-center gap-1.5 transition-transform active:scale-95"
+                  >
+                    <Navigation2 className="w-3.5 h-3.5 text-blue-400" />
+                    Apple Maps
+                  </a>
+                  <a
+                    href={wazeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-cyan-600 hover:bg-cyan-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-lg shadow-cyan-600/30 flex items-center gap-1.5 transition-transform active:scale-95"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Waze
+                  </a>
+                </div>
+              )}
+            </div>
 
-            <a
-              href={smsUrl}
-              className="p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 shadow-xs"
-            >
-              <MessageSquare className="w-4 h-4" />
-              SMS Alert
-            </a>
-          </div>
-        </div>
-      </Card>
-
-      {/* 3. Swiggy/Zomato Step-by-Step Delivery Action Stepper */}
-      <Card className="glass-panel text-card-foreground">
-        <CardHeader className="p-5 pb-3 border-b border-slate-200/60 dark:border-zinc-800/60">
-          <CardTitle className="text-sm font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-sky-500" />
-            Field Dispatch Action Steps
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent className="p-5 space-y-4">
-          {/* Action Step Bar */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-            <button
-              type="button"
-              onClick={handleEnRoute}
-              className={`p-3 rounded-2xl border text-left font-bold text-xs transition-all ${
-                fieldState === 'en_route'
-                  ? 'bg-sky-500 text-white border-sky-600 shadow-md shadow-sky-500/30'
-                  : 'bg-white/50 dark:bg-zinc-800/50 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span>1. En Route</span>
-                {fieldState === 'en_route' && <Check className="w-3.5 h-3.5" />}
-              </div>
-              <p className="text-[11px] font-normal opacity-80">Drive to client location</p>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleArrived}
-              className={`p-3 rounded-2xl border text-left font-bold text-xs transition-all ${
-                fieldState === 'arrived'
-                  ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/30'
-                  : 'bg-white/50 dark:bg-zinc-800/50 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span>2. Arrived on Site</span>
-                {fieldState === 'arrived' && <Check className="w-3.5 h-3.5" />}
-              </div>
-              <p className="text-[11px] font-normal opacity-80">Check in at property</p>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleStartWork}
-              className={`p-3 rounded-2xl border text-left font-bold text-xs transition-all ${
-                fieldState === 'in_progress'
-                  ? 'bg-blue-600 text-white border-blue-700 shadow-md shadow-blue-600/30'
-                  : 'bg-white/50 dark:bg-zinc-800/50 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span>3. In Progress</span>
-                {fieldState === 'in_progress' && <Check className="w-3.5 h-3.5" />}
-              </div>
-              <p className="text-[11px] font-normal opacity-80">Labor stopwatch ticking</p>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleCompleteJob}
-              disabled={isUpdating}
-              className={`p-3 rounded-2xl border text-left font-bold text-xs transition-all ${
-                fieldState === 'completed'
-                  ? 'bg-emerald-600 text-white border-emerald-700 shadow-md shadow-emerald-600/30'
-                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span>4. Complete Order</span>
-                {fieldState === 'completed' && <Check className="w-3.5 h-3.5" />}
-              </div>
-              <p className="text-[11px] font-normal opacity-80">Finish & notify dispatch</p>
-            </button>
-          </div>
-
-          {/* Live Labor Timer & Parts Logger (when In Progress) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {/* Stopwatch */}
-            <div className="p-4 rounded-2xl bg-slate-900 text-white flex flex-col justify-between shadow-inner">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-sky-400" />
-                  On-Site Labor Stopwatch
-                </span>
-                {timerRunning && (
-                  <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-bold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    Recording
+            {/* Customer Stop Card & Quick Contact */}
+            <div className="p-5 bg-white/95 dark:bg-zinc-900/95 border-t border-slate-200/80 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1 max-w-xl">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
+                    Stop #{myJobs.findIndex((j) => j.id === activeJob.id) + 1} of {myJobs.length}
                   </span>
+                  <span className="text-slate-400">•</span>
+                  <span className="text-xs font-mono font-bold text-slate-500 dark:text-zinc-400">
+                    {activeJob.job_number}
+                  </span>
+                  {activeJob.title?.toLowerCase().includes('emergency') && (
+                    <Badge variant="destructive" className="text-[10px] py-0">
+                      Emergency
+                    </Badge>
+                  )}
+                </div>
+
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100">
+                  {activeJob.title}
+                </h3>
+
+                <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-zinc-300 pt-0.5">
+                  <User className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                  <span className="font-bold text-slate-900 dark:text-zinc-100">{customerFullName || 'Valued Client'}</span>
+                  {customer?.company_name && (
+                    <span className="text-slate-400">({customer.company_name})</span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-zinc-300">
+                  <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                  <span className="truncate">{customerAddress || 'Address Not Specified'}</span>
+                  {customerAddress && (
+                    <button
+                      type="button"
+                      onClick={copyAddressToClipboard}
+                      title="Copy Address"
+                      className="text-sky-600 hover:text-sky-700 dark:text-sky-400 p-0.5 rounded hover:bg-sky-50 dark:hover:bg-sky-950/50"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                {customerNotes && (
+                  <div className="text-[11px] text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 p-2 rounded-xl border border-amber-200 dark:border-amber-800/60 mt-2 flex items-start gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">Client Instructions: </span>
+                      {customerNotes}
+                    </div>
+                  </div>
                 )}
               </div>
 
-              <div className="my-3 text-center">
-                <span className="text-3xl sm:text-4xl font-black font-mono tracking-wider text-sky-300">
-                  {formatStopwatch(timerSeconds)}
-                </span>
-                <p className="text-[11px] text-sky-400 font-mono mt-1">
-                  Billable: {calculateQuarterHourRounding(timerSeconds).formatted}
-                </p>
-              </div>
+              {/* Quick Action Dial, SMS & Dispatch Alerts */}
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                {normalizedPhone && (
+                  <a
+                    href={`tel:${normalizedPhone}`}
+                    className="p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 shadow-xs"
+                  >
+                    <Phone className="w-4 h-4" />
+                    Call Customer
+                  </a>
+                )}
 
-              <div className="flex items-center justify-center gap-2">
+                {customerPhone && hasValidAddress && (
+                  <a
+                    href={smsUrl}
+                    className="p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 shadow-xs"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    SMS Alert
+                  </a>
+                )}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDispatchNotificationModal(true)}
+                  className="p-3 rounded-xl min-h-[44px] text-xs font-bold flex items-center gap-1.5 border-sky-500/30 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/40"
+                >
+                  <Radio className="w-4 h-4 text-sky-500" />
+                  Dispatch Alerts
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* 3. Swiggy/Zomato Step-by-Step Delivery Action Stepper */}
+          <Card className="glass-panel text-card-foreground">
+            <CardHeader className="p-5 pb-3 border-b border-slate-200/60 dark:border-zinc-800/60">
+              <CardTitle className="text-sm font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-sky-500" />
+                Field Dispatch Action Steps
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="p-5 space-y-4">
+              {/* Action Step Bar */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                 <button
                   type="button"
-                  onClick={timerRunning ? pauseStopwatch : startStopwatch}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 ${
-                    timerRunning
-                      ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                      : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                  onClick={handleEnRoute}
+                  className={`p-3 rounded-2xl border text-left font-bold text-xs transition-all ${
+                    fieldState === 'en_route'
+                      ? 'bg-sky-500 text-white border-sky-600 shadow-md shadow-sky-500/30'
+                      : 'bg-white/50 dark:bg-zinc-800/50 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300'
                   }`}
                 >
-                  {timerRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                  {timerRunning ? 'Pause Stopwatch' : 'Start Stopwatch'}
+                  <div className="flex items-center justify-between mb-1">
+                    <span>1. En Route</span>
+                    {fieldState === 'en_route' && <Check className="w-3.5 h-3.5" />}
+                  </div>
+                  <p className="text-[11px] font-normal opacity-80">Drive to client location</p>
                 </button>
+
                 <button
                   type="button"
-                  onClick={resetStopwatch}
-                  className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 active:scale-95"
-                  title="Reset Timer"
+                  onClick={handleArrived}
+                  className={`p-3 rounded-2xl border text-left font-bold text-xs transition-all ${
+                    fieldState === 'arrived'
+                      ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/30'
+                      : 'bg-white/50 dark:bg-zinc-800/50 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300'
+                  }`}
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <div className="flex items-center justify-between mb-1">
+                    <span>2. Arrived on Site</span>
+                    {fieldState === 'arrived' && <Check className="w-3.5 h-3.5" />}
+                  </div>
+                  <p className="text-[11px] font-normal opacity-80">Check in at property</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleStartWork}
+                  className={`p-3 rounded-2xl border text-left font-bold text-xs transition-all ${
+                    fieldState === 'in_progress'
+                      ? 'bg-blue-600 text-white border-blue-700 shadow-md shadow-blue-600/30'
+                      : 'bg-white/50 dark:bg-zinc-800/50 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span>3. In Progress</span>
+                    {fieldState === 'in_progress' && <Check className="w-3.5 h-3.5" />}
+                  </div>
+                  <p className="text-[11px] font-normal opacity-80">Labor stopwatch ticking</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCompleteJob}
+                  disabled={isUpdating}
+                  className={`p-3 rounded-2xl border text-left font-bold text-xs transition-all ${
+                    fieldState === 'completed'
+                      ? 'bg-emerald-600 text-white border-emerald-700 shadow-md shadow-emerald-600/30'
+                      : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span>4. Complete Order</span>
+                    {fieldState === 'completed' && <Check className="w-3.5 h-3.5" />}
+                  </div>
+                  <p className="text-[11px] font-normal opacity-80">Finish & notify dispatch</p>
                 </button>
               </div>
-            </div>
 
-            {/* Quick Parts Logger */}
-            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white/40 dark:bg-zinc-800/40 space-y-2.5">
-              <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
-                <PackageCheck className="w-3.5 h-3.5 text-indigo-500" />
-                Quick-Add Truck Parts Used
-              </span>
+              {/* Live Labor Timer & Parts Logger (when In Progress) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                {/* Stopwatch */}
+                <div className="p-4 rounded-2xl bg-slate-900 text-white flex flex-col justify-between shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-sky-400" />
+                      On-Site Labor Stopwatch
+                    </span>
+                    {timerRunning && (
+                      <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                        Recording
+                      </span>
+                    )}
+                  </div>
 
-              <div className="flex flex-wrap gap-1.5">
-                {COMMON_PARTS.map((part) => (
-                  <button
-                    key={part.name}
-                    type="button"
-                    onClick={() => addPart(part)}
-                    className="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-white dark:bg-zinc-800 hover:bg-sky-50 dark:hover:bg-zinc-700 border border-slate-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 shadow-2xs transition-all active:scale-95"
-                  >
-                    + {part.name} ({formatConverted(part.priceCents)})
-                  </button>
-                ))}
-              </div>
+                  <div className="my-3 text-center">
+                    <span className="text-3xl sm:text-4xl font-black font-mono tracking-wider text-sky-300">
+                      {formatStopwatch(timerSeconds)}
+                    </span>
+                    <p className="text-[11px] text-sky-400 font-mono mt-1">
+                      Billable: {calculateQuarterHourRounding(timerSeconds).formatted}
+                    </p>
+                  </div>
 
-              {loggedParts.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-slate-100 dark:border-zinc-800 text-xs">
-                  <p className="font-semibold text-slate-700 dark:text-zinc-300 mb-1">Logged to Order:</p>
-                  <div className="space-y-1.5 max-h-32 overflow-y-auto pr-0.5">
-                    {loggedParts.map((p) => (
-                      <div
-                        key={p.name}
-                        className="flex items-center justify-between text-slate-600 dark:text-zinc-400 text-[11px] bg-slate-50/80 dark:bg-zinc-900/60 p-1.5 rounded-xl border border-slate-200/60 dark:border-zinc-800"
-                      >
-                        <div className="min-w-0 flex-1 mr-2">
-                          <p className="font-semibold text-slate-800 dark:text-zinc-200 truncate">{p.name}</p>
-                          <span className="font-mono text-[10px] text-slate-400">
-                            {formatConverted(p.priceCents * p.qty)} ({formatConverted(p.priceCents)}/ea)
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => decrementPart(p.name)}
-                            aria-label={`Decrease ${p.name}`}
-                            className="w-5 h-5 rounded bg-slate-200 dark:bg-zinc-700 hover:bg-slate-300 dark:hover:bg-zinc-600 flex items-center justify-center text-slate-700 dark:text-zinc-200 font-bold active:scale-95"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="w-5 text-center font-bold font-mono text-slate-800 dark:text-zinc-200 text-xs">
-                            {p.qty}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => incrementPart(p.name)}
-                            aria-label={`Increase ${p.name}`}
-                            className="w-5 h-5 rounded bg-slate-200 dark:bg-zinc-700 hover:bg-slate-300 dark:hover:bg-zinc-600 flex items-center justify-center text-slate-700 dark:text-zinc-200 font-bold active:scale-95"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removePart(p.name)}
-                            aria-label={`Remove ${p.name}`}
-                            className="w-5 h-5 rounded text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/40 flex items-center justify-center active:scale-95 ml-1"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={timerRunning ? pauseStopwatch : startStopwatch}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 ${
+                        timerRunning
+                          ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                          : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                      }`}
+                    >
+                      {timerRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                      {timerRunning ? 'Pause Stopwatch' : 'Start Stopwatch'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetStopwatch}
+                      className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 active:scale-95"
+                      title="Reset Timer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Completion Notes & Final Sign Off */}
-          <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 space-y-2">
-            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block">
-              Technician Field Completion Notes & Work Summary
-            </label>
-            <textarea
-              rows={2}
-              value={completionNotes}
-              onChange={(e) => setCompletionNotes(e.target.value)}
-              placeholder="e.g. Replaced leaking wax gasket and flange bolts, cleared drain line, tested water pressure to 65 PSI. Customer verified zero leaks."
-              className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-xs text-slate-900 dark:text-zinc-100 placeholder:text-slate-500 dark:placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs"
-            />
+                {/* Quick Parts Logger */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white/40 dark:bg-zinc-800/40 space-y-2.5">
+                  <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+                    <PackageCheck className="w-3.5 h-3.5 text-indigo-500" />
+                    Quick-Add Truck Parts Used
+                  </span>
 
-            <div className="flex justify-end pt-1">
-              <Button
-                type="button"
-                onClick={handleCompleteJob}
-                disabled={isUpdating}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/25 min-h-[44px] px-6"
-              >
-                <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                {isUpdating ? 'Completing Work Order...' : 'Submit & Complete Work Order'}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                  <div className="flex flex-wrap gap-1.5">
+                    {COMMON_PARTS.map((part) => (
+                      <button
+                        key={part.name}
+                        type="button"
+                        onClick={() => addPart(part)}
+                        className="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-white dark:bg-zinc-800 hover:bg-sky-50 dark:hover:bg-zinc-700 border border-slate-200 dark:border-zinc-700 text-slate-800 dark:text-zinc-200 shadow-2xs transition-all active:scale-95"
+                      >
+                        + {part.name} ({formatConverted(part.priceCents)})
+                      </button>
+                    ))}
+                  </div>
+
+                  {loggedParts.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-slate-100 dark:border-zinc-800 text-xs">
+                      <p className="font-semibold text-slate-700 dark:text-zinc-300 mb-1">Logged to Order:</p>
+                      <div className="space-y-1.5 max-h-32 overflow-y-auto pr-0.5">
+                        {loggedParts.map((p) => (
+                          <div
+                            key={p.name}
+                            className="flex items-center justify-between text-slate-600 dark:text-zinc-400 text-[11px] bg-slate-50/80 dark:bg-zinc-900/60 p-1.5 rounded-xl border border-slate-200/60 dark:border-zinc-800"
+                          >
+                            <div className="min-w-0 flex-1 mr-2">
+                              <p className="font-semibold text-slate-800 dark:text-zinc-200 truncate">{p.name}</p>
+                              <span className="font-mono text-[10px] text-slate-400">
+                                {formatConverted(p.priceCents * p.qty)} ({formatConverted(p.priceCents)}/ea)
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => decrementPart(p.name)}
+                                aria-label={`Decrease ${p.name}`}
+                                className="w-5 h-5 rounded bg-slate-200 dark:bg-zinc-700 hover:bg-slate-300 dark:hover:bg-zinc-600 flex items-center justify-center text-slate-700 dark:text-zinc-200 font-bold active:scale-95"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="w-5 text-center font-bold font-mono text-slate-800 dark:text-zinc-200 text-xs">
+                                {p.qty}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => incrementPart(p.name)}
+                                aria-label={`Increase ${p.name}`}
+                                className="w-5 h-5 rounded bg-slate-200 dark:bg-zinc-700 hover:bg-slate-300 dark:hover:bg-zinc-600 flex items-center justify-center text-slate-700 dark:text-zinc-200 font-bold active:scale-95"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removePart(p.name)}
+                                aria-label={`Remove ${p.name}`}
+                                className="w-5 h-5 rounded text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/40 flex items-center justify-center active:scale-95 ml-1"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Work Order Site Inspection Photos */}
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800">
+                <JobPhotoGallery
+                  initialPhotos={jobPhotos}
+                  onPhotosChange={setJobPhotos}
+                />
+              </div>
+
+              {/* Digital Signature On Glass */}
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+                    <PenTool className="w-3.5 h-3.5 text-sky-500" />
+                    Customer Digital Verification & Sign-Off
+                  </label>
+                  {customerSignature && (
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      Verified by {customerSignerName}
+                    </span>
+                  )}
+                </div>
+
+                {customerSignature ? (
+                  <div className="p-3 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 h-12 rounded-xl bg-white dark:bg-zinc-800 p-1 border border-emerald-300 dark:border-emerald-700 overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={customerSignature} alt="Signature" className="w-full h-full object-contain" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                          Signer: {customerSignerName}
+                        </p>
+                        <p className="text-[10px] text-emerald-700 dark:text-emerald-400">
+                          Recorded on glass via mobile touch interface
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowSignatureModal(true)}
+                      className="min-h-[36px] text-xs font-semibold"
+                    >
+                      Re-Sign
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowSignatureModal(true)}
+                    className="w-full min-h-[44px] border-dashed border-sky-400 dark:border-sky-700 text-sky-700 dark:text-sky-300 bg-sky-50/50 dark:bg-sky-950/20 font-bold text-xs flex items-center justify-center gap-2 hover:bg-sky-100/60"
+                  >
+                    <PenTool className="w-4 h-4" />
+                    Capture Customer Signature on Glass
+                  </Button>
+                )}
+              </div>
+
+              {/* Completion Notes & Final Sign Off */}
+              <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 space-y-2">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block">
+                  Technician Field Completion Notes & Work Summary
+                </label>
+                <textarea
+                  rows={2}
+                  value={completionNotes}
+                  onChange={(e) => setCompletionNotes(e.target.value)}
+                  placeholder="e.g. Replaced leaking wax gasket and flange bolts, cleared drain line, tested water pressure to 65 PSI. Customer verified zero leaks."
+                  className="w-full rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-xs text-slate-900 dark:text-zinc-100 placeholder:text-slate-500 dark:placeholder:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-2xs"
+                />
+
+                <div className="flex justify-end pt-1">
+                  <Button
+                    type="button"
+                    onClick={handleCompleteJob}
+                    disabled={isUpdating}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/25 min-h-[44px] px-6"
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                    {isUpdating ? 'Completing Work Order...' : 'Submit & Complete Work Order'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* 4. Today's Assigned Stops Timeline */}
       <Card className="glass-panel text-card-foreground">
@@ -899,6 +1067,33 @@ export function TechnicianFieldPortal({
           )}
         </CardContent>
       </Card>
+
+      {/* Digital Signature on Glass Modal */}
+      <SignaturePadModal
+        isOpen={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        onSave={({ signatureDataUrl, signerName }) => {
+          setCustomerSignature(signatureDataUrl);
+          setCustomerSignerName(signerName);
+          setShowSignatureModal(false);
+          toast.success('Signature Captured', `Signed by ${signerName}. Recorded for work order.`);
+        }}
+        title="Customer Sign-off on Glass"
+        defaultSignerName={customerFullName || ''}
+        roleLabel="Customer / Property Representative"
+      />
+
+      {/* Automated Dispatch Notification Modal */}
+      <DispatchNotificationModal
+        isOpen={showDispatchNotificationModal}
+        onClose={() => setShowDispatchNotificationModal(false)}
+        customerName={customerFullName || 'Valued Customer'}
+        customerPhone={customerPhone}
+        customerEmail={customerEmail}
+        technicianName={user.full_name}
+        serviceAddress={customerAddress || 'Service Site'}
+        jobNumber={activeJob?.job_number || 'ORD-NEW'}
+      />
     </div>
   );
 }
