@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { FEATURES } from '@/lib/featureFlags';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,88 +85,110 @@ export function OwnerPictorialDashboard({
     }
   }
 
-  // Real Database Financial Metrics (No Mock Numbers)
-  const collectedCents = metrics.revenueMtdCents || 0;
-  const outstandingCents = metrics.outstandingReceivablesCents || 0;
-  const totalInvoicedCents = metrics.totalInvoicedMtdCents || (collectedCents + outstandingCents);
+  // Real Database Financial Metrics (No Mock Numbers) — memoized to avoid re-computing on unrelated renders
+  const collectedCents = useMemo(() => metrics.revenueMtdCents || 0, [metrics.revenueMtdCents]);
+  const outstandingCents = useMemo(() => metrics.outstandingReceivablesCents || 0, [metrics.outstandingReceivablesCents]);
+  const totalInvoicedCents = useMemo(
+    () => metrics.totalInvoicedMtdCents || (collectedCents + outstandingCents),
+    [metrics.totalInvoicedMtdCents, collectedCents, outstandingCents]
+  );
 
-  const collectionPercent =
-    totalInvoicedCents > 0
-      ? Math.min(100, Math.round((collectedCents / totalInvoicedCents) * 100))
-      : 0;
+  const collectionPercent = useMemo(
+    () =>
+      totalInvoicedCents > 0
+        ? Math.min(100, Math.round((collectedCents / totalInvoicedCents) * 100))
+        : 0,
+    [collectedCents, totalInvoicedCents]
+  );
 
-  const quoteWinPercent = metrics.quoteWinRatePercentage || 0;
+  const quoteWinPercent = useMemo(() => metrics.quoteWinRatePercentage || 0, [metrics.quoteWinRatePercentage]);
 
-  const totalJobs = metrics.totalJobsCount || jobs.length || 0;
-  const completedJobs = metrics.completedJobsCount || jobs.filter((j) => j.status === 'completed').length || 0;
-  const slaOnTimePercent = totalJobs > 0 ? Math.min(100, Math.round((completedJobs / totalJobs) * 100)) : 100;
+  const totalJobs = useMemo(() => metrics.totalJobsCount || jobs.length || 0, [metrics.totalJobsCount, jobs]);
+  const completedJobs = useMemo(
+    () => metrics.completedJobsCount || jobs.filter((j) => j.status === 'completed').length || 0,
+    [metrics.completedJobsCount, jobs]
+  );
+  const slaOnTimePercent = useMemo(
+    () => (totalJobs > 0 ? Math.min(100, Math.round((completedJobs / totalJobs) * 100)) : 100),
+    [totalJobs, completedJobs]
+  );
 
   // Real Team Members & Assigned Fleet Vans Telemetry
-  const activeCrew = (teamMembers || []).map((member, idx) => {
-    const assignedActiveJob = jobs.find(
-      (j) => j.assigned_to_user_id === member.id && (j.status === 'in_progress' || j.status === 'scheduled')
-    );
+  const activeCrew = useMemo(
+    () =>
+      (teamMembers || []).map((member, idx) => {
+        const assignedActiveJob = jobs.find(
+          (j) => j.assigned_to_user_id === member.id && (j.status === 'in_progress' || j.status === 'scheduled')
+        );
 
-    let statusText = 'Available / Standby';
-    let jobTag = 'STANDBY';
-    let isWorking = false;
+        let statusText = 'Available / Standby';
+        let jobTag = 'STANDBY';
+        let isWorking = false;
 
-    if (assignedActiveJob) {
-      if (assignedActiveJob.status === 'in_progress') {
-        statusText = `On-Site: ${assignedActiveJob.title}`;
-        jobTag = assignedActiveJob.job_number || 'ACTIVE';
-        isWorking = true;
-      } else {
-        statusText = `Scheduled: ${assignedActiveJob.title}`;
-        jobTag = assignedActiveJob.job_number || 'SCHEDULED';
-      }
-    }
+        if (assignedActiveJob) {
+          if (assignedActiveJob.status === 'in_progress') {
+            statusText = `On-Site: ${assignedActiveJob.title}`;
+            jobTag = assignedActiveJob.job_number || 'ACTIVE';
+            isWorking = true;
+          } else {
+            statusText = `Scheduled: ${assignedActiveJob.title}`;
+            jobTag = assignedActiveJob.job_number || 'SCHEDULED';
+          }
+        }
 
-    // Deterministic position on radar grid based on index
-    const angles = [35, 65, 25, 75, 45, 80];
-    const distances = [30, 55, 70, 40, 60, 35];
-    const angle = angles[idx % angles.length];
-    const dist = distances[idx % distances.length];
+        // Deterministic position on radar grid based on index
+        const angles = [35, 65, 25, 75, 45, 80];
+        const distances = [30, 55, 70, 40, 60, 35];
+        const angle = angles[idx % angles.length];
+        const dist = distances[idx % distances.length];
 
-    return {
-      id: member.id,
-      tech: member.full_name || member.email,
-      role: member.role,
-      status: statusText,
-      job: jobTag,
-      isWorking,
-      lat: dist,
-      lng: angle,
-    };
-  });
+        return {
+          id: member.id,
+          tech: member.full_name || member.email,
+          role: member.role,
+          status: statusText,
+          job: jobTag,
+          isWorking,
+          lat: dist,
+          lng: angle,
+        };
+      }),
+    [teamMembers, jobs]
+  );
 
   // Active / Emergency Service Jobs Triage
-  const activeJobs = jobs.filter((j) => j.status === 'in_progress' || j.status === 'scheduled');
+  const activeJobs = useMemo(
+    () => jobs.filter((j) => j.status === 'in_progress' || j.status === 'scheduled'),
+    [jobs]
+  );
 
   // Real 7-Day Revenue Velocity Sparkline Path Construction
-  const weeklyPoints = Array.isArray(metrics.weeklyRevenue) && metrics.weeklyRevenue.length === 7
-    ? metrics.weeklyRevenue
-    : [0, 0, 0, 0, 0, 0, 0];
+  const { pathD, areaD, weeklyPoints } = useMemo(() => {
+    const weeklyPoints =
+      Array.isArray(metrics.weeklyRevenue) && metrics.weeklyRevenue.length === 7
+        ? metrics.weeklyRevenue
+        : [0, 0, 0, 0, 0, 0, 0];
 
-  const maxWeeklyRevenue = Math.max(...weeklyPoints, 10000); // at least $100 to avoid flat div by zero
-  const sparklineCoords = weeklyPoints.map((val: number, idx: number) => {
-    const x = Math.round((idx / 6) * 700);
-    // Y inverted: 110 is bottom, 10 is top
-    const y = Math.round(110 - (val / maxWeeklyRevenue) * 90);
-    return { x, y };
-  });
+    const maxWeeklyRevenue = Math.max(...weeklyPoints, 10000); // at least $100 to avoid flat div by zero
+    const sparklineCoords = weeklyPoints.map((val: number, idx: number) => {
+      const x = Math.round((idx / 6) * 700);
+      // Y inverted: 110 is bottom, 10 is top
+      const y = Math.round(110 - (val / maxWeeklyRevenue) * 90);
+      return { x, y };
+    });
 
-  const pathD = sparklineCoords.reduce((acc: string, pt: { x: number; y: number }, idx: number, arr: any[]) => {
-    if (idx === 0) return `M ${pt.x},${pt.y}`;
-    const prev = arr[idx - 1];
-    const cp1x = prev.x + (pt.x - prev.x) / 2;
-    const cp1y = prev.y;
-    const cp2x = prev.x + (pt.x - prev.x) / 2;
-    const cp2y = pt.y;
-    return `${acc} C ${cp1x},${cp1y} ${cp2x},${cp2y} ${pt.x},${pt.y}`;
-  }, '');
+    const pd = sparklineCoords.reduce((acc: string, pt: { x: number; y: number }, idx: number, arr: any[]) => {
+      if (idx === 0) return `M ${pt.x},${pt.y}`;
+      const prev = arr[idx - 1];
+      const cp1x = prev.x + (pt.x - prev.x) / 2;
+      const cp1y = prev.y;
+      const cp2x = prev.x + (pt.x - prev.x) / 2;
+      const cp2y = pt.y;
+      return `${acc} C ${cp1x},${cp1y} ${cp2x},${cp2y} ${pt.x},${pt.y}`;
+    }, '');
 
-  const areaD = `${pathD} L 700,120 L 0,120 Z`;
+    return { pathD: pd, areaD: `${pd} L 700,120 L 0,120 Z`, weeklyPoints };
+  }, [metrics.weeklyRevenue]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -219,6 +242,7 @@ export function OwnerPictorialDashboard({
             )}
           </div>
 
+          {FEATURES.DEMO_SEEDING && (
           <Button
             size="sm"
             variant="outline"
@@ -229,6 +253,7 @@ export function OwnerPictorialDashboard({
             <Sparkles className={`w-3.5 h-3.5 mr-1 ${isSeeding ? 'animate-spin text-indigo-500' : 'text-indigo-500'}`} />
             {isSeeding ? 'Seeding...' : 'Seed Demo Data'}
           </Button>
+          )}
           <Link href="/quotes/new">
             <Button size="sm" variant="outline" className="bg-white/80 dark:bg-zinc-800/80 font-bold text-xs">
               <Plus className="w-3.5 h-3.5 mr-1" />

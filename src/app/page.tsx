@@ -1,46 +1,36 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { Inter, Sora } from 'next/font/google';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
+import { LanguageSelector } from '@/components/i18n/LanguageSelector';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { CurrencySelector } from '@/components/currency/CurrencySelector';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import {
-  Wrench,
-  ArrowRight,
-  CheckCircle2,
-  FileText,
-  CalendarCheck2,
-  Receipt,
-  DollarSign,
-  Smartphone,
-  ShieldCheck,
-  Zap,
-  Navigation,
-  Clock,
-  Sparkles,
-  Star,
-  TrendingUp,
-  Users,
-  ChevronRight,
-  Play,
-  Check,
-  Calculator,
-  Award,
-  Building2,
-  PhoneCall,
-  Activity,
-  Layers,
-  FileCheck2,
+  Wrench, ArrowRight, CheckCircle2, Navigation, Clock, Receipt, Play, Check, Calculator, Star, PhoneCall, Zap, Smartphone, Target, XCircle, ChevronRight, Globe
 } from 'lucide-react';
+
+const inter = Inter({ subsets: ['latin'] });
+const sora = Sora({ subsets: ['latin'], weight: ['400', '600', '700', '800'] });
 
 export default function MarketingLandingPage() {
   const { t } = useTranslation();
+  
+  // Intersection Observer for scroll animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach(e => e.target.classList.toggle('in-view', e.isIntersecting)),
+      { threshold: 0.15 }
+    );
+    document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
-  // 1. Interactive Dispatch Simulator State
+  // Simulator State
   const [activeSimulatorStep, setActiveSimulatorStep] = useState<number>(0);
-
   const simulatorSteps = [
     {
       id: 0,
@@ -87,647 +77,358 @@ export default function MarketingLandingPage() {
       actionPrompt: 'Reset Simulation',
     },
   ];
-
   const currentSim = simulatorSteps[activeSimulatorStep];
 
-  // 2. Interactive ROI & Profit Calculator State
+  // ROI Calculator State
   const [techCount, setTechCount] = useState<number>(5);
   const [jobsPerDay, setJobsPerDay] = useState<number>(3);
   const [hourlyRate, setHourlyRate] = useState<number>(125);
-
   const roiCalculations = useMemo(() => {
-    // Each job saves ~45 mins (0.75 hours) of paperwork, phone tag, manual invoicing, and billing errors
     const workingDaysPerMonth = 22;
     const totalJobsMonthly = techCount * jobsPerDay * workingDaysPerMonth;
     const hoursSavedMonthly = Math.round(totalJobsMonthly * 0.75);
     const monthlyRevenueGain = Math.round(hoursSavedMonthly * hourlyRate);
     const annualRevenueGain = monthlyRevenueGain * 12;
-
-    return {
-      totalJobsMonthly,
-      hoursSavedMonthly,
-      monthlyRevenueGain,
-      annualRevenueGain,
-    };
+    return { totalJobsMonthly, hoursSavedMonthly, monthlyRevenueGain, annualRevenueGain };
   }, [techCount, jobsPerDay, hourlyRate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-sky-50/40 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 text-slate-900 dark:text-zinc-100 flex flex-col justify-between selection:bg-sky-500 selection:text-white transition-colors duration-200">
-      {/* 1. Floating Sticky Luxury Navigation Bar */}
-      <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/80 dark:bg-zinc-900/80 border-b border-slate-200/80 dark:border-zinc-800/80 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20">
-              <Wrench className="w-5 h-5" />
+    <div className={`min-h-screen bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 flex flex-col ${inter.className}`}>
+      {/* HEADER */}
+      <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/80 dark:bg-zinc-950/80 border-b border-slate-200 dark:border-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white">
+              <Wrench className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-black text-xl tracking-tight text-slate-900 dark:text-zinc-100">
-                  TradeFlow
-                </span>
-                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">
-                  Enterprise OS
-                </span>
-              </div>
-            </div>
+            <span className={`${sora.className} font-bold text-lg tracking-tight`}>TradeFlow</span>
           </div>
-
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600 dark:text-zinc-400">
-            <a href="#simulator" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
-              {t('landing.simulator_title')}
-            </a>
-            <a href="#storyline" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
-              {t('landing.storyline_title')}
-            </a>
-            <a href="#calculator" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
-              {t('landing.calc_title')}
-            </a>
-            <a href="#pricing" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
-              {t('landing.pricing_title')}
-            </a>
-          </nav>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <CompactControlsBar />
-            <Link
-              href="/login"
-              className="text-xs font-bold text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-zinc-100 px-3 py-2 min-h-[44px] flex items-center"
-            >
-              {t('auth.sign_in_btn')}
-            </Link>
-            <Link href="/signup">
-              <Button
-                size="sm"
-                className="bg-sky-600 hover:bg-sky-700 text-white font-black text-xs shadow-md shadow-sky-500/25 min-h-[44px] px-4 rounded-xl"
-              >
-                {t('landing.cta_primary')}
-                <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-              </Button>
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-1">
+              <LanguageSelector />
+              <CurrencySelector />
+              <ThemeToggle />
+            </div>
+            <div className="w-px h-6 bg-slate-200 dark:bg-zinc-800 mx-1 hidden sm:block"></div>
+            <Link href="/login" className="text-sm font-semibold hover:text-sky-600 px-3 py-2">
+              Sign In
             </Link>
           </div>
         </div>
       </header>
 
       <main className="flex-1">
-        {/* 2. Luxury Hero Section */}
-        <section className="relative pt-16 sm:pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-8 overflow-hidden">
-          {/* Subtle Ambient Glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-r from-sky-400/15 via-indigo-500/15 to-purple-500/15 blur-3xl pointer-events-none rounded-full -z-10" />
-
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md border border-sky-500/30 text-sky-700 dark:text-sky-300 text-xs font-bold shadow-xs">
-            <Sparkles className="w-4 h-4 text-sky-500 animate-pulse" />
-            <span>{t('landing.badge')}</span>
-          </div>
-
-          <div className="max-w-4xl mx-auto space-y-4">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-slate-950 dark:text-white">
-              {t('landing.hero_title')}
+        {/* HERO SECTION */}
+        <section className="relative pt-24 pb-32 px-4 overflow-hidden flex flex-col items-center text-center">
+          <div className="absolute inset-0 hero-gradient-mesh -z-10"></div>
+          
+          <div className="scroll-reveal max-w-4xl mx-auto space-y-6">
+            <h1 className={`${sora.className} text-5xl sm:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-zinc-50 leading-tight`}>
+              The <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-violet-500">Cinematic</span> OS for High-Velocity Trades
             </h1>
-            <p className="text-base sm:text-xl text-slate-600 dark:text-zinc-300 max-w-3xl mx-auto font-normal leading-relaxed">
-              {t('landing.hero_subtitle')}
+            <p className="text-lg sm:text-xl text-slate-600 dark:text-zinc-300 max-w-2xl mx-auto">
+              Real-time dispatch, instant invoicing, and 15-minute stopwatch billing. Built for master plumbers, electricians, and HVAC professionals who demand luxury software.
             </p>
           </div>
 
-          {/* CTAs */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
-            <Link href="/signup" className="w-full sm:w-auto flex-1">
-              <Button
-                size="lg"
-                className="w-full text-sm sm:text-base font-black shadow-xl shadow-sky-500/25 h-13 px-8 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl"
-              >
-                {t('landing.cta_primary')}
-                <ArrowRight className="w-4 h-4 ml-2" />
+          <div className="scroll-reveal scroll-reveal-delay-1 mt-10 flex flex-col sm:flex-row gap-4">
+            <Link href="/signup">
+              <Button size="lg" className="h-14 px-8 text-base font-bold rounded-full bg-slate-900 dark:bg-zinc-100 text-white dark:text-slate-900 hover:scale-105 transition-transform shadow-2xl">
+                Start 14-Day Free Trial <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <a href="#simulator" className="w-full sm:w-auto flex-1">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full h-13 px-8 text-sm sm:text-base font-bold rounded-2xl border-slate-300 dark:border-zinc-700 bg-white/70 dark:bg-zinc-800/70 backdrop-blur-md hover:bg-white dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200"
-              >
-                <Play className="w-4 h-4 mr-2 text-sky-500 fill-sky-500" />
-                {t('landing.cta_secondary')}
+            <a href="#simulator">
+              <Button size="lg" variant="outline" className="h-14 px-8 text-base font-bold rounded-full bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm border-slate-300 dark:border-zinc-700 hover:scale-105 transition-transform">
+                <Play className="w-5 h-5 mr-2 text-sky-500" /> Interactive Demo
               </Button>
             </a>
           </div>
 
-          {/* Social Proof & Trust Badges */}
-          <div className="pt-4 flex flex-col items-center gap-3">
-            <div className="flex items-center gap-1 text-amber-500">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-              ))}
-              <span className="text-xs font-bold text-slate-700 dark:text-zinc-300 ml-2">
-                4.98 / 5.0 Rating
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-400">
-              {t('landing.trusted_by')}
-            </p>
-          </div>
-
-          {/* Specialized Trade Capability Chips */}
-          <div className="pt-6 flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto">
+          <div className="mt-20 w-full max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6 px-4">
             {[
-              'Commercial Boiler Loops',
-              'Backflow RPZ Certifications',
-              'High-Pressure Hydro-Jetting',
-              'Ultrasonic Slab Leak Detection',
-              'Medical Gas Line Audits',
-              'Dual-Tankless Water Heaters',
-            ].map((skill, idx) => (
-              <span
-                key={idx}
-                className="px-3 py-1 rounded-xl text-xs font-semibold bg-white/60 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/80 text-slate-700 dark:text-zinc-300 shadow-2xs backdrop-blur-xs"
-              >
-                🔧 {skill}
-              </span>
+              { title: '2,500+', desc: 'Master Trades Using TradeFlow', icon: Globe },
+              { title: '<8 Min', desc: 'Average Dispatch Time', icon: Zap },
+              { title: '>98%', desc: 'Customer Satisfaction Score', icon: Star },
+            ].map((stat, i) => (
+              <div key={i} className={`scroll-reveal scroll-reveal-delay-${i+1} glass-panel p-6 rounded-2xl flex flex-col items-center bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md border border-slate-200 dark:border-zinc-800`}>
+                <stat.icon className="w-8 h-8 text-sky-500 mb-3" />
+                <h3 className={`${sora.className} text-3xl font-black`}>{stat.title}</h3>
+                <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">{stat.desc}</p>
+              </div>
             ))}
           </div>
         </section>
 
-        {/* 3. Live Interactive Dispatch & Work Order Simulator */}
-        <section id="simulator" className="py-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto scroll-mt-20">
-          <div className="text-center space-y-2 mb-10">
-            <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
-              Live Field Simulator
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-zinc-100">
-              {t('landing.simulator_title')}
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 max-w-2xl mx-auto">
-              Experience the 4 frictionless stages of a modern trade job. Click through to watch real-time dispatching.
-            </p>
+        {/* PROBLEM / SOLUTION STRIP */}
+        <section className="py-24 bg-slate-50 dark:bg-zinc-900/50 border-y border-slate-200 dark:border-zinc-800">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="text-center mb-16 scroll-reveal">
+              <h2 className={`${sora.className} text-3xl sm:text-4xl font-bold`}>Ditch the Paperwork. <span className="text-emerald-500">Embrace Velocity.</span></h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { old: 'Phone tag & whiteboards', new: 'Live GPS Radar Dispatch', icon1: PhoneCall, icon2: Navigation },
+                { old: 'Guessing billable hours', new: 'Quarter-hour Stopwatch', icon1: Clock, icon2: CheckCircle2 },
+                { old: 'Chasing unpaid invoices', new: 'Instant Glass Sign-off & Pay', icon1: XCircle, icon2: Receipt },
+              ].map((item, i) => (
+                <div key={i} className={`scroll-reveal scroll-reveal-delay-${i+1} bg-white dark:bg-zinc-950 p-8 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm relative overflow-hidden`}>
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-3 opacity-50">
+                      <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-full mt-1 shrink-0"><item.icon1 className="w-4 h-4 text-red-600 dark:text-red-400" /></div>
+                      <div>
+                        <p className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-1">The Old Way</p>
+                        <p className="text-sm font-medium line-through">{item.old}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-full mt-1 shrink-0"><item.icon2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /></div>
+                      <div>
+                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">TradeFlow</p>
+                        <p className="text-base font-bold">{item.new}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* INTERACTIVE SIMULATOR */}
+        <section id="simulator" className="py-24 px-4 max-w-6xl mx-auto">
+          <div className="text-center mb-16 scroll-reveal">
+            <h2 className={`${sora.className} text-3xl sm:text-5xl font-bold`}>Interactive Dispatch Simulator</h2>
+            <p className="text-slate-500 mt-4 max-w-2xl mx-auto">Experience the 4 frictionless stages of a modern trade job in real-time.</p>
           </div>
 
-          {/* Simulator Container */}
-          <div className="glass-panel-elevated p-6 sm:p-8 rounded-3xl border border-sky-500/30 dark:border-sky-500/20 shadow-2xl bg-gradient-to-b from-white/90 to-slate-50/90 dark:from-zinc-900/90 dark:to-zinc-950/90 backdrop-blur-xl">
-            {/* Step Selector Pills */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-8">
+          <div className="scroll-reveal glass-panel-elevated p-6 sm:p-8 rounded-3xl border border-sky-500/20 bg-white dark:bg-zinc-900 shadow-2xl">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
               {simulatorSteps.map((step, idx) => {
                 const isActive = activeSimulatorStep === idx;
                 const StepIcon = step.icon;
                 return (
                   <button
                     key={step.id}
-                    type="button"
                     onClick={() => setActiveSimulatorStep(idx)}
-                    className={`p-3 rounded-2xl border text-left transition-all min-h-[44px] flex items-center gap-3 ${
-                      isActive
-                        ? 'bg-sky-600 text-white border-sky-600 shadow-md shadow-sky-500/20 scale-[1.02]'
-                        : 'bg-white/60 dark:bg-zinc-800/60 border-slate-200 dark:border-zinc-700 hover:border-sky-400 text-slate-700 dark:text-zinc-300'
+                    className={`p-4 rounded-2xl border text-left transition-all flex flex-col gap-2 ${
+                      isActive ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-slate-900 border-transparent shadow-lg scale-[1.02]' : 'bg-slate-50 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 hover:border-sky-400'
                     }`}
                   >
-                    <div className={`p-2 rounded-xl ${isActive ? 'bg-white/20' : 'bg-slate-100 dark:bg-zinc-700'}`}>
-                      <StepIcon className="w-4 h-4" />
-                    </div>
-                    <div className="overflow-hidden">
-                      <span className={`text-[10px] uppercase font-bold tracking-wider block truncate ${isActive ? 'text-sky-100' : 'text-slate-400'}`}>
-                        {step.badge}
-                      </span>
-                      <span className="text-xs font-bold block truncate">
-                        {step.title.split(' ')[0]} {step.title.split(' ')[1]}
-                      </span>
+                    <StepIcon className={`w-5 h-5 ${isActive ? 'text-sky-400 dark:text-sky-500' : 'text-slate-400'}`} />
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-wider opacity-70 block">{step.badge}</span>
+                      <span className="text-sm font-bold block truncate">{step.title.split(' ')[0]} {step.title.split(' ')[1]}</span>
                     </div>
                   </button>
                 );
               })}
             </div>
 
-            {/* Active Simulation Preview Glass Card */}
-            <div className="p-6 rounded-2xl bg-white dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="space-y-3 flex-1">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-sky-500 text-white font-bold text-xs">
-                    {currentSim.badge}
-                  </Badge>
-                  <span className="text-xs text-slate-400">•</span>
-                  <span className="text-xs font-bold text-slate-900 dark:text-zinc-100">
-                    {currentSim.title}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Customer & Site</span>
-                    <span className="text-xs font-bold text-slate-900 dark:text-zinc-100 block">{currentSim.client}</span>
-                    <span className="text-[11px] text-slate-500 dark:text-zinc-400">{currentSim.location || 'Site Address Verified'}</span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Live Telemetry</span>
-                    <span className="text-xs font-bold text-sky-600 dark:text-sky-400 block">
-                      {currentSim.tech || currentSim.labor || currentSim.amount || currentSim.eta}
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-zinc-400 truncate block">
-                      {currentSim.vehicle || currentSim.parts || currentSim.settlement || currentSim.issue}
-                    </span>
+            <div className="p-8 rounded-2xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 flex flex-col md:flex-row items-center gap-8 transition-all duration-500 ease-in-out">
+              <div className="flex-1 space-y-6 w-full relative min-h-[160px]">
+                <div key={activeSimulatorStep} className="absolute inset-0 animate-in fade-in slide-in-from-right-4 duration-500">
+                  <Badge className="bg-sky-500 text-white mb-4">{currentSim.badge}</Badge>
+                  <h3 className={`${sora.className} text-2xl font-bold mb-6`}>{currentSim.title}</h3>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="p-4 bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm">
+                      <p className="text-[10px] uppercase text-slate-400 font-bold mb-1">Customer Details</p>
+                      <p className="font-semibold">{currentSim.client}</p>
+                      <p className="text-xs text-slate-500 mt-1">{currentSim.location || 'Site Verified'}</p>
+                    </div>
+                    <div className="p-4 bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm">
+                      <p className="text-[10px] uppercase text-slate-400 font-bold mb-1">Live Telemetry</p>
+                      <p className="font-semibold text-sky-600 dark:text-sky-400">{currentSim.tech || currentSim.labor || currentSim.amount || currentSim.eta}</p>
+                      <p className="text-xs text-slate-500 mt-1 truncate">{currentSim.vehicle || currentSim.parts || currentSim.settlement || currentSim.issue}</p>
+                    </div>
                   </div>
                 </div>
-
-                {activeSimulatorStep === 2 && (
-                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Customer Glass Signature Captured: Verified by Dr. Sarah Connor</span>
-                  </div>
-                )}
-
-                {activeSimulatorStep === 3 && (
-                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Payment Reconciled: $1,450.00 directly credited to business operating account</span>
-                  </div>
-                )}
               </div>
-
-              <div className="shrink-0 flex flex-col items-center gap-2 w-full md:w-auto">
-                <Button
-                  onClick={() => setActiveSimulatorStep((prev) => (prev + 1) % simulatorSteps.length)}
-                  className="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white font-black text-xs h-12 px-6 shadow-md shadow-sky-500/20 rounded-xl"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {currentSim.actionPrompt}
-                  <ChevronRight className="w-4 h-4 ml-1.5" />
+              <div className="shrink-0 w-full md:w-auto flex flex-col items-center z-10 relative">
+                <Button onClick={() => setActiveSimulatorStep((prev) => (prev + 1) % 4)} className="h-14 px-8 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold w-full md:w-auto shadow-xl shadow-sky-500/20 transition-transform active:scale-95">
+                  {currentSim.actionPrompt} <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
-                <span className="text-[10px] text-slate-400">
-                  Simulation Stage {activeSimulatorStep + 1} of 4
-                </span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 4. "The Journey of a Trade Dispatch" Storyline Section */}
-        <section id="storyline" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20">
-          <div className="text-center space-y-2 mb-12">
-            <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-              End-to-End Velocity
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-zinc-100">
-              {t('landing.storyline_title')}
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 max-w-2xl mx-auto">
-              {t('landing.storyline_subtitle')}
-            </p>
+        {/* FEATURE SHOWCASE */}
+        <section className="py-24 overflow-hidden bg-white dark:bg-zinc-950">
+          <div className="max-w-6xl mx-auto px-4 space-y-32">
+            {[
+              { title: "Live GPS Fleet Telemetry", desc: "Monitor your entire fleet on a real-time radar. Dispatch the closest available van with 1-click, reducing fuel costs and response times by up to 40%.", imgClass: "from-sky-500 to-indigo-500", icon: Target },
+              { title: "Quarter-Hour Stopwatch Billing", desc: "Never lose a billable minute. Technicians start a digital stopwatch upon arrival. Time is automatically rounded to the nearest quarter-hour and added to the invoice.", imgClass: "from-emerald-500 to-teal-500", icon: Clock, reverse: true },
+              { title: "Sign-on-Glass & Instant Pay", desc: "Generate professional PDFs on site. Capture customer signatures on the iPad glass, and accept tap-to-pay or card payments before leaving the driveway.", imgClass: "from-violet-500 to-fuchsia-500", icon: Smartphone }
+            ].map((feat, idx) => (
+              <div key={idx} className={`scroll-reveal flex flex-col ${feat.reverse ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-12 md:gap-24`}>
+                <div className="flex-1 space-y-6">
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${feat.imgClass} flex items-center justify-center text-white shadow-lg`}>
+                    <feat.icon className="w-6 h-6" />
+                  </div>
+                  <h2 className={`${sora.className} text-3xl md:text-4xl font-bold leading-tight`}>{feat.title}</h2>
+                  <p className="text-lg text-slate-600 dark:text-zinc-400 leading-relaxed">{feat.desc}</p>
+                </div>
+                <div className="flex-1 w-full">
+                  <div className={`aspect-square md:aspect-[4/3] rounded-3xl bg-gradient-to-tr ${feat.imgClass} p-1 shadow-2xl`}>
+                    <div className="w-full h-full bg-white dark:bg-zinc-900 rounded-[22px] overflow-hidden flex items-center justify-center relative">
+                       <div className="absolute inset-0 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm z-10 flex items-center justify-center">
+                          <p className="font-mono text-sm font-bold opacity-50">Visual Dashboard Preview</p>
+                       </div>
+                       <div className="w-3/4 h-3/4 bg-slate-100 dark:bg-zinc-800 rounded-xl border border-slate-200 dark:border-zinc-700"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Step 1 Card */}
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-sky-500/20 hover:border-sky-500/40 hover:shadow-xl transition-all space-y-4 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center font-black">
-                  <Navigation className="w-6 h-6" />
+        {/* SOCIAL PROOF */}
+        <section className="py-24 bg-slate-50 dark:bg-zinc-900/50 border-y border-slate-200 dark:border-zinc-800">
+          <div className="max-w-6xl mx-auto px-4 text-center">
+            <h2 className={`${sora.className} text-2xl font-bold mb-12 scroll-reveal`}>Trusted by the Top 1% of Service Businesses</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { name: "John D.", role: "Owner, JD Plumbing", text: "TradeFlow completely changed how we bill. The stopwatch feature alone recovered $4,000 in lost time last month." },
+                { name: "Sarah W.", role: "Dispatch Manager, HVAC Pro", text: "I can see exactly where all 12 vans are. Dispatching emergencies is now a 1-click process instead of 5 phone calls." },
+                { name: "Mike R.", role: "Master Electrician", text: "Collecting payment on the spot via iPad has eliminated our accounts receivable problem entirely. We get paid the same day." }
+              ].map((testimonial, i) => (
+                <div key={i} className={`scroll-reveal scroll-reveal-delay-${i+1} bg-white dark:bg-zinc-950 p-8 rounded-3xl border border-slate-200 dark:border-zinc-800 shadow-sm text-left`}>
+                  <div className="flex text-amber-400 mb-4">
+                    {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 fill-current" />)}
+                  </div>
+                  <p className="text-slate-700 dark:text-zinc-300 mb-6 font-medium leading-relaxed">"{testimonial.text}"</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900/50 flex items-center justify-center font-bold text-sky-600 dark:text-sky-400">
+                      {testimonial.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">{testimonial.name}</p>
+                      <p className="text-xs text-slate-500">{testimonial.role}</p>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-zinc-100">
-                  {t('landing.step1_title')}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 leading-relaxed">
-                  {t('landing.step1_desc')}
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/80 text-[11px] font-bold text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5" />
-                <span>Zero dispatch phone tag</span>
-              </div>
-            </div>
-
-            {/* Step 2 Card */}
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-indigo-500/20 hover:border-indigo-500/40 hover:shadow-xl transition-all space-y-4 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black">
-                  <Smartphone className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-zinc-100">
-                  {t('landing.step2_title')}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 leading-relaxed">
-                  {t('landing.step2_desc')}
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/80 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Quarter-hour stopwatch accuracy</span>
-              </div>
-            </div>
-
-            {/* Step 3 Card */}
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-emerald-500/20 hover:border-emerald-500/40 hover:shadow-xl transition-all space-y-4 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black">
-                  <DollarSign className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-zinc-100">
-                  {t('landing.step3_title')}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-zinc-400 leading-relaxed">
-                  {t('landing.step3_desc')}
-                </p>
-              </div>
-              <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/80 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Immediate card & bank settlement</span>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* 5. Interactive ROI & Profit Calculator */}
-        <section id="calculator" className="py-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto scroll-mt-20">
-          <div className="glass-panel-elevated p-6 sm:p-10 rounded-3xl border border-indigo-500/30 dark:border-indigo-500/20 shadow-2xl bg-gradient-to-br from-white/95 via-indigo-50/20 to-sky-50/20 dark:from-zinc-900/95 dark:to-zinc-950/95">
-            <div className="text-center space-y-2 mb-8">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
-                <Calculator className="w-3.5 h-3.5" />
-                <span>{t('landing.calc_title')}</span>
-              </div>
-              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-zinc-100">
-                Calculate Your Real Enterprise Savings
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 max-w-xl mx-auto">
-                {t('landing.calc_subtitle')}
-              </p>
+        {/* ROI CALCULATOR */}
+        <section id="calculator" className="py-24 px-4 max-w-6xl mx-auto">
+          <div className="scroll-reveal glass-panel-elevated p-8 md:p-12 rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-white to-indigo-50/50 dark:from-zinc-900 dark:to-indigo-950/20 shadow-2xl">
+            <div className="text-center mb-12">
+              <h2 className={`${sora.className} text-3xl md:text-5xl font-bold mb-4`}>Calculate Your ROI</h2>
+              <p className="text-slate-500 max-w-2xl mx-auto">See how much revenue TradeFlow can help you recover by eliminating administrative friction.</p>
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-              {/* Sliders Input Column */}
-              <div className="space-y-6">
-                {/* Slider 1: Technicians */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span className="text-slate-700 dark:text-zinc-300">{t('landing.calc_technicians')}</span>
-                    <span className="text-sky-600 dark:text-sky-400 font-mono text-sm">{techCount} Techs</span>
+            
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="space-y-8">
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="font-bold text-sm">Technicians</span>
+                    <span className="font-mono text-sky-600 dark:text-sky-400 font-bold">{techCount} Techs</span>
                   </div>
-                  <input
-                    type="range"
-                    min={1}
-                    max={50}
-                    value={techCount}
-                    onChange={(e) => setTechCount(Number(e.target.value))}
-                    className="w-full h-2.5 bg-slate-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-sky-600"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-400">
-                    <span>1 solo tech</span>
-                    <span>25 fleet</span>
-                    <span>50 enterprise</span>
-                  </div>
+                  <input type="range" min="1" max="50" value={techCount} onChange={(e) => setTechCount(Number(e.target.value))} className="w-full accent-sky-500" />
                 </div>
-
-                {/* Slider 2: Jobs per day */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span className="text-slate-700 dark:text-zinc-300">{t('landing.calc_jobs_per_day')}</span>
-                    <span className="text-sky-600 dark:text-sky-400 font-mono text-sm">{jobsPerDay} Jobs / Day</span>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="font-bold text-sm">Jobs Per Day (Per Tech)</span>
+                    <span className="font-mono text-sky-600 dark:text-sky-400 font-bold">{jobsPerDay} Jobs</span>
                   </div>
-                  <input
-                    type="range"
-                    min={1}
-                    max={10}
-                    value={jobsPerDay}
-                    onChange={(e) => setJobsPerDay(Number(e.target.value))}
-                    className="w-full h-2.5 bg-slate-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-sky-600"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-400">
-                    <span>1 job/day</span>
-                    <span>5 jobs/day</span>
-                    <span>10 jobs/day</span>
-                  </div>
+                  <input type="range" min="1" max="10" value={jobsPerDay} onChange={(e) => setJobsPerDay(Number(e.target.value))} className="w-full accent-sky-500" />
                 </div>
-
-                {/* Slider 3: Hourly Rate */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span className="text-slate-700 dark:text-zinc-300">{t('landing.calc_hourly_rate')}</span>
-                    <span className="text-sky-600 dark:text-sky-400 font-mono text-sm">${hourlyRate} / hr</span>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="font-bold text-sm">Hourly Billable Rate</span>
+                    <span className="font-mono text-sky-600 dark:text-sky-400 font-bold">${hourlyRate}/hr</span>
                   </div>
-                  <input
-                    type="range"
-                    min={50}
-                    max={300}
-                    step={5}
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(Number(e.target.value))}
-                    className="w-full h-2.5 bg-slate-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-sky-600"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-400">
-                    <span>$50/hr</span>
-                    <span>$150/hr</span>
-                    <span>$300/hr</span>
-                  </div>
+                  <input type="range" min="50" max="300" step="5" value={hourlyRate} onChange={(e) => setHourlyRate(Number(e.target.value))} className="w-full accent-sky-500" />
                 </div>
               </div>
-
-              {/* Output Results Column */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-5 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm space-y-1">
-                  <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">
-                    {t('landing.calc_hours_saved')}
-                  </span>
-                  <span className="text-3xl sm:text-4xl font-black text-sky-600 dark:text-sky-400 font-mono block">
-                    {roiCalculations.hoursSavedMonthly} hrs
-                  </span>
-                  <p className="text-[11px] text-slate-400">Time reclaimed from billing friction & paper invoices</p>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <div className="bg-white dark:bg-zinc-950 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 text-center">
+                  <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-2">Estimated Monthly Revenue Gain</p>
+                  <p className={`${sora.className} text-4xl font-black text-emerald-500`}>${roiCalculations.monthlyRevenueGain.toLocaleString()}</p>
                 </div>
-
-                <div className="p-5 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm space-y-1">
-                  <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">
-                    {t('landing.calc_monthly_savings')}
-                  </span>
-                  <span className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 font-mono block">
-                    ${roiCalculations.monthlyRevenueGain.toLocaleString()}
-                  </span>
-                  <p className="text-[11px] text-slate-400">Extra billable capacity generated every month</p>
-                </div>
-
-                <div className="sm:col-span-2 p-5 rounded-2xl bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-emerald-500/10 border border-sky-500/30 text-center space-y-1">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-zinc-300">
-                    Projected Annual Growth
-                  </span>
-                  <span className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-zinc-100 font-mono block">
-                    +${roiCalculations.annualRevenueGain.toLocaleString()} / year
-                  </span>
-                  <p className="text-xs text-slate-500 dark:text-zinc-400">
-                    Based on {roiCalculations.totalJobsMonthly} monthly work orders across {techCount} technician(s)
-                  </p>
+                <div className="bg-gradient-to-r from-sky-500 to-indigo-500 p-6 rounded-2xl text-center text-white shadow-xl">
+                  <p className="text-xs font-bold uppercase text-white/80 tracking-wider mb-2">Projected Annual Growth</p>
+                  <p className={`${sora.className} text-5xl font-black`}>+${roiCalculations.annualRevenueGain.toLocaleString()}</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 6. Transparent Pricing Matrix */}
-        <section id="pricing" className="py-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto scroll-mt-20">
-          <div className="text-center space-y-2 mb-12">
-            <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">
-              Simple Scalability
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-zinc-100">
-              {t('landing.pricing_title')}
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 max-w-xl mx-auto">
-              {t('landing.pricing_subtitle')}
-            </p>
+        {/* PRICING */}
+        <section id="pricing" className="py-24 px-4 max-w-6xl mx-auto">
+          <div className="text-center mb-16 scroll-reveal">
+            <h2 className={`${sora.className} text-3xl sm:text-5xl font-bold`}>Simple, Transparent Pricing</h2>
+            <p className="text-slate-500 mt-4">No hidden fees. Scale your empire predictably.</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Plan 1: Starter */}
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-zinc-800 space-y-6 flex flex-col justify-between">
-              <div className="space-y-4">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-500">Starter</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-slate-900 dark:text-zinc-100">$79</span>
-                  <span className="text-xs text-slate-400">/ month</span>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { name: 'Starter', price: '79', desc: '1-2 Techs', highlight: false },
+              { name: 'Pro Fleet', price: '149', desc: '3-10 Techs', highlight: true },
+              { name: 'Enterprise', price: '299', desc: 'Unlimited Techs', highlight: false }
+            ].map((plan, i) => (
+              <div key={i} className={`scroll-reveal scroll-reveal-delay-${i+1} p-8 rounded-3xl border flex flex-col transition-all duration-300 ${plan.highlight ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-900/10 shadow-2xl scale-105' : 'border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm hover:border-sky-300'}`}>
+                {plan.highlight && <div className="bg-sky-500 text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-full self-start mb-4">Most Popular</div>}
+                <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className={`${sora.className} text-4xl font-black`}>${plan.price}</span>
+                  <span className="text-slate-500 text-sm">/mo</span>
                 </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Perfect for independent master trades with 1–2 vans.
-                </p>
-                <div className="space-y-2 pt-2 text-xs text-slate-700 dark:text-zinc-300">
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Up to 2 field technicians</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Unlimited quotes & invoices</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Quarter-hour labor stopwatch</span>
-                  </div>
+                <p className="text-sm text-slate-600 dark:text-zinc-400 mb-8 border-b border-slate-100 dark:border-zinc-800 pb-8">{plan.desc}</p>
+                <div className="space-y-4 mb-8 flex-1">
+                  {[1,2,3,4].map((f) => (
+                    <div key={f} className="flex items-center gap-3">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span className="text-sm font-medium">Premium Feature {f}</span>
+                    </div>
+                  ))}
                 </div>
+                <Link href="/signup">
+                  <Button className={`w-full h-12 rounded-xl font-bold ${plan.highlight ? 'bg-sky-600 hover:bg-sky-700 text-white shadow-lg' : 'bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-900 dark:text-zinc-100'}`}>
+                    Get Started
+                  </Button>
+                </Link>
               </div>
-              <Link href="/signup">
-                <Button variant="outline" className="w-full min-h-[44px] font-bold text-xs">
-                  {t('landing.cta_primary')}
-                </Button>
-              </Link>
-            </div>
-
-            {/* Plan 2: Pro / Growth (Featured) */}
-            <div className="glass-panel-elevated p-6 sm:p-8 rounded-3xl border-2 border-sky-500 shadow-xl relative space-y-6 flex flex-col justify-between bg-gradient-to-b from-sky-500/5 to-transparent">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-sky-600 text-white font-black text-[10px] uppercase tracking-wider shadow-sm">
-                Most Popular
-              </div>
-              <div className="space-y-4">
-                <span className="text-xs font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">Pro Fleet</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-slate-900 dark:text-zinc-100">$149</span>
-                  <span className="text-xs text-slate-400">/ month</span>
-                </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  For growing plumbing contractors with 3–10 trucks.
-                </p>
-                <div className="space-y-2 pt-2 text-xs text-slate-700 dark:text-zinc-300">
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-sky-500 shrink-0" />
-                    <span>Up to 10 field technicians</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-sky-500 shrink-0" />
-                    <span>Live GPS Fleet Telemetry Radar</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-sky-500 shrink-0" />
-                    <span>Customer Touch Sign-on-Glass</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-sky-500 shrink-0" />
-                    <span>Instant PDF generation & SMS link</span>
-                  </div>
-                </div>
-              </div>
-              <Link href="/signup">
-                <Button className="w-full bg-sky-600 hover:bg-sky-700 text-white min-h-[44px] font-black text-xs shadow-md shadow-sky-500/25">
-                  {t('landing.cta_primary')}
-                </Button>
-              </Link>
-            </div>
-
-            {/* Plan 3: Enterprise */}
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-zinc-800 space-y-6 flex flex-col justify-between">
-              <div className="space-y-4">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-500">Commercial Empire</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-slate-900 dark:text-zinc-100">$299</span>
-                  <span className="text-xs text-slate-400">/ month</span>
-                </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  For multi-city mechanical & commercial plumbing operations.
-                </p>
-                <div className="space-y-2 pt-2 text-xs text-slate-700 dark:text-zinc-300">
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Unlimited field technicians</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Custom domain & multi-brand portals</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>Multi-currency & international tax rates</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <span>24/7 dedicated dispatch engineer</span>
-                  </div>
-                </div>
-              </div>
-              <Link href="/signup">
-                <Button variant="outline" className="w-full min-h-[44px] font-bold text-xs">
-                  {t('landing.cta_primary')}
-                </Button>
-              </Link>
-            </div>
+            ))}
           </div>
         </section>
 
-        {/* 7. Bottom Call-to-Action Banner */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center space-y-6">
-          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-sky-600 via-indigo-600 to-sky-700 text-white shadow-2xl space-y-6">
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight">
-              {t('landing.cta_footer_title')}
-            </h2>
-            <p className="text-sm sm:text-base text-sky-100 max-w-2xl mx-auto font-normal">
-              {t('landing.cta_footer_subtitle')}
-            </p>
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-sm mx-auto">
-              <Link href="/signup" className="w-full">
-                <Button
-                  size="lg"
-                  className="w-full bg-white hover:bg-slate-100 text-slate-950 font-black text-sm h-13 rounded-2xl shadow-lg"
-                >
-                  {t('landing.cta_start_trial')}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+        {/* FINAL CTA */}
+        <section className="py-24 px-4 max-w-5xl mx-auto text-center scroll-reveal">
+          <div className="bg-slate-900 dark:bg-zinc-900 p-12 md:p-20 rounded-[3rem] shadow-2xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-violet-500/20"></div>
+            <div className="relative z-10 space-y-8">
+              <h2 className={`${sora.className} text-4xl md:text-6xl font-black text-white`}>Ready to Modernize?</h2>
+              <p className="text-xl text-slate-300 max-w-2xl mx-auto">Join the elite field service companies transforming their dispatch operations today.</p>
+              <Link href="/signup" className="inline-block">
+                <Button size="lg" className="h-16 px-10 text-lg font-bold rounded-full bg-sky-500 hover:bg-sky-400 text-white shadow-[0_0_40px_rgba(14,165,233,0.4)] transition-all hover:scale-105">
+                  Start Your 14-Day Free Trial
                 </Button>
               </Link>
             </div>
-            <p className="text-xs text-sky-200">
-              14-day full access trial • No credit card required • Instant cancel anytime
-            </p>
           </div>
         </section>
       </main>
 
-      {/* 8. Luxury Footer */}
-      <footer className="border-t border-slate-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md py-10 px-4 sm:px-6 lg:px-8 transition-colors">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-sky-600 flex items-center justify-center text-white">
-              <Wrench className="w-4 h-4" />
+      {/* FOOTER */}
+      <footer className="border-t border-slate-200 dark:border-zinc-900 bg-white dark:bg-zinc-950 py-8 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-slate-900 dark:bg-zinc-800 flex items-center justify-center text-white">
+              <Wrench className="w-3 h-3" />
             </div>
-            <div>
-              <span className="font-black text-sm text-slate-900 dark:text-zinc-100">TradeFlow Enterprise</span>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400">© 2026 TradeFlow Inc. High-velocity field dispatch systems.</p>
-            </div>
+            <span className="font-bold text-sm">TradeFlow Enterprise &copy; 2026</span>
           </div>
-
-          <div className="flex items-center gap-3">
-            <CompactControlsBar />
-            <Link
-              href="/login"
-              className="text-xs font-bold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100"
-            >
-              Sign In
-            </Link>
+          <div className="flex items-center gap-3 opacity-70 hover:opacity-100 transition-opacity">
+            <LanguageSelector />
+            <CurrencySelector />
+            <ThemeToggle />
           </div>
         </div>
       </footer>

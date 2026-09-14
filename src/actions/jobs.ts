@@ -124,3 +124,36 @@ export async function deleteJobAction(jobId: string) {
     };
   }
 }
+
+/**
+ * Gantt drag-and-drop rescheduling action.
+ * Persists a new scheduled_start (and optionally scheduled_end) for a job
+ * when a technician drags a job bar to a different day/time on the Gantt chart.
+ */
+export async function rescheduleJobAction(
+  jobId: string,
+  newScheduledStart: string,
+  newScheduledEnd?: string | null
+) {
+  try {
+    const updatePayload: Record<string, string | null> = {
+      scheduled_start: newScheduledStart,
+    };
+    if (newScheduledEnd !== undefined) {
+      updatePayload.scheduled_end = newScheduledEnd ?? null;
+    }
+    const job = await JobService.update(jobId, updatePayload as any);
+    revalidatePath('/jobs');
+    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath('/dashboard');
+    return {
+      success: true,
+      data: job,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}

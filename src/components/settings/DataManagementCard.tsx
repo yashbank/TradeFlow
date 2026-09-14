@@ -19,6 +19,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { PurgeEntity, WorkspaceStats } from '@/services/DataManagementService';
+import { FEATURES } from '@/lib/featureFlags';
 
 export function DataManagementCard() {
   const toast = useToast();
@@ -166,6 +167,7 @@ export function DataManagementCard() {
           </div>
 
           {/* 1-Click Demo Data Population Banner */}
+          {FEATURES.DEMO_SEEDING && (
           <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-500/10 via-blue-500/10 to-indigo-500/10 border border-sky-500/30 dark:border-sky-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
             <div>
               <div className="flex items-center gap-2">
@@ -191,6 +193,7 @@ export function DataManagementCard() {
               {seeding ? 'Seeding Pipeline...' : 'Seed Demo Data'}
             </Button>
           </div>
+          )}
 
           <p className="text-xs text-slate-600 dark:text-zinc-400">
             Select a category below to purge test records. Foreign keys are automatically cascading, safely removing dependent items without database lockup.

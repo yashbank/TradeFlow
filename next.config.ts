@@ -4,6 +4,8 @@ const isVercel = Boolean(process.env.VERCEL);
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  compress: true,
+  poweredByHeader: false,
   serverExternalPackages: ["@react-pdf/renderer"],
   ...(isVercel ? {} : { output: "standalone" }),
   eslint: {
