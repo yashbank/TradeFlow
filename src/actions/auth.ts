@@ -1,4 +1,5 @@
 'use server';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 
 import { AuthService } from '@/services/AuthService';
 import { RegisterSchema, LoginSchema } from '@/lib/validations/auth';
@@ -29,7 +30,7 @@ export async function registerUserAction(formData: FormData) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message || 'Failed to complete registration.',
+      error: getFriendlyErrorMessage(err) || 'Failed to complete registration.',
     };
   }
 
@@ -55,7 +56,7 @@ export async function loginUserAction(formData: FormData) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message || 'Invalid email or password.',
+      error: getFriendlyErrorMessage(err) || 'Invalid email or password.',
     };
   }
 
@@ -94,7 +95,7 @@ export async function requestPasswordResetAction(formData: FormData) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message || 'Failed to send password reset email.',
+      error: getFriendlyErrorMessage(err) || 'Failed to send password reset email.',
     };
   }
 }
@@ -122,7 +123,7 @@ export async function resetPasswordAction(formData: FormData) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message || 'Failed to reset password.',
+      error: getFriendlyErrorMessage(err) || 'Failed to reset password.',
     };
   }
 

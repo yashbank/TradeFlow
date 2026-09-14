@@ -1,3 +1,4 @@
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 'use client';
 
 import React, { useState } from 'react';
@@ -67,7 +68,7 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
       window.URL.revokeObjectURL(url);
       toast.success('Invoice Downloaded', 'PDF saved to your device');
     } catch (err: any) {
-      toast.error('Download Failed', err.message || 'Could not download PDF');
+      toast.error('Download Failed', getFriendlyErrorMessage(err));
     } finally {
       setDownloading(false);
     }

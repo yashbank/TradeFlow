@@ -1,4 +1,5 @@
 'use server';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 
 import { CustomerService } from '@/services/CustomerService';
 import { CustomerSchema, type CustomerInput } from '@/lib/validations/customer';
@@ -23,7 +24,7 @@ export async function createCustomerAction(input: CustomerInput) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -40,7 +41,7 @@ export async function updateCustomerAction(customerId: string, input: Partial<Cu
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -55,7 +56,7 @@ export async function getCustomerLinkedCountsAction(customerId: string) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -71,7 +72,7 @@ export async function deleteCustomerAction(customerId: string, forceCascade: boo
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }

@@ -100,7 +100,7 @@ export function JobDetailActions({ job, teamMembers = [] }: JobDetailActionsProp
     const res = await updateJobAction(job.id, {
       title: editTitle.trim(),
       description: editDescription.trim(),
-      assigned_to_user_id: editAssignedTo || undefined,
+      assigned_to_user_id: editAssignedTo === '' ? null : editAssignedTo,
       scheduled_start: editStart ? new Date(editStart).toISOString() : undefined,
       scheduled_end: editEnd ? new Date(editEnd).toISOString() : undefined,
       address_line1: editAddress.trim(),

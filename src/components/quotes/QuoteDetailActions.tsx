@@ -1,3 +1,4 @@
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 'use client';
 
 import React, { useState } from 'react';
@@ -95,7 +96,7 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
       window.URL.revokeObjectURL(url);
       toast.success('Quote Downloaded', 'PDF saved to your device');
     } catch (err: any) {
-      toast.error('Download Failed', err.message || 'Could not download PDF');
+      toast.error('Download Failed', getFriendlyErrorMessage(err));
     } finally {
       setDownloading(false);
     }

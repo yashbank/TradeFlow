@@ -1,3 +1,4 @@
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 'use client';
 
 import React, { useState } from 'react';
@@ -48,7 +49,7 @@ export function DeleteConfirmationModal({
       await onConfirm(cascadeConfirmed);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to delete. Please try again.');
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,5 @@
 'use server';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 
 import { AuthService } from '@/services/AuthService';
 import { createClient } from '@/lib/supabase/server';

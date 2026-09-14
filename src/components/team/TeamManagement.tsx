@@ -1,3 +1,4 @@
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -76,7 +77,7 @@ export function TeamManagement() {
     if (!res.success) {
       toast.error('Creation Failed', res.error || 'Failed to create technician account.');
     } else {
-      toast.success('Technician Provisioned', res.message || 'Technician ready to log in.');
+      toast.success('Technician Provisioned', getFriendlyErrorMessage(res));
       setCreatedCredentials({
         email,
         pass: password,

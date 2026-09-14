@@ -1,3 +1,4 @@
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 'use client';
 
 import React, { useState } from 'react';
@@ -29,7 +30,7 @@ export function ForgotPasswordForm() {
     if (!res.success) {
       setError(res.error || 'Failed to send reset email.');
     } else {
-      setSuccessMessage(res.message || 'Password recovery email sent! Check your inbox.');
+      setSuccessMessage(getFriendlyErrorMessage(res));
     }
   }
 

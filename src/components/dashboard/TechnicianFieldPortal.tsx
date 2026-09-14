@@ -140,7 +140,7 @@ export function TechnicianFieldPortal({
   const [isOnDuty, setIsOnDuty] = useState(true);
 
   // Active Job selection (strictly active, non-completed, non-cancelled orders)
-  const activeJobs = myJobs.filter((j) => j.status === 'scheduled' || j.status === 'in_progress');
+  const activeJobs = myJobs.filter((j) => j.status !== 'completed' && j.status !== 'cancelled');
   const completedJobs = myJobs.filter((j) => j.status === 'completed');
   const [selectedJobId, setSelectedJobId] = useState<string>(activeJobs[0]?.id || '');
 

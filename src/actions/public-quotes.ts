@@ -1,4 +1,5 @@
 'use server';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 
 import { QuoteService } from '@/services/QuoteService';
 import { PublicQuoteRespondSchema, type PublicQuoteRespondInput } from '@/lib/validations/quote';
@@ -26,7 +27,7 @@ export async function respondToQuotePublicAction(token: string, input: PublicQuo
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
