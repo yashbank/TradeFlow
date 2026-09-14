@@ -118,7 +118,7 @@ export function DispatchNotificationModal({
             <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1.5">
               Notification Trigger
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {[
                 { type: 'en_route', label: '🚚 En Route (ETA 8m)' },
                 { type: 'scheduled', label: '📅 Scheduled & Assigned' },

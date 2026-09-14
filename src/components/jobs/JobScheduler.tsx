@@ -480,7 +480,7 @@ export function JobScheduler({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                 City <span className="text-red-500">*</span>
