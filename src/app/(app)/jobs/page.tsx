@@ -7,6 +7,7 @@ import { formatDate, formatDateTime } from '@/lib/utils';
 import { CalendarCheck2, MapPin, ChevronRight, Clock, User, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ListSearchBar } from '@/components/common/ListSearchBar';
+import { JobsViewContainer } from '@/components/jobs/JobsViewContainer';
 import type { JobStatus } from '@/types/database';
 
 interface JobsPageProps {
@@ -74,80 +75,85 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
         })}
       </div>
 
-      {/* Jobs List */}
-      <div className="grid grid-cols-1 gap-3">
-        {jobs.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center text-slate-400 dark:text-zinc-500 space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center mx-auto text-slate-400 dark:text-zinc-400">
-                <CalendarCheck2 className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-700 dark:text-zinc-200">No jobs found in this category.</p>
-                <p className="text-xs text-slate-400 dark:text-zinc-400 mt-1">
-                  Directly schedule a new plumbing dispatch or convert an accepted quote.
-                </p>
-              </div>
-              <Link href="/jobs/new">
-                <Button size="sm" variant="outline" className="min-h-[44px]">
-                  <Plus className="w-4 h-4 mr-1.5" />
-                  Schedule First Job
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        ) : (
-          jobs.map((job) => (
-            <Link key={job.id} href={`/jobs/${job.id}`} className="block">
-              <Card className="card-hover-tactile hover:border-blue-400 dark:hover:border-blue-500 transition-all">
-                <CardContent className="p-4 sm:p-5 flex items-center justify-between gap-4">
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 dark:text-zinc-100 text-base">{job.job_number}</span>
-                      <Badge
-                        variant={
-                          job.status === 'completed'
-                            ? 'success'
-                            : job.status === 'in_progress'
-                            ? 'default'
-                            : job.status === 'cancelled'
-                            ? 'destructive'
-                            : 'secondary'
-                        }
-                      >
-                        {job.status}
-                      </Badge>
-                    </div>
-
-                    <p className="text-sm font-bold text-slate-800 dark:text-zinc-200 truncate">{job.title}</p>
-
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-zinc-400">
-                      <span className="flex items-center">
-                        <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0" />
-                        {job.address_line1}, {job.city}
-                      </span>
-                      {job.scheduled_start && (
-                        <span className="flex items-center">
-                          <Clock className="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0" />
-                          {formatDateTime(job.scheduled_start)}
-                        </span>
-                      )}
-                      {job.assigned_to && (
-                        <span className="flex items-center text-slate-700 dark:text-zinc-300 font-semibold">
-                          <User className="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0" />
-                          {job.assigned_to.full_name}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <ChevronRight className="w-5 h-5 text-slate-300 dark:text-zinc-600 shrink-0" />
-                </CardContent>
-              </Card>
+      {/* Jobs List / Pipeline Board */}
+      {jobs.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center text-slate-400 dark:text-zinc-500 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center mx-auto text-slate-400 dark:text-zinc-400">
+              <CalendarCheck2 className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-700 dark:text-zinc-200">No jobs found in this category.</p>
+              <p className="text-xs text-slate-400 dark:text-zinc-400 mt-1">
+                Directly schedule a new plumbing dispatch or convert an accepted quote.
+              </p>
+            </div>
+            <Link href="/jobs/new">
+              <Button size="sm" variant="outline" className="min-h-[44px]">
+                <Plus className="w-4 h-4 mr-1.5" />
+                Schedule First Job
+              </Button>
             </Link>
-          ))
-        )}
-      </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <JobsViewContainer
+          jobs={jobs}
+          listView={
+            <div className="grid grid-cols-1 gap-3">
+              {jobs.map((job) => (
+                <Link key={job.id} href={`/jobs/${job.id}`} className="block">
+                  <Card className="card-hover-tactile hover:border-blue-400 dark:hover:border-blue-500 transition-all">
+                    <CardContent className="p-4 sm:p-5 flex items-center justify-between gap-4">
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900 dark:text-zinc-100 text-base">{job.job_number}</span>
+                          <Badge
+                            variant={
+                              job.status === 'completed'
+                                ? 'success'
+                                : job.status === 'in_progress'
+                                ? 'default'
+                                : job.status === 'cancelled'
+                                ? 'destructive'
+                                : 'secondary'
+                            }
+                          >
+                            {job.status}
+                          </Badge>
+                        </div>
+
+                        <p className="text-sm font-bold text-slate-800 dark:text-zinc-200 truncate">{job.title}</p>
+
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-zinc-400">
+                          <span className="flex items-center">
+                            <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0" />
+                            {job.address_line1}, {job.city}
+                          </span>
+                          {job.scheduled_start && (
+                            <span className="flex items-center">
+                              <Clock className="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0" />
+                              {formatDateTime(job.scheduled_start)}
+                            </span>
+                          )}
+                          {job.assigned_to && (
+                            <span className="flex items-center text-slate-700 dark:text-zinc-300 font-semibold">
+                              <User className="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0" />
+                              {job.assigned_to.full_name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <ChevronRight className="w-5 h-5 text-slate-300 dark:text-zinc-600 shrink-0" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          }
+        />
+      )}
     </div>
   );
 }

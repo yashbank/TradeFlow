@@ -5,6 +5,7 @@ import { JobService } from '@/services/JobService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { JobDetailActions } from '@/components/jobs/JobDetailActions';
+import { WorkflowPipelineTracker } from '@/components/common/WorkflowPipelineTracker';
 import { formatDateTime, formatDate } from '@/lib/utils';
 import {
   ArrowLeft,
@@ -43,6 +44,14 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
         </Link>
         <JobDetailActions job={job} />
       </div>
+
+      {/* Lifecycle Pipeline Step Indicator */}
+      <WorkflowPipelineTracker
+        currentStage="job"
+        quoteId={job.source_quote_id || undefined}
+        jobStatus={job.status}
+        jobId={job.id}
+      />
 
       {/* Completed Status Banner */}
       {job.status === 'completed' && (

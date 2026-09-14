@@ -18,6 +18,7 @@ import { logoutUserAction } from '@/actions/auth';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { LanguageSelector } from '@/components/i18n/LanguageSelector';
 import { CurrencySelector } from '@/components/currency/CurrencySelector';
+import { CommandPalette } from '@/components/common/CommandPalette';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import type { Organization, UserProfile, UserRole } from '@/types/database';
@@ -173,8 +174,9 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
           </span>
         </div>
 
-        {/* Controls: Theme, Language, Currency, Logout */}
+        {/* Controls: Command Palette, Theme, Language, Currency, Logout */}
         <div className="flex items-center gap-1.5">
+          <CommandPalette />
           <ThemeToggle />
           <LanguageSelector />
           <CurrencySelector />
@@ -194,12 +196,15 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Desktop Top Navbar (Header Bar) */}
         <div className="hidden md:flex items-center justify-between px-8 py-3.5 glass-panel-elevated sticky top-0 z-20">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-zinc-400">
-            <span className="px-2.5 py-1 rounded-lg bg-sky-500/10 dark:bg-cyan-950/60 text-sky-700 dark:text-cyan-300 font-bold border border-sky-500/20">
-              TradeFlow FSM
-            </span>
-            <span>•</span>
-            <span className="capitalize">{role} Portal</span>
+          <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 dark:text-zinc-400">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-lg bg-sky-500/10 dark:bg-cyan-950/60 text-sky-700 dark:text-cyan-300 font-bold border border-sky-500/20">
+                TradeFlow FSM
+              </span>
+              <span>•</span>
+              <span className="capitalize">{role} Portal</span>
+            </div>
+            <CommandPalette />
           </div>
 
           <div className="flex items-center gap-2">

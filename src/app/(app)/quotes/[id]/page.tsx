@@ -5,6 +5,7 @@ import { QuoteService } from '@/services/QuoteService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { QuoteDetailActions } from '@/components/quotes/QuoteDetailActions';
+import { WorkflowPipelineTracker } from '@/components/common/WorkflowPipelineTracker';
 import { formatCurrency, formatDate, formatDateTime, getAppBaseUrl } from '@/lib/utils';
 import { ArrowLeft, User, Phone, MapPin, Calendar, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -33,6 +34,13 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
         </Link>
         <QuoteDetailActions quote={quote} publicUrl={publicUrl} />
       </div>
+
+      {/* Lifecycle Pipeline Step Indicator */}
+      <WorkflowPipelineTracker
+        currentStage="quote"
+        quoteStatus={quote.status}
+        quoteId={quote.id}
+      />
 
       {/* Quote Status Banner */}
       {quote.status === 'accepted' && (

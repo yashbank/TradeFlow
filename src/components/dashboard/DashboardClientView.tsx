@@ -32,7 +32,7 @@ export function DashboardClientView({
   const [lastSyncTime, setLastSyncTime] = useState<Date>(() => new Date());
   const [isAutoSyncing, setIsAutoSyncing] = useState<boolean>(true);
 
-  // 3-second live auto-refresh polling (only when tab is visible to prevent unnecessary load)
+  // 15-second live auto-refresh polling (only when tab is visible to prevent unnecessary load)
   useEffect(() => {
     if (!isAutoSyncing) return;
 
@@ -43,7 +43,7 @@ export function DashboardClientView({
           setLastSyncTime(new Date());
         });
       }
-    }, 3000);
+    }, 15000);
 
     return () => clearInterval(interval);
   }, [router, isAutoSyncing]);
