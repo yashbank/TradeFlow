@@ -1,5 +1,6 @@
-import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 'use client';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
+
 
 import React, { useState } from 'react';
 import Link from 'next/link';

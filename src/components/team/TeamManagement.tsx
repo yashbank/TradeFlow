@@ -1,5 +1,6 @@
-import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 'use client';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
+
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
