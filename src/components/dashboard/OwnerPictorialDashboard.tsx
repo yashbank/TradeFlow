@@ -1,12 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/lib/currency/CurrencyContext';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { useToast } from '@/lib/toast/ToastContext';
+import { seedDemoDataAction } from '@/actions/dataManagement';
 import {
   DollarSign,
   TrendingUp,
@@ -59,8 +62,27 @@ export function OwnerPictorialDashboard({
   onToggleAutoSync,
   onManualSync,
 }: OwnerPictorialDashboardProps) {
+  const router = useRouter();
+  const toast = useToast();
   const { formatConverted } = useCurrency();
   const { t } = useTranslation();
+  const [isSeeding, setIsSeeding] = useState(false);
+
+  async function handleSeedDemoData() {
+    setIsSeeding(true);
+    const res = await seedDemoDataAction();
+    setIsSeeding(false);
+    if (res.success && res.data) {
+      toast.success(
+        'Demo Workspace Seeded',
+        `Generated ${res.data.customersCount} clients, ${res.data.quotesCount} quotes, ${res.data.jobsCount} jobs, ${res.data.invoicesCount} invoices, and ${res.data.auditLogsCount} audit logs.`
+      );
+      router.refresh();
+      if (onManualSync) onManualSync();
+    } else {
+      toast.error('Seeding Failed', res.error || 'Failed to seed demo data.');
+    }
+  }
 
   // Real Database Financial Metrics (No Mock Numbers)
   const collectedCents = metrics.revenueMtdCents || 0;
@@ -197,6 +219,16 @@ export function OwnerPictorialDashboard({
             )}
           </div>
 
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSeedDemoData}
+            disabled={isSeeding}
+            className="border-indigo-400/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 font-bold text-xs shadow-xs"
+          >
+            <Sparkles className={`w-3.5 h-3.5 mr-1 ${isSeeding ? 'animate-spin text-indigo-500' : 'text-indigo-500'}`} />
+            {isSeeding ? 'Seeding...' : 'Seed Demo Data'}
+          </Button>
           <Link href="/quotes/new">
             <Button size="sm" variant="outline" className="bg-white/80 dark:bg-zinc-800/80 font-bold text-xs">
               <Plus className="w-3.5 h-3.5 mr-1" />
@@ -273,6 +305,21 @@ export function OwnerPictorialDashboard({
                 <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">Assign job order to field crew</p>
               </Link>
             </div>
+          </div>
+
+          <div className="mt-5 pt-4 border-t border-sky-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="text-xs text-slate-600 dark:text-zinc-400">
+              ⚡ <strong>Instant Test Drive:</strong> Populate 10 real commercial clients, 100 dispatched orders (with unassigned pool jobs), and 50 invoices in 1 click.
+            </div>
+            <Button
+              size="sm"
+              onClick={handleSeedDemoData}
+              disabled={isSeeding}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-500/20 shrink-0 min-h-[44px]"
+            >
+              <Sparkles className={`w-3.5 h-3.5 mr-1.5 ${isSeeding ? 'animate-spin' : ''}`} />
+              {isSeeding ? 'Populating Fleet & Orders...' : 'Seed 10 Clients, 100 Jobs & 50 Invoices'}
+            </Button>
           </div>
         </Card>
       )}

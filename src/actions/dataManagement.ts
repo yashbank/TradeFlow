@@ -49,3 +49,22 @@ export async function purgeEntityAction(entity: PurgeEntity) {
     return { success: false, error: err.message };
   }
 }
+
+export async function seedDemoDataAction() {
+  try {
+    const { organization, user } = await AuthService.requireRole(['owner', 'admin']);
+    const result = await DataManagementService.seedDemoData(organization.id, user.id);
+
+    revalidatePath('/dashboard');
+    revalidatePath('/customers');
+    revalidatePath('/quotes');
+    revalidatePath('/jobs');
+    revalidatePath('/invoices');
+    revalidatePath('/settings');
+
+    return { success: true, data: result };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+

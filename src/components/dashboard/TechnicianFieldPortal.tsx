@@ -334,7 +334,7 @@ export function TechnicianFieldPortal({
 
   // Direct 1-tap call and prefilled SMS dispatch update
   const normalizedPhone = customerPhone ? normalizePhoneForUri(customerPhone) : '';
-  const smsUrl = (customerPhone && hasValidAddress) ? generateSmsDispatchUrl(customerPhone, user.full_name, customerFullName || 'Customer', customerAddress) : '#';
+  const smsUrl = (customerPhone && hasValidAddress) ? generateSmsDispatchUrl(customerPhone, user?.full_name || 'Technician', customerFullName || 'Customer', customerAddress) : '#';
 
   const copyAddressToClipboard = () => {
     if (customerAddress && typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -381,7 +381,7 @@ export function TechnicianFieldPortal({
     const laborRounding = calculateQuarterHourRounding(timerSeconds);
     const signatureSnippet = customerSignature ? `Customer Signature: Signed by ${customerSignerName || 'Customer'} (Captured on glass)\n` : '';
     const photosSnippet = jobPhotos.length > 0 ? `Inspection Photos: ${jobPhotos.length} site photos attached\n` : '';
-    const summaryNotes = `Technician: ${user.full_name}\nLabor Duration: ${formatStopwatch(timerSeconds)} (${laborRounding.formatted})\nParts Used: ${loggedParts.map((p) => `${p.qty}x ${p.name}`).join(', ') || 'None'}\n${signatureSnippet}${photosSnippet}Field Notes: ${completionNotes || 'Job completed smoothly.'}`;
+    const summaryNotes = `Technician: ${user?.full_name || 'Technician'}\nLabor Duration: ${formatStopwatch(timerSeconds)} (${laborRounding.formatted})\nParts Used: ${loggedParts.map((p) => `${p.qty}x ${p.name}`).join(', ') || 'None'}\n${signatureSnippet}${photosSnippet}Field Notes: ${completionNotes || 'Job completed smoothly.'}`;
 
     const res = await updateJobStatusAction(activeJob.id, 'completed', summaryNotes);
     setIsUpdating(false);
@@ -428,14 +428,14 @@ export function TechnicianFieldPortal({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100">
-                {user.full_name}
+                {user?.full_name || 'Field Technician'}
               </h2>
               <Badge variant={isOnDuty ? 'success' : 'secondary'} className="text-[10px] uppercase font-bold tracking-wider">
                 {isOnDuty ? '⚡ Ready for Dispatch' : 'Offline'}
               </Badge>
             </div>
             <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-              Field Technician • {organization.name}
+              Field Technician • {organization?.name || 'TradeFlow'}
             </p>
           </div>
         </div>
@@ -1152,7 +1152,7 @@ export function TechnicianFieldPortal({
         customerName={customerFullName || 'Valued Customer'}
         customerPhone={customerPhone}
         customerEmail={customerEmail}
-        technicianName={user.full_name}
+        technicianName={user?.full_name || 'Technician'}
         serviceAddress={customerAddress || 'Service Site'}
         jobNumber={activeJob?.job_number || 'ORD-NEW'}
       />

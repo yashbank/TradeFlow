@@ -51,7 +51,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // If already authenticated and visiting /login or /signup, redirect to dashboard
-  if (isAuthenticated && (path === '/login' || path === '/signup')) {
+  // unless loop protection query parameter or signout retry is requested
+  const hasAuthError = request.nextUrl.searchParams.has('error') || request.nextUrl.searchParams.has('retry');
+  if (isAuthenticated && (path === '/login' || path === '/signup') && !hasAuthError) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

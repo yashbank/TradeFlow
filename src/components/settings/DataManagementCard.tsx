@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { getWorkspaceStatsAction, purgeEntityAction } from '@/actions/dataManagement';
+import { getWorkspaceStatsAction, purgeEntityAction, seedDemoDataAction } from '@/actions/dataManagement';
 import { useToast } from '@/lib/toast/ToastContext';
 import {
   AlertTriangle,
@@ -16,6 +16,7 @@ import {
   CalendarCheck2,
   Receipt,
   X,
+  Sparkles,
 } from 'lucide-react';
 import type { PurgeEntity, WorkspaceStats } from '@/services/DataManagementService';
 
@@ -26,6 +27,7 @@ export function DataManagementCard() {
   const [selectedEntity, setSelectedEntity] = useState<PurgeEntity | null>(null);
   const [confirmationInput, setConfirmationInput] = useState('');
   const [purging, setPurging] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   async function loadStats() {
     setLoading(true);
@@ -33,6 +35,21 @@ export function DataManagementCard() {
     setLoading(false);
     if (res.success && res.data) {
       setStats(res.data);
+    }
+  }
+
+  async function handleSeedDemoData() {
+    setSeeding(true);
+    const res = await seedDemoDataAction();
+    setSeeding(false);
+    if (res.success && res.data) {
+      toast.success(
+        'Demo Fleet & Orders Populated',
+        `Seeded ${res.data.customersCount} clients, ${res.data.quotesCount} quotes, ${res.data.jobsCount} jobs, ${res.data.invoicesCount} invoices, and ${res.data.auditLogsCount} audit logs.`
+      );
+      await loadStats();
+    } else {
+      toast.error('Seeding Failed', res.error || 'Failed to seed demo data.');
     }
   }
 
@@ -146,6 +163,33 @@ export function DataManagementCard() {
                 {stats?.invoicesCount ?? '—'}
               </span>
             </div>
+          </div>
+
+          {/* 1-Click Demo Data Population Banner */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-500/10 via-blue-500/10 to-indigo-500/10 border border-sky-500/30 dark:border-sky-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                <span className="font-bold text-sm text-slate-900 dark:text-zinc-100">
+                  1-Click Demo Data Population
+                </span>
+                <Badge className="bg-sky-500/20 text-sky-700 dark:text-sky-300 border-sky-500/30 text-[10px] font-bold">
+                  10 Clients • 100 Jobs • 50 Invoices
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1">
+                Seed a full realistic trade pipeline to test field dispatching, live radar, quotes, invoice payments, and audit logs.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              onClick={handleSeedDemoData}
+              disabled={seeding || loading}
+              className="min-h-[44px] bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-md shadow-sky-500/20 whitespace-nowrap shrink-0"
+            >
+              <Sparkles className={`w-3.5 h-3.5 mr-1.5 ${seeding ? 'animate-spin' : ''}`} />
+              {seeding ? 'Seeding Pipeline...' : 'Seed Demo Data'}
+            </Button>
           </div>
 
           <p className="text-xs text-slate-600 dark:text-zinc-400">

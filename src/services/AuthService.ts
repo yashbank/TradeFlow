@@ -13,6 +13,7 @@ export interface UserOrgContext {
 }
 
 import { cache } from 'react';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 const getCachedUserOrgContext = cache(async (): Promise<UserOrgContext | null> => {
   try {
@@ -21,30 +22,97 @@ const getCachedUserOrgContext = cache(async (): Promise<UserOrgContext | null> =
 
     if (!user) return null;
 
-    // Fetch user profile and member in parallel to minimize latency
+    // 1. First attempt: standard client with user's session
+    let userProfile: UserProfile | null = null;
+    let organization: Organization | null = null;
+    let role: UserRole = 'technician';
+
     const [profileRes, memberRes] = await Promise.all([
       supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .single(),
+        .maybeSingle(),
       supabase
         .from('organization_members')
         .select('*, organization:organizations(*)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: true })
         .limit(1)
-        .single(),
+        .maybeSingle(),
     ]);
 
-    if (!profileRes.data || !memberRes.data || !memberRes.data.organization) return null;
+    if (profileRes.data && memberRes.data?.organization) {
+      userProfile = profileRes.data as UserProfile;
+      organization = memberRes.data.organization as Organization;
+      role = (memberRes.data.role as UserRole) || 'technician';
+    } else {
+      // 2. Self-healing fallback: Admin client bypasses RLS constraints
+      // This is crucial for technicians logging in from new sessions or incognito
+      const admin = createAdminClient();
+
+      // Ensure public.users profile exists
+      if (!profileRes.data) {
+        const fullName = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || user.email?.split('@')[0] || 'Field Technician';
+        const { data: upsertedUser } = await admin
+          .from('users')
+          .upsert({
+            id: user.id,
+            full_name: fullName,
+            email: user.email || '',
+            phone: (user.user_metadata?.phone as string) || null,
+          })
+          .select()
+          .maybeSingle();
+
+        userProfile = upsertedUser as UserProfile;
+      } else {
+        userProfile = profileRes.data as UserProfile;
+      }
+
+      // Query membership via admin client
+      const { data: adminMember } = await admin
+        .from('organization_members')
+        .select('*, organization:organizations(*)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (adminMember && adminMember.organization) {
+        organization = adminMember.organization as Organization;
+        role = (adminMember.role as UserRole) || 'technician';
+      } else {
+        // Auto-link technician to the active organization if not linked
+        const { data: firstOrg } = await admin
+          .from('organizations')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (firstOrg) {
+          await admin.from('organization_members').upsert({
+            organization_id: firstOrg.id,
+            user_id: user.id,
+            role: 'technician',
+          }, { onConflict: 'organization_id,user_id' });
+
+          organization = firstOrg as Organization;
+          role = 'technician';
+        }
+      }
+    }
+
+    if (!userProfile || !organization) return null;
 
     return {
-      user: profileRes.data as UserProfile,
-      organization: memberRes.data.organization as Organization,
-      role: memberRes.data.role as UserRole,
+      user: userProfile,
+      organization,
+      role,
     };
-  } catch {
+  } catch (err) {
+    console.error('Auth context resolution error:', err);
     return null;
   }
 });
