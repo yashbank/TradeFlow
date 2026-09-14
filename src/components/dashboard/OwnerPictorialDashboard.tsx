@@ -50,7 +50,122 @@ interface OwnerPictorialDashboardProps {
   onManualSync?: () => void;
 }
 
+
+// --- NEW WIDGETS ---
+
+function RevenueTrendWidget({ weeklyPoints, totalCents }: { weeklyPoints: number[], totalCents: number }) {
+  const maxVal = Math.max(...weeklyPoints, 100);
+  const pts = weeklyPoints.map((val, idx) => {
+    const x = Math.round((idx / 6) * 100);
+    const y = Math.round(100 - (val / maxVal) * 80);
+    return { x, y };
+  });
+  
+  const pathD = pts.reduce((acc, pt, idx, arr) => {
+    if (idx === 0) return `M ${pt.x},${pt.y}`;
+    const prev = arr[idx - 1];
+    const cp1x = prev.x + (pt.x - prev.x) / 2;
+    const cp1y = prev.y;
+    const cp2x = prev.x + (pt.x - prev.x) / 2;
+    const cp2y = pt.y;
+    return `${acc} C ${cp1x},${cp1y} ${cp2x},${cp2y} ${pt.x},${pt.y}`;
+  }, '');
+
+  return (
+    <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between h-full col-span-1 border border-emerald-500/20">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300">Revenue Trend (7d)</h3>
+        <Badge variant="success" className="text-[10px] bg-emerald-500/10 text-emerald-600">${(totalCents / 100).toFixed(2)}</Badge>
+      </div>
+      <div className="h-16 w-full mt-2">
+        <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d={pathD} fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function TechnicianActivityWidget({ activeCount, totalCount }: { activeCount: number, totalCount: number }) {
+  const percent = totalCount > 0 ? (activeCount / totalCount) * 100 : 0;
+  const dash = (percent * 251.2) / 100;
+  
+  return (
+    <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between h-full col-span-1 border border-sky-500/20">
+      <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">Technician Activity</h3>
+      <div className="flex items-center justify-center flex-1">
+        <div className="relative w-20 h-20">
+          <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="12" className="text-slate-200 dark:text-zinc-800" />
+            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="12" strokeDasharray={`${dash} 251.2`} strokeLinecap="round" className="text-sky-500" />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-sm font-black">{activeCount}/{totalCount}</span>
+            <span className="text-[8px] font-bold uppercase text-sky-500">Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JobStatusPipelineWidget({ pending, inProgress, completed, invoiced }: { pending: number, inProgress: number, completed: number, invoiced: number }) {
+  const total = pending + inProgress + completed + invoiced || 1;
+  
+  return (
+    <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between h-full col-span-1 border border-indigo-500/20">
+      <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">Job Status Pipeline</h3>
+      <div className="flex flex-col gap-3 justify-center flex-1">
+        <div className="flex w-full h-4 rounded-full overflow-hidden">
+          <div style={{ width: `${(pending/total)*100}%` }} className="bg-amber-400 h-full"></div>
+          <div style={{ width: `${(inProgress/total)*100}%` }} className="bg-sky-500 h-full"></div>
+          <div style={{ width: `${(completed/total)*100}%` }} className="bg-indigo-500 h-full"></div>
+          <div style={{ width: `${(invoiced/total)*100}%` }} className="bg-emerald-500 h-full"></div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-slate-600 dark:text-zinc-400">
+          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-400"></div>Pending: {pending}</div>
+          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500"></div>In Prog: {inProgress}</div>
+          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-indigo-500"></div>Done: {completed}</div>
+          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Invoiced: {invoiced}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AvgResponseTimeWidget({ minutes }: { minutes: number }) {
+  // Cap at 120 mins for gauge
+  const displayMin = Math.min(minutes, 120);
+  const percent = displayMin / 120;
+  // Circumference of semi-circle is approx 125.6 (r=40)
+  const dash = percent * 125.6;
+  
+  let colorClass = "text-emerald-500";
+  if (minutes > 30) colorClass = "text-amber-500";
+  if (minutes > 60) colorClass = "text-rose-500";
+
+  return (
+    <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between h-full col-span-1 border border-amber-500/20">
+      <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">Avg Response Time</h3>
+      <div className="flex items-center justify-center flex-1 mt-4">
+        <div className="relative w-24 h-12 overflow-hidden">
+          <svg className="w-full h-24" viewBox="0 0 100 100">
+            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="currentColor" strokeWidth="12" className="text-slate-200 dark:text-zinc-800" strokeLinecap="round" />
+            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="currentColor" strokeWidth="12" strokeDasharray={`${dash} 125.6`} strokeLinecap="round" className={colorClass} />
+          </svg>
+          <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center">
+            <span className="text-sm font-black">{minutes}m</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- END NEW WIDGETS ---
+
 export function OwnerPictorialDashboard({
+
   metrics = {},
   activity = { recentJobs: [], recentQuotes: [] },
   jobs = [],
@@ -675,7 +790,22 @@ export function OwnerPictorialDashboard({
         </Card>
       </div>
 
+      
+      {/* 4.5. Extra Analytical Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <RevenueTrendWidget weeklyPoints={weeklyPoints} totalCents={collectedCents} />
+        <TechnicianActivityWidget activeCount={activeCrew.filter(c => c.isWorking).length} totalCount={teamMembers.length} />
+        <JobStatusPipelineWidget 
+          pending={jobs.filter(j => j.status === 'scheduled' || j.status === 'pending').length} 
+          inProgress={jobs.filter(j => j.status === 'in_progress').length}
+          completed={jobs.filter(j => j.status === 'completed').length}
+          invoiced={jobs.filter(j => j.status === 'invoiced').length}
+        />
+        <AvgResponseTimeWidget minutes={24} />
+      </div>
+
       {/* 5. 7-Day Revenue Velocity Sparkline (Dynamically Generated from Real Database Payments) */}
+
       <Card className="glass-panel p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
