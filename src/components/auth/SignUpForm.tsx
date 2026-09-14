@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { registerUserAction } from '@/actions/auth';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
-import { LanguageSelector } from '@/components/i18n/LanguageSelector';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
 import {
   Wrench,
   CheckCircle2,
@@ -84,17 +83,18 @@ export function SignUpForm() {
 
       {/* Right Column: Sign Up Form */}
       <div className="flex-1 lg:col-span-6 xl:col-span-5 flex flex-col justify-between p-6 sm:p-10 lg:p-12 overflow-y-auto">
-        <div className="flex items-center justify-between w-full mb-6">
-          <Link href="/" className="lg:hidden flex items-center gap-2">
+        {/* Fixed Compact Controls Bar */}
+        <div className="fixed top-4 right-4 z-50">
+          <CompactControlsBar />
+        </div>
+
+        <div className="flex items-center justify-between w-full mb-6 lg:hidden">
+          <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-sky-600 flex items-center justify-center text-white">
               <Wrench className="w-4 h-4" />
             </div>
             <span className="font-black text-lg text-slate-900 dark:text-zinc-100">TradeFlow</span>
           </Link>
-          <div className="flex items-center gap-2 ml-auto">
-            <ThemeToggle />
-            <LanguageSelector />
-          </div>
         </div>
 
         <div className="w-full max-w-md mx-auto space-y-5">

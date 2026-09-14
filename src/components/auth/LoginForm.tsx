@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { loginUserAction } from '@/actions/auth';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
-import { LanguageSelector } from '@/components/i18n/LanguageSelector';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
 import {
   Wrench,
   ShieldCheck,
@@ -103,18 +102,19 @@ export function LoginForm() {
 
       {/* Right Column: Sign In Form Card */}
       <div className="flex-1 lg:col-span-6 xl:col-span-5 flex flex-col justify-between p-6 sm:p-10 lg:p-12">
+        {/* Fixed Compact Controls Bar */}
+        <div className="fixed top-4 right-4 z-50">
+          <CompactControlsBar />
+        </div>
+
         {/* Top Controls Bar */}
-        <div className="flex items-center justify-between w-full mb-6">
-          <Link href="/" className="lg:hidden flex items-center gap-2">
+        <div className="flex items-center justify-between w-full mb-6 lg:hidden">
+          <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-sky-600 flex items-center justify-center text-white">
               <Wrench className="w-4 h-4" />
             </div>
             <span className="font-black text-lg text-slate-900 dark:text-zinc-100">TradeFlow</span>
           </Link>
-          <div className="flex items-center gap-2 ml-auto">
-            <ThemeToggle />
-            <LanguageSelector />
-          </div>
         </div>
 
         {/* Main Form Container */}

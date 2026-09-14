@@ -4,8 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LanguageSelector } from '@/components/i18n/LanguageSelector';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import {
   Wrench,
@@ -149,8 +148,7 @@ export default function MarketingLandingPage() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeToggle />
-            <LanguageSelector />
+            <CompactControlsBar />
             <Link
               href="/login"
               className="text-xs font-bold text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-zinc-100 px-3 py-2 min-h-[44px] flex items-center"
@@ -723,8 +721,7 @@ export default function MarketingLandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <LanguageSelector />
-            <ThemeToggle />
+            <CompactControlsBar />
             <Link
               href="/login"
               className="text-xs font-bold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100"
