@@ -169,7 +169,7 @@ export function JobPhotoGallery({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {filteredPhotos.map((photo) => {
               const meta = CATEGORY_LABELS[photo.tag] || CATEGORY_LABELS.before;
               return (

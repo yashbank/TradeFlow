@@ -115,7 +115,7 @@ export function DataManagementCard() {
 
         <CardContent className="p-6 pt-3 space-y-4">
           {/* Live Data Summary Pills */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3 rounded-xl bg-white/70 dark:bg-zinc-800/70 border border-slate-200/80 dark:border-zinc-700/80">
               <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 mb-1">
                 <span className="flex items-center gap-1 font-semibold">

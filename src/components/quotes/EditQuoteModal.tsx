@@ -187,7 +187,7 @@ export function EditQuoteModal({ quote }: EditQuoteModalProps) {
               )}
 
               {/* Dates */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                     Issue Date
@@ -253,7 +253,7 @@ export function EditQuoteModal({ quote }: EditQuoteModalProps) {
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <div>
                           <label className="text-[11px] text-slate-500 dark:text-zinc-400 block mb-0.5">
                             Quantity
@@ -324,7 +324,7 @@ export function EditQuoteModal({ quote }: EditQuoteModalProps) {
               </div>
 
               {/* Notes & Terms */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
                     Customer Notes

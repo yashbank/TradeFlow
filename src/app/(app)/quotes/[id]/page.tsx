@@ -127,7 +127,7 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
 
           {/* Line Items Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto w-full"><table className="min-w-[600px] w-full text-left text-sm">
               <thead className="border-b border-slate-200 dark:border-zinc-700 text-slate-400 dark:text-zinc-400 text-xs uppercase font-semibold">
                 <tr>
                   <th className="pb-3">Description</th>
@@ -146,7 +146,7 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
 
           {/* Financial Breakdown Summary */}

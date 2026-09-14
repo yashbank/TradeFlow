@@ -131,7 +131,7 @@ export function JobsViewContainer({ jobs, listView }: JobsViewContainerProps) {
                           {job.customer.first_name} {job.customer.last_name}
                         </p>
                       )}
-                      <p className="flex items-center truncate">
+                      <p className="flex items-center min-w-0 truncate">
                         <MapPin className="w-3 h-3 mr-1 text-slate-400 shrink-0" />
                         {job.city ? `${job.address_line1}, ${job.city}` : job.address_line1}
                       </p>
@@ -197,7 +197,7 @@ export function JobsViewContainer({ jobs, listView }: JobsViewContainerProps) {
                           {job.customer.first_name} {job.customer.last_name}
                         </p>
                       )}
-                      <p className="flex items-center truncate">
+                      <p className="flex items-center min-w-0 truncate">
                         <MapPin className="w-3 h-3 mr-1 text-slate-400 shrink-0" />
                         {job.city ? `${job.address_line1}, ${job.city}` : job.address_line1}
                       </p>
