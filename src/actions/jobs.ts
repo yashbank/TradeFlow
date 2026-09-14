@@ -78,6 +78,25 @@ export async function updateJobAction(
     const job = await JobService.update(jobId, input);
     revalidatePath('/jobs');
     revalidatePath(`/jobs/${jobId}`);
+    revalidatePath('/dashboard');
+    return {
+      success: true,
+      data: job,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}
+
+export async function assignJobTechnicianAction(jobId: string, technicianId: string | null) {
+  try {
+    const job = await JobService.update(jobId, { assigned_to_user_id: technicianId || null });
+    revalidatePath('/jobs');
+    revalidatePath(`/jobs/${jobId}`);
+    revalidatePath('/dashboard');
     return {
       success: true,
       data: job,

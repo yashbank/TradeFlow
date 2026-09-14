@@ -41,7 +41,9 @@ import {
   RefreshCw,
   PenTool,
   CheckCheck,
+  Lock,
 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { SignaturePadModal } from '@/components/common/SignaturePadModal';
 import { JobPhotoGallery, type JobPhoto } from '@/components/jobs/JobPhotoGallery';
 import { DispatchNotificationModal } from '@/components/jobs/DispatchNotificationModal';
@@ -131,27 +133,38 @@ export function TechnicianFieldPortal({
 }: TechnicianFieldPortalProps) {
   const router = useRouter();
   const toast = useToast();
+  const { t } = useTranslation();
   const { formatConverted } = useCurrency();
 
   // Swiggy/Zomato style duty toggle
   const [isOnDuty, setIsOnDuty] = useState(true);
 
-  // Active Job selection (default to first scheduled or in_progress job)
+  // Active Job selection (strictly active, non-completed, non-cancelled orders)
   const activeJobs = myJobs.filter((j) => j.status === 'scheduled' || j.status === 'in_progress');
-  const [selectedJobId, setSelectedJobId] = useState<string>(activeJobs[0]?.id || myJobs[0]?.id || '');
+  const completedJobs = myJobs.filter((j) => j.status === 'completed');
+  const [selectedJobId, setSelectedJobId] = useState<string>(activeJobs[0]?.id || '');
 
-  const activeJob = myJobs.find((j) => j.id === selectedJobId) || activeJobs[0] || myJobs[0];
+  // Keep selectedJobId synchronized with activeJobs queue
+  useEffect(() => {
+    if (selectedJobId && !activeJobs.some((j) => j.id === selectedJobId)) {
+      setSelectedJobId(activeJobs[0]?.id || '');
+    } else if (!selectedJobId && activeJobs.length > 0) {
+      setSelectedJobId(activeJobs[0].id);
+    }
+  }, [activeJobs, selectedJobId]);
+
+  // activeJob strictly selects from activeJobs - never completed jobs!
+  const activeJob = activeJobs.find((j) => j.id === selectedJobId) || activeJobs[0] || null;
 
   // Field delivery states: 'scheduled' -> 'en_route' -> 'arrived' -> 'in_progress' -> 'completed'
   const [fieldState, setFieldState] = useState<'scheduled' | 'en_route' | 'arrived' | 'in_progress' | 'completed'>(
-    activeJob?.status === 'in_progress' ? 'in_progress' : activeJob?.status === 'completed' ? 'completed' : 'scheduled'
+    activeJob?.status === 'in_progress' ? 'in_progress' : 'scheduled'
   );
 
   // Update field state when activeJob changes
   useEffect(() => {
     if (activeJob) {
-      if (activeJob.status === 'completed') setFieldState('completed');
-      else if (activeJob.status === 'in_progress') setFieldState('in_progress');
+      if (activeJob.status === 'in_progress') setFieldState('in_progress');
       else setFieldState('scheduled');
     }
   }, [activeJob]);
@@ -374,10 +387,20 @@ export function TechnicianFieldPortal({
     setIsUpdating(false);
 
     if (res.success) {
-      setFieldState('completed');
+      const remainingJobs = activeJobs.filter((j) => j.id !== activeJob.id);
+      setSelectedJobId(remainingJobs[0]?.id || '');
+      setFieldState(remainingJobs[0]?.status === 'in_progress' ? 'in_progress' : 'scheduled');
       resetStopwatch();
+      setCustomerSignature(null);
+      setCustomerSignerName('');
+      setJobPhotos([]);
+      setLoggedParts([]);
+      setCompletionNotes('');
       router.refresh();
-      toast.success('Job Complete!', `Work order ${activeJob.job_number || 'order'} completed and synced with Dispatch.`);
+      toast.success(
+        t('common.confirm') || 'Job Complete!',
+        `Work order ${activeJob.job_number || 'order'} completed and closed. Dispatches updated.`
+      );
     } else {
       toast.error('Error', res.error || 'Failed to update job status.');
     }
@@ -438,7 +461,7 @@ export function TechnicianFieldPortal({
       </div>
 
       {/* 2. Standby Radar Screen when No Assigned Jobs vs. Active Dispatch Route Experience */}
-      {!activeJob || myJobs.length === 0 ? (
+      {!activeJob || activeJobs.length === 0 ? (
         <Card className="glass-panel-elevated overflow-hidden border border-sky-500/30 p-8 sm:p-12 text-center space-y-6">
           <div className="relative w-40 h-40 sm:w-48 sm:h-48 mx-auto flex items-center justify-center">
             {/* Concentric Radar Rings */}
@@ -989,29 +1012,30 @@ export function TechnicianFieldPortal({
         </>
       )}
 
-      {/* 4. Today's Assigned Stops Timeline */}
+      {/* 4. Dispatches & Queue Timeline */}
       <Card className="glass-panel text-card-foreground">
         <CardHeader className="p-5 pb-3 border-b border-slate-200/60 dark:border-zinc-800/60 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
             <Calendar className="w-4 h-4 text-sky-500" />
-            Today&apos;s Dispatch Route ({myJobs.length} Stops)
+            <span>{t('jobs.title') || "Today's Dispatches & Queue"}</span>
           </CardTitle>
-          <span className="text-xs text-slate-500">
-            {myJobs.filter((j) => j.status === 'completed').length} / {myJobs.length} Completed
+          <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">
+            {activeJobs.length} {t('jobs.tab.scheduled') || 'Pending'} • {completedJobs.length} {t('jobs.tab.completed') || 'Completed'}
           </span>
         </CardHeader>
 
-        <CardContent className="p-5">
-          {myJobs.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-400">
-              No jobs assigned to your queue today. You are ready for incoming dispatches.
+        <CardContent className="p-5 space-y-4">
+          {activeJobs.length === 0 ? (
+            <div className="py-6 text-center text-xs text-slate-400">
+              {t('tech.standby_desc') || 'No pending active jobs in your queue. You are on standby for incoming dispatches.'}
             </div>
           ) : (
             <div className="space-y-3">
-              {myJobs.map((job, idx) => {
-                const isCurrent = job.id === selectedJobId;
-                const isDone = job.status === 'completed';
-
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                {t('jobs.title') || 'Active Dispatches'} ({activeJobs.length})
+              </span>
+              {activeJobs.map((job, idx) => {
+                const isCurrent = job.id === activeJob?.id;
                 const jobCustomerName = job.customer
                   ? `${job.customer.first_name || ''} ${job.customer.last_name || ''}`.trim() || job.customer.company_name || 'Valued Customer'
                   : 'Valued Customer';
@@ -1021,7 +1045,7 @@ export function TechnicianFieldPortal({
                     key={job.id}
                     onClick={() => {
                       setSelectedJobId(job.id);
-                      setFieldState(job.status === 'completed' ? 'completed' : 'scheduled');
+                      setFieldState(job.status === 'in_progress' ? 'in_progress' : 'scheduled');
                     }}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                       isCurrent
@@ -1031,13 +1055,11 @@ export function TechnicianFieldPortal({
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 ${
-                        isDone
-                          ? 'bg-emerald-500 text-white'
-                          : isCurrent
+                        isCurrent
                           ? 'bg-sky-500 text-white'
                           : 'bg-slate-200 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300'
                       }`}>
-                        {isDone ? <Check className="w-4 h-4" /> : `#${idx + 1}`}
+                        #{idx + 1}
                       </div>
 
                       <div>
@@ -1045,7 +1067,7 @@ export function TechnicianFieldPortal({
                           <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100">
                             {job.title}
                           </h4>
-                          <Badge variant={isDone ? 'success' : isCurrent ? 'default' : 'secondary'} className="text-[9px] py-0 px-1.5">
+                          <Badge variant={job.status === 'in_progress' ? 'default' : 'secondary'} className="text-[9px] py-0 px-1.5">
                             {job.status}
                           </Badge>
                         </div>
@@ -1063,6 +1085,46 @@ export function TechnicianFieldPortal({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Completed History Section */}
+          {completedJobs.length > 0 && (
+            <div className="pt-3 border-t border-slate-200/50 dark:border-zinc-800/50 space-y-2">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-emerald-500" />
+                {t('tech.completed_history') || 'Completed Work Orders'} ({completedJobs.length}) • {t('tech.locked_notice') || 'Locked'}
+              </span>
+              <div className="space-y-2">
+                {completedJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    onClick={() => {
+                      toast.info(
+                        'Order Completed',
+                        `Work order ${job.job_number} has been completed and locked. Only the owner can view or bill this order.`
+                      );
+                    }}
+                    className="p-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-950/20 flex items-center justify-between cursor-not-allowed opacity-80"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">{job.title}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-zinc-400">
+                          {job.job_number} • Completed
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="success" className="text-[9px] py-0 px-2 flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5" />
+                      Locked
+                    </Badge>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </CardContent>

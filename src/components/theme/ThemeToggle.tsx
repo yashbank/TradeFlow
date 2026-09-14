@@ -2,10 +2,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme, type AppTheme } from '@/lib/theme/ThemeContext';
-import { Droplets, Shield, Sparkles, Check } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { Droplets, Moon, Sparkles, Check } from 'lucide-react';
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -21,29 +23,29 @@ export function ThemeToggle() {
 
   const themeOptions: {
     key: AppTheme;
-    label: string;
-    description: string;
+    labelKey: string;
+    fallbackLabel: string;
     icon: typeof Droplets;
     pillClass: string;
   }[] = [
     {
       key: 'light',
-      label: 'Fresh Stream',
-      description: 'Crisp aquatic slate & clean daylight',
+      labelKey: 'theme.stream',
+      fallbackLabel: 'Stream',
       icon: Droplets,
       pillClass: 'bg-sky-100 text-sky-600 border border-sky-200/80',
     },
     {
       key: 'dark',
-      label: 'Deep Drainage',
-      description: 'Obsidian midnight with electric cyan glow',
-      icon: Shield,
+      labelKey: 'theme.midnight',
+      fallbackLabel: 'Midnight',
+      icon: Moon,
       pillClass: 'bg-cyan-950/70 text-cyan-400 border border-cyan-800/60 shadow-xs shadow-cyan-500/20',
     },
     {
       key: 'colorful',
-      label: 'Hydro Neon',
-      description: 'Twilight violet & iridescent liquid aurora',
+      labelKey: 'theme.neon',
+      fallbackLabel: 'Neon',
       icon: Sparkles,
       pillClass: 'bg-gradient-to-tr from-purple-600 to-pink-500 text-white shadow-xs shadow-purple-500/30',
     },
@@ -57,8 +59,8 @@ export function ThemeToggle() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label={`Current identity: ${currentOption.label}. Click to switch theme.`}
-        title={`Fluid Theme: ${currentOption.label}`}
+        aria-label={`Theme: ${currentOption.fallbackLabel}. Click to switch theme.`}
+        title={`Fluid Theme: ${currentOption.fallbackLabel}`}
         className="group flex items-center justify-center w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl glass-panel-elevated hover:scale-105 active:scale-95 transition-all text-slate-800 dark:text-zinc-100"
       >
         <div className={`p-1.5 rounded-lg ${currentOption.pillClass} transition-all spring-icon`}>
@@ -67,13 +69,8 @@ export function ThemeToggle() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2.5 w-64 rounded-2xl glass-panel-elevated py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-          <div className="px-3.5 py-1.5 text-[10px] font-black text-slate-400 dark:text-zinc-400 uppercase tracking-widest border-b border-slate-200/50 dark:border-zinc-800/60 flex items-center gap-1.5">
-            <Droplets className="w-3.5 h-3.5 text-sky-500" />
-            <span>Fluid Atmosphere Engine</span>
-          </div>
-
-          <div className="p-1.5 space-y-1">
+        <div className="absolute right-0 mt-2 rounded-2xl glass-panel-elevated p-1.5 z-50 shadow-2xl animate-in fade-in zoom-in-95 duration-150 border border-slate-200/80 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl">
+          <div className="flex items-center gap-1">
             {themeOptions.map((opt) => {
               const Icon = opt.icon;
               const isSelected = opt.key === theme;
@@ -85,24 +82,15 @@ export function ThemeToggle() {
                     setTheme(opt.key);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all text-left group ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                     isSelected
-                      ? 'bg-sky-500/15 text-sky-900 dark:text-sky-200 font-bold border border-sky-500/30'
-                      : 'text-slate-700 dark:text-zinc-200 hover:bg-slate-100/70 dark:hover:bg-zinc-800/60'
+                      ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/30 scale-[1.02]'
+                      : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800/80'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className={`p-1.5 rounded-lg ${opt.pillClass} spring-icon`}>
-                      <Icon className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <p className="font-bold leading-tight">{opt.label}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5 leading-snug">
-                        {opt.description}
-                      </p>
-                    </div>
-                  </div>
-                  {isSelected && <Check className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0 ml-1" />}
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{t(opt.labelKey) || opt.fallbackLabel}</span>
+                  {isSelected && <Check className="w-3 h-3 text-white ml-0.5" />}
                 </button>
               );
             })}

@@ -21,6 +21,7 @@ import {
 import { formatDate } from '@/lib/utils';
 import { updateJobStatusAction } from '@/actions/jobs';
 import { useToast } from '@/lib/toast/ToastContext';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 import type { Job } from '@/types/database';
 
 interface JobsViewContainerProps {
@@ -32,6 +33,7 @@ export function JobsViewContainer({ jobs, listView }: JobsViewContainerProps) {
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const toast = useToast();
+  const { t } = useTranslation();
 
   async function handleQuickAdvance(jobId: string, nextStatus: 'in_progress' | 'completed') {
     setUpdatingId(jobId);

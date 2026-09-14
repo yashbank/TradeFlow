@@ -4,20 +4,23 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { updateJobStatusAction, convertJobToInvoiceAction, updateJobAction, deleteJobAction } from '@/actions/jobs';
-import { Play, CheckCircle, Receipt, X, Pencil, Clock, MapPin, Trash2 } from 'lucide-react';
+import { updateJobStatusAction, convertJobToInvoiceAction, updateJobAction, deleteJobAction, assignJobTechnicianAction } from '@/actions/jobs';
+import { Play, CheckCircle, Receipt, X, Pencil, Clock, MapPin, Trash2, UserCheck, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/lib/toast/ToastContext';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { DeleteConfirmationModal } from '@/components/common/DeleteConfirmationModal';
 import type { Job } from '@/types/database';
 
 interface JobDetailActionsProps {
   job: Job;
+  teamMembers?: { id: string; full_name: string; email: string; role: string }[];
 }
 
-export function JobDetailActions({ job }: JobDetailActionsProps) {
+export function JobDetailActions({ job, teamMembers = [] }: JobDetailActionsProps) {
   const router = useRouter();
   const toast = useToast();
+  const { t } = useTranslation();
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -38,6 +41,7 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
   // Edit fields
   const [editTitle, setEditTitle] = useState(job.title);
   const [editDescription, setEditDescription] = useState(job.description || '');
+  const [editAssignedTo, setEditAssignedTo] = useState<string>(job.assigned_to_user_id || '');
   const [editStart, setEditStart] = useState(job.scheduled_start ? job.scheduled_start.slice(0, 16) : '');
   const [editEnd, setEditEnd] = useState(job.scheduled_end ? job.scheduled_end.slice(0, 16) : '');
   const [editAddress, setEditAddress] = useState(job.address_line1 || '');
@@ -96,6 +100,7 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
     const res = await updateJobAction(job.id, {
       title: editTitle.trim(),
       description: editDescription.trim(),
+      assigned_to_user_id: editAssignedTo || undefined,
       scheduled_start: editStart ? new Date(editStart).toISOString() : undefined,
       scheduled_end: editEnd ? new Date(editEnd).toISOString() : undefined,
       address_line1: editAddress.trim(),
@@ -124,6 +129,42 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
       )}
 
       <div className="flex flex-wrap items-center gap-2">
+        {/* Quick Technician Reassignment Selector */}
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-slate-100 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700/80 min-h-[44px]">
+          <UserCheck className="w-4 h-4 text-sky-500 shrink-0" />
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-400">
+              {t('jobs.assigned_to') || 'Assigned Tech'}
+            </span>
+            <select
+              className="bg-transparent dark:bg-zinc-800 text-xs font-bold text-slate-800 dark:text-zinc-200 focus:outline-none cursor-pointer pr-2 border-0 dark:border-zinc-700"
+              value={job.assigned_to_user_id || ''}
+              onChange={async (e) => {
+                const newTechId = e.target.value || null;
+                setLoading(true);
+                const res = await assignJobTechnicianAction(job.id, newTechId);
+                setLoading(false);
+                if (res.success) {
+                  toast.success('Technician Assigned', 'Work order dispatch updated.');
+                  router.refresh();
+                } else {
+                  toast.error('Assignment Failed', res.error || 'Failed to assign technician');
+                }
+              }}
+              disabled={loading}
+            >
+              <option value="" className="text-slate-900 dark:text-zinc-100 bg-white dark:bg-zinc-900">
+                -- {t('jobs.unassigned_pool') || 'Unassigned (Pool)'} --
+              </option>
+              {teamMembers.map((m) => (
+                <option key={m.id} value={m.id} className="text-slate-900 dark:text-zinc-100 bg-white dark:bg-zinc-900">
+                  {m.full_name} ({m.role})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <Button
           size="sm"
           variant="outline"
@@ -131,7 +172,7 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
           className="min-h-[44px]"
         >
           <Pencil className="w-4 h-4 mr-1.5 text-slate-500 dark:text-zinc-400" />
-          Edit Work Order
+          {t('jobs.edit_title') || 'Edit Work Order'}
         </Button>
 
         {job.status === 'scheduled' && (
@@ -294,6 +335,28 @@ export function JobDetailActions({ job }: JobDetailActionsProps) {
                     required
                     className="min-h-[44px]"
                   />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-sky-500" />
+                    {t('jobs.assigned_to') || 'Assign Technician / Crew Member'}
+                  </label>
+                  <select
+                    value={editAssignedTo}
+                    onChange={(e) => setEditAssignedTo(e.target.value)}
+                    className="w-full text-xs rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 p-2.5 min-h-[44px] focus:ring-2 focus:ring-sky-500"
+                  >
+                    <option value="">-- {t('jobs.unassigned_pool') || 'Unassigned (Pool Queue)'} --</option>
+                    {teamMembers.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.full_name} ({member.role})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1">
+                    Assigning a technician pushes this work order into their live mobile dispatch queue.
+                  </p>
                 </div>
 
                 <div>

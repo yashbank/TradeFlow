@@ -24,7 +24,10 @@ interface JobDetailPageProps {
 
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = await params;
-  const job = await JobService.getById(id);
+  const [job, teamMembers] = await Promise.all([
+    JobService.getById(id),
+    JobService.getTeamMembers().catch(() => []),
+  ]);
 
   if (!job) {
     notFound();
@@ -42,7 +45,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back to Jobs
         </Link>
-        <JobDetailActions job={job} />
+        <JobDetailActions job={job} teamMembers={teamMembers} />
       </div>
 
       {/* Lifecycle Pipeline Step Indicator */}

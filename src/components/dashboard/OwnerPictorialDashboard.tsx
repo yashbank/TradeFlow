@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/lib/currency/CurrencyContext';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 import {
   DollarSign,
   TrendingUp,
@@ -59,6 +60,7 @@ export function OwnerPictorialDashboard({
   onManualSync,
 }: OwnerPictorialDashboardProps) {
   const { formatConverted } = useCurrency();
+  const { t } = useTranslation();
 
   // Real Database Financial Metrics (No Mock Numbers)
   const collectedCents = metrics.revenueMtdCents || 0;
@@ -198,13 +200,13 @@ export function OwnerPictorialDashboard({
           <Link href="/quotes/new">
             <Button size="sm" variant="outline" className="bg-white/80 dark:bg-zinc-800/80 font-bold text-xs">
               <Plus className="w-3.5 h-3.5 mr-1" />
-              New Quote
+              {t('dash.btn.new_quote') || 'New Quote'}
             </Button>
           </Link>
           <Link href="/jobs/new">
             <Button size="sm" className="bg-sky-600 hover:bg-sky-700 font-bold text-xs shadow-md shadow-sky-500/25">
               <CalendarCheck2 className="w-3.5 h-3.5 mr-1.5" />
-              Dispatch Job
+              {t('dash.btn.schedule_job') || 'Dispatch Job'}
             </Button>
           </Link>
         </div>
@@ -220,11 +222,11 @@ export function OwnerPictorialDashboard({
                   <Sparkles className="w-5 h-5" />
                 </span>
                 <h3 className="text-lg font-black text-slate-900 dark:text-zinc-100">
-                  Welcome to TradeFlow • Ready for First Dispatch
+                  {t('dash.welcome_zero') || 'Welcome to TradeFlow • Ready for First Dispatch'}
                 </h3>
               </div>
               <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
-                Your workspace is active and synced to the database. Kickstart your field service pipeline in 3 simple steps:
+                {t('dash.welcome_desc') || 'Your workspace is active and synced to the database. Kickstart your field service pipeline in 3 simple steps:'}
               </p>
             </div>
 
@@ -237,7 +239,9 @@ export function OwnerPictorialDashboard({
                   <span className="w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-black flex items-center justify-center">1</span>
                   <Users className="w-4 h-4 text-sky-500 group-hover:scale-110 transition-transform" />
                 </div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-sky-600">Add Customer</h4>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-sky-600">
+                  {t('dash.quick_step1') || '1. Add Customer'}
+                </h4>
                 <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">Register client & property address</p>
               </Link>
 
@@ -249,7 +253,9 @@ export function OwnerPictorialDashboard({
                   <span className="w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-black flex items-center justify-center">2</span>
                   <FileCheck className="w-4 h-4 text-sky-500 group-hover:scale-110 transition-transform" />
                 </div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-sky-600">Create Estimate</h4>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-sky-600">
+                  {t('dash.quick_step2') || '2. Create Estimate'}
+                </h4>
                 <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">Draft quote with plumbing presets</p>
               </Link>
 
@@ -261,7 +267,9 @@ export function OwnerPictorialDashboard({
                   <span className="w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-black flex items-center justify-center">3</span>
                   <CalendarCheck2 className="w-4 h-4 text-sky-500 group-hover:scale-110 transition-transform" />
                 </div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-sky-600">Dispatch Tech</h4>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100 group-hover:text-sky-600">
+                  {t('dash.quick_step3') || '3. Dispatch Tech'}
+                </h4>
                 <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">Assign job order to field crew</p>
               </Link>
             </div>
