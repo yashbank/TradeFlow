@@ -1,4 +1,5 @@
 'use server';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 
 import { QuoteService } from '@/services/QuoteService';
 import { AuthService } from '@/services/AuthService';
@@ -26,7 +27,7 @@ export async function createQuoteAction(input: CreateQuoteInput) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -60,7 +61,7 @@ export async function sendQuoteAction(quoteId: string) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -87,7 +88,7 @@ export async function convertQuoteToJobAction(
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -108,7 +109,7 @@ export async function approveQuoteAction(
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -125,7 +126,7 @@ export async function rejectQuoteAction(quoteId: string, reason?: string) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -157,7 +158,7 @@ export async function updateQuoteAction(quoteId: string, input: CreateQuoteInput
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -173,7 +174,7 @@ export async function deleteQuoteAction(quoteId: string) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }

@@ -1,4 +1,5 @@
 'use server';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 
 import { InvoiceService } from '@/services/InvoiceService';
 import { AuthService } from '@/services/AuthService';
@@ -31,7 +32,7 @@ export async function createInvoiceAction(input: CreateInvoiceInput) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -66,7 +67,7 @@ export async function sendInvoiceAction(invoiceId: string) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -83,7 +84,7 @@ export async function voidInvoiceAction(invoiceId: string) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -125,7 +126,7 @@ export async function recordPaymentAction(invoiceId: string, input: RecordPaymen
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -141,7 +142,7 @@ export async function deleteInvoiceAction(invoiceId: string) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }

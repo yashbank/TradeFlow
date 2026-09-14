@@ -1,4 +1,5 @@
 'use server';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 
 import { JobService } from '@/services/JobService';
 import { InvoiceService } from '@/services/InvoiceService';
@@ -25,7 +26,7 @@ export async function createJobAction(input: CreateJobInput) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -47,7 +48,7 @@ export async function updateJobStatusAction(
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -65,7 +66,7 @@ export async function convertJobToInvoiceAction(jobId: string) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -86,7 +87,7 @@ export async function updateJobAction(
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -104,7 +105,7 @@ export async function assignJobTechnicianAction(jobId: string, technicianId: str
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }
@@ -120,7 +121,7 @@ export async function deleteJobAction(jobId: string) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message,
+      error: getFriendlyErrorMessage(err),
     };
   }
 }

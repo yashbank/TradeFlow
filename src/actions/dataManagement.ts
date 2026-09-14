@@ -1,4 +1,5 @@
 'use server';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 
 import { AuthService } from '@/services/AuthService';
 import { DataManagementService, type PurgeEntity } from '@/services/DataManagementService';
@@ -9,7 +10,7 @@ export async function getWorkspaceStatsAction() {
     const stats = await DataManagementService.getStats();
     return { success: true, data: stats };
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, error: getFriendlyErrorMessage(err) };
   }
 }
 
@@ -46,7 +47,7 @@ export async function purgeEntityAction(entity: PurgeEntity) {
 
     return { success: true };
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, error: getFriendlyErrorMessage(err) };
   }
 }
 
@@ -64,7 +65,7 @@ export async function seedDemoDataAction() {
 
     return { success: true, data: result };
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, error: getFriendlyErrorMessage(err) };
   }
 }
 

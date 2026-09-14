@@ -1,4 +1,5 @@
 'use server';
+import { getFriendlyErrorMessage } from '@/lib/errorHandler';
 
 import { AuthService } from '@/services/AuthService';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -112,7 +113,7 @@ export async function createTechnicianAction(formData: FormData) {
   } catch (err: any) {
     return {
       success: false,
-      error: err.message || 'An unexpected error occurred while provisioning the technician.',
+      error: getFriendlyErrorMessage(err) || 'An unexpected error occurred while provisioning the technician.',
     };
   }
 }
@@ -134,7 +135,7 @@ export async function listTechniciansAction(): Promise<{ success: boolean; data?
       .eq('role', 'technician');
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: getFriendlyErrorMessage(error) };
     }
 
     // Get active job counts per technician
@@ -171,7 +172,7 @@ export async function listTechniciansAction(): Promise<{ success: boolean; data?
 
     return { success: true, data: list };
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, error: getFriendlyErrorMessage(err) };
   }
 }
 
@@ -190,7 +191,7 @@ export async function deleteTechnicianAction(memberId: string) {
       .eq('organization_id', organization.id);
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: getFriendlyErrorMessage(error) };
     }
 
     revalidatePath('/settings');
@@ -199,6 +200,6 @@ export async function deleteTechnicianAction(memberId: string) {
 
     return { success: true, message: 'Technician removed from organization.' };
   } catch (err: any) {
-    return { success: false, error: err.message };
+    return { success: false, error: getFriendlyErrorMessage(err) };
   }
 }
