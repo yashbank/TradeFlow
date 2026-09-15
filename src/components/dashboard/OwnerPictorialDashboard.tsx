@@ -11,6 +11,7 @@ import { useCurrency } from '@/lib/currency/CurrencyContext';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useToast } from '@/lib/toast/ToastContext';
 import { seedDemoDataAction } from '@/actions/dataManagement';
+import { GanttDispatchView } from '@/components/dashboard/GanttDispatchView';
 import {
   DollarSign,
   TrendingUp,
@@ -33,6 +34,7 @@ import {
   Sparkles,
   UserPlus,
   RefreshCw,
+  CalendarDays,
 } from 'lucide-react';
 import type { UserProfile, Organization } from '@/types/database';
 import { FleetRadarMap } from './FleetRadarMap';
@@ -184,6 +186,7 @@ export function OwnerPictorialDashboard({
   const { formatConverted } = useCurrency();
   const { t } = useTranslation();
   const [isSeeding, setIsSeeding] = useState(false);
+  const [dispatchTab, setDispatchTab] = useState<'all' | 'gantt' | 'radar'>('all');
 
   async function handleSeedDemoData() {
     setIsSeeding(true);
@@ -579,8 +582,72 @@ export function OwnerPictorialDashboard({
         </Card>
       </div>
 
-      {/* 3. Real Metropolitan Fleet Radar Map (Wired to Real Team & Jobs) */}
-      <FleetRadarMap activeCrew={activeCrew} />
+      {/* 3. Dispatch Operations Command Center (Gantt Schedule & Fleet Radar Tabs) */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+              <CalendarDays className="w-5 h-5" />
+            </span>
+            <div>
+              <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-zinc-100">
+                Dispatch Operations Command
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
+                Manage technician routes, live radar positions, and drag-and-drop weekly schedules
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 dark:bg-zinc-800/90 rounded-2xl w-fit border border-slate-200/60 dark:border-zinc-700/60 shadow-inner">
+            <button
+              type="button"
+              onClick={() => setDispatchTab('all')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                dispatchTab === 'all'
+                  ? 'bg-white dark:bg-zinc-900 text-sky-600 dark:text-sky-400 shadow-xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+              }`}
+            >
+              All Views
+            </button>
+            <button
+              type="button"
+              onClick={() => setDispatchTab('gantt')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                dispatchTab === 'gantt'
+                  ? 'bg-white dark:bg-zinc-900 text-sky-600 dark:text-sky-400 shadow-xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+              }`}
+            >
+              Weekly Gantt Board
+            </button>
+            <button
+              type="button"
+              onClick={() => setDispatchTab('radar')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                dispatchTab === 'radar'
+                  ? 'bg-white dark:bg-zinc-900 text-sky-600 dark:text-sky-400 shadow-xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+              }`}
+            >
+              Live Fleet Radar
+            </button>
+          </div>
+        </div>
+
+        {/* Weekly Gantt Dispatch View Section */}
+        {(dispatchTab === 'all' || dispatchTab === 'gantt') && (
+          <Card className="glass-panel-elevated p-6 rounded-3xl border border-sky-500/30 shadow-md">
+            <GanttDispatchView jobs={jobs} teamMembers={teamMembers} />
+          </Card>
+        )}
+
+        {/* Real Metropolitan Fleet Radar Map */}
+        {(dispatchTab === 'all' || dispatchTab === 'radar') && (
+          <FleetRadarMap activeCrew={activeCrew} />
+        )}
+      </div>
 
       {/* 4. Priority Dispatch Triage (Wired to Real Database Jobs) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

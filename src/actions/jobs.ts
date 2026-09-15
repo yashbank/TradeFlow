@@ -128,20 +128,24 @@ export async function deleteJobAction(jobId: string) {
 
 /**
  * Gantt drag-and-drop rescheduling action.
- * Persists a new scheduled_start (and optionally scheduled_end) for a job
- * when a technician drags a job bar to a different day/time on the Gantt chart.
+ * Persists a new scheduled_start (and optionally scheduled_end and assigned technician)
+ * for a job when a dispatcher drags a job bar across days or technicians on the Gantt chart.
  */
 export async function rescheduleJobAction(
   jobId: string,
-  newScheduledStart: string,
-  newScheduledEnd?: string | null
+  newScheduledStart: string | null,
+  newScheduledEnd?: string | null,
+  newAssignedToUserId?: string | null
 ) {
   try {
     const updatePayload: Record<string, string | null> = {
-      scheduled_start: newScheduledStart,
+      scheduled_start: newScheduledStart || null,
     };
     if (newScheduledEnd !== undefined) {
       updatePayload.scheduled_end = newScheduledEnd ?? null;
+    }
+    if (newAssignedToUserId !== undefined) {
+      updatePayload.assigned_to_user_id = newAssignedToUserId ?? null;
     }
     const job = await JobService.update(jobId, updatePayload as any);
     revalidatePath('/jobs');
