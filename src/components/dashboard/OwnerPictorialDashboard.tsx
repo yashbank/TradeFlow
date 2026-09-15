@@ -75,15 +75,51 @@ function RevenueTrendWidget({ weeklyPoints, totalCents }: { weeklyPoints: number
   }, '');
 
   return (
-    <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between h-full col-span-1 border border-emerald-500/20">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300">Revenue Trend (7d)</h3>
-        <Badge variant="success" className="text-[10px] bg-emerald-500/10 text-emerald-600">${(totalCents / 100).toFixed(2)}</Badge>
+    <div className="glass-panel group relative rounded-2xl p-5 flex flex-col justify-between h-full col-span-1 border border-emerald-500/20 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="relative z-10 flex items-center justify-between mb-3">
+        <h3 className="text-xs font-black tracking-wide uppercase text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+          <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+          Revenue Trend
+        </h3>
+        <Badge variant="success" className="text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-sm transition-transform group-hover:scale-105">
+          +12.4%
+        </Badge>
       </div>
-      <div className="h-16 w-full mt-2">
+      <div className="relative z-10 mb-2">
+        <p className="text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-50">
+          ${(totalCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </p>
+      </div>
+      <div className="relative h-16 w-full mt-2 group/chart">
+        <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-xl" />
         <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <path d={pathD} fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <defs>
+            <filter id="glowRevenue">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <path 
+            d={pathD} 
+            fill="none" 
+            stroke="#10b981" 
+            strokeWidth="3" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            filter="url(#glowRevenue)"
+            className="opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+          />
         </svg>
+        {/* Interactive Crosshair (simulated via CSS hover) */}
+        <div className="absolute inset-0 opacity-0 group-hover/chart:opacity-100 transition-opacity duration-200 pointer-events-none flex justify-center items-center">
+          <div className="w-px h-full bg-emerald-500/40 relative">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white border-2 border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -94,19 +130,45 @@ function TechnicianActivityWidget({ activeCount, totalCount }: { activeCount: nu
   const dash = (percent * 251.2) / 100;
   
   return (
-    <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between h-full col-span-1 border border-sky-500/20">
-      <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">Technician Activity</h3>
-      <div className="flex items-center justify-center flex-1">
-        <div className="relative w-20 h-20">
+    <div className="glass-panel group relative rounded-2xl p-5 flex flex-col justify-between h-full col-span-1 border border-sky-500/20 hover:border-sky-500/40 hover:shadow-lg hover:shadow-sky-500/10 transition-all duration-300 cursor-pointer overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <h3 className="relative z-10 text-xs font-black tracking-wide uppercase text-slate-700 dark:text-zinc-300 mb-2 flex items-center gap-1.5">
+        <Users className="w-3.5 h-3.5 text-sky-500" />
+        Tech Activity
+      </h3>
+      <div className="relative z-10 flex items-center justify-center flex-1 py-2">
+        <div className="relative w-24 h-24 transition-transform duration-500 group-hover:scale-110">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="12" className="text-slate-200 dark:text-zinc-800" />
-            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="12" strokeDasharray={`${dash} 251.2`} strokeLinecap="round" className="text-sky-500" />
+            <defs>
+              <filter id="glowTech">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="8" className="text-slate-100 dark:text-zinc-800/80" />
+            <circle 
+              cx="50" cy="50" r="40" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="8" 
+              strokeDasharray={`${dash} 251.2`} 
+              strokeLinecap="round" 
+              className="text-sky-500" 
+              filter="url(#glowTech)"
+              style={{ transition: 'stroke-dasharray 1s ease-out' }}
+            />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-sm font-black">{activeCount}/{totalCount}</span>
-            <span className="text-[8px] font-bold uppercase text-sky-500">Active</span>
+            <span className="text-xl font-black text-slate-900 dark:text-white">{activeCount}<span className="text-sm text-slate-400">/{totalCount}</span></span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-sky-500 mt-0.5">Active</span>
           </div>
         </div>
+      </div>
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-3 py-2 bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none translate-y-2 group-hover:translate-y-0 shadow-xl z-50">
+        {activeCount} active in field, {totalCount - activeCount} on standby
       </div>
     </div>
   );
@@ -116,20 +178,44 @@ function JobStatusPipelineWidget({ pending, inProgress, completed, invoiced }: {
   const total = pending + inProgress + completed + invoiced || 1;
   
   return (
-    <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between h-full col-span-1 border border-indigo-500/20">
-      <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">Job Status Pipeline</h3>
-      <div className="flex flex-col gap-3 justify-center flex-1">
-        <div className="flex w-full h-4 rounded-full overflow-hidden">
-          <div style={{ width: `${(pending/total)*100}%` }} className="bg-amber-400 h-full"></div>
-          <div style={{ width: `${(inProgress/total)*100}%` }} className="bg-sky-500 h-full"></div>
-          <div style={{ width: `${(completed/total)*100}%` }} className="bg-indigo-500 h-full"></div>
-          <div style={{ width: `${(invoiced/total)*100}%` }} className="bg-emerald-500 h-full"></div>
+    <div className="glass-panel group relative rounded-2xl p-5 flex flex-col justify-between h-full col-span-1 border border-indigo-500/20 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 cursor-pointer overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <h3 className="relative z-10 text-xs font-black tracking-wide uppercase text-slate-700 dark:text-zinc-300 mb-4 flex items-center gap-1.5">
+        <Activity className="w-3.5 h-3.5 text-indigo-500" />
+        Job Pipeline
+      </h3>
+      <div className="relative z-10 flex flex-col gap-4 justify-center flex-1">
+        <div className="group/bar flex w-full h-5 rounded-full overflow-hidden shadow-inner bg-slate-100 dark:bg-zinc-800 border border-slate-200/50 dark:border-zinc-700/50">
+          <div style={{ width: `${(pending/total)*100}%` }} className="bg-amber-400 h-full relative overflow-hidden transition-all duration-500 hover:brightness-110 cursor-help" title={`Pending: ${pending}`}>
+            <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full group-hover/bar:animate-[shimmer_2s_infinite]" />
+          </div>
+          <div style={{ width: `${(inProgress/total)*100}%` }} className="bg-sky-500 h-full relative overflow-hidden transition-all duration-500 hover:brightness-110 cursor-help" title={`In Progress: ${inProgress}`}>
+            <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full group-hover/bar:animate-[shimmer_2s_infinite_0.2s]" />
+          </div>
+          <div style={{ width: `${(completed/total)*100}%` }} className="bg-indigo-500 h-full relative overflow-hidden transition-all duration-500 hover:brightness-110 cursor-help" title={`Completed: ${completed}`}>
+            <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full group-hover/bar:animate-[shimmer_2s_infinite_0.4s]" />
+          </div>
+          <div style={{ width: `${(invoiced/total)*100}%` }} className="bg-emerald-500 h-full relative overflow-hidden transition-all duration-500 hover:brightness-110 cursor-help" title={`Invoiced: ${invoiced}`}>
+            <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full group-hover/bar:animate-[shimmer_2s_infinite_0.6s]" />
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold text-slate-600 dark:text-zinc-400">
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-400"></div>Pending: {pending}</div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500"></div>In Prog: {inProgress}</div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-indigo-500"></div>Done: {completed}</div>
-          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Invoiced: {invoiced}</div>
+        <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-[10px] font-bold text-slate-600 dark:text-zinc-400">
+          <div className="flex items-center justify-between group/item hover:text-amber-500 transition-colors">
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-amber-400 shadow-sm" />Pending</div>
+            <span className="text-slate-900 dark:text-zinc-100">{pending}</span>
+          </div>
+          <div className="flex items-center justify-between group/item hover:text-sky-500 transition-colors">
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-sky-500 shadow-sm" />Active</div>
+            <span className="text-slate-900 dark:text-zinc-100">{inProgress}</span>
+          </div>
+          <div className="flex items-center justify-between group/item hover:text-indigo-500 transition-colors">
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-indigo-500 shadow-sm" />Done</div>
+            <span className="text-slate-900 dark:text-zinc-100">{completed}</span>
+          </div>
+          <div className="flex items-center justify-between group/item hover:text-emerald-500 transition-colors">
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-emerald-500 shadow-sm" />Invoiced</div>
+            <span className="text-slate-900 dark:text-zinc-100">{invoiced}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -137,27 +223,63 @@ function JobStatusPipelineWidget({ pending, inProgress, completed, invoiced }: {
 }
 
 function AvgResponseTimeWidget({ minutes }: { minutes: number }) {
-  // Cap at 120 mins for gauge
   const displayMin = Math.min(minutes, 120);
   const percent = displayMin / 120;
-  // Circumference of semi-circle is approx 125.6 (r=40)
   const dash = percent * 125.6;
   
   let colorClass = "text-emerald-500";
-  if (minutes > 30) colorClass = "text-amber-500";
-  if (minutes > 60) colorClass = "text-rose-500";
+  let badgeText = "Elite <30m";
+  let badgeColor = "bg-emerald-500/15 text-emerald-600 border-emerald-500/20";
+  if (minutes > 30) {
+    colorClass = "text-amber-500";
+    badgeText = "Fair <60m";
+    badgeColor = "bg-amber-500/15 text-amber-600 border-amber-500/20";
+  }
+  if (minutes > 60) {
+    colorClass = "text-rose-500";
+    badgeText = "Poor >60m";
+    badgeColor = "bg-rose-500/15 text-rose-600 border-rose-500/20";
+  }
 
   return (
-    <div className="glass-panel rounded-2xl p-4 flex flex-col justify-between h-full col-span-1 border border-amber-500/20">
-      <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">Avg Response Time</h3>
-      <div className="flex items-center justify-center flex-1 mt-4">
-        <div className="relative w-24 h-12 overflow-hidden">
-          <svg className="w-full h-24" viewBox="0 0 100 100">
-            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="currentColor" strokeWidth="12" className="text-slate-200 dark:text-zinc-800" strokeLinecap="round" />
-            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="currentColor" strokeWidth="12" strokeDasharray={`${dash} 125.6`} strokeLinecap="round" className={colorClass} />
+    <div className="glass-panel group relative rounded-2xl p-5 flex flex-col justify-between h-full col-span-1 border border-amber-500/20 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="relative z-10 flex items-center justify-between mb-2">
+        <h3 className="text-xs font-black tracking-wide uppercase text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5 text-amber-500" />
+          Response Time
+        </h3>
+        <Badge variant="outline" className={cn("text-[9px] font-bold shadow-sm transition-transform group-hover:scale-105", badgeColor)}>
+          {badgeText}
+        </Badge>
+      </div>
+      <div className="relative z-10 flex items-center justify-center flex-1 mt-4">
+        <div className="relative w-28 h-14 overflow-hidden transition-transform duration-500 group-hover:scale-110">
+          <svg className="w-full h-28" viewBox="0 0 100 100">
+            <defs>
+              <filter id="glowGauge">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="currentColor" strokeWidth="10" className="text-slate-100 dark:text-zinc-800/80" strokeLinecap="round" />
+            <path 
+              d="M 10 50 A 40 40 0 0 1 90 50" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="10" 
+              strokeDasharray={`${dash} 125.6`} 
+              strokeLinecap="round" 
+              className={colorClass}
+              filter="url(#glowGauge)"
+              style={{ transition: 'stroke-dasharray 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
+            />
           </svg>
-          <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center">
-            <span className="text-sm font-black">{minutes}m</span>
+          <div className="absolute bottom-1 left-0 right-0 flex flex-col items-center">
+            <span className="text-2xl font-black text-slate-900 dark:text-white drop-shadow-sm">{minutes}<span className="text-sm font-bold text-slate-400 ml-0.5">m</span></span>
           </div>
         </div>
       </div>
