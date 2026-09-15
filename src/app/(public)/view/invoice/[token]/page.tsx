@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { InvoiceService } from '@/services/InvoiceService';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Wrench, Phone, CheckCircle2, AlertCircle, Download } from 'lucide-react';
+import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +31,7 @@ export default async function PublicInvoicePage({ params }: PublicInvoicePagePro
         <div className="bg-white dark:bg-zinc-900 rounded-xl p-5 border border-slate-200 dark:border-zinc-800 shadow-sm flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-blue-600 text-white p-2.5 rounded-lg">
-              <Wrench className="w-6 h-6" />
+              <TradeFlowLogo size="md" />
             </div>
             <div>
               <h1 className="font-bold text-slate-900 dark:text-zinc-100 text-lg sm:text-xl">

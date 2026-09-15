@@ -22,6 +22,7 @@ import { CommandPalette } from '@/components/common/CommandPalette';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import type { Organization, UserProfile, UserRole } from '@/types/database';
+import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -86,7 +87,7 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
         {/* Brand Header */}
         <div className="flex items-center space-x-3 px-1.5 py-3 mb-3 border-b border-slate-200/50 dark:border-zinc-800/60">
           <div className="bg-gradient-to-tr from-sky-500 to-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-sky-500/25 shrink-0 spring-icon">
-            <Wrench className="w-5 h-5" />
+            <TradeFlowLogo size="md" />
           </div>
           <div className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200 overflow-hidden whitespace-nowrap min-w-0">
             <h1 className="font-bold text-slate-900 dark:text-zinc-100 truncate text-sm leading-tight">
@@ -167,7 +168,7 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
       <header className="md:hidden flex items-center justify-between px-3.5 py-2.5 glass-panel-elevated sticky top-0 z-30 shadow-2xs">
         <div className="flex items-center space-x-2 shrink-0">
           <div className="bg-gradient-to-tr from-sky-500 to-blue-600 text-white p-1.5 rounded-lg shadow-sm">
-            <Wrench className="w-4 h-4" />
+            <TradeFlowLogo size="md" />
           </div>
           <span className="font-bold text-slate-900 dark:text-zinc-100 text-xs truncate max-w-[130px]">
             {organization.name}

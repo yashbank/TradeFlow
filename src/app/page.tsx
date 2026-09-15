@@ -4,9 +4,9 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { Inter, Sora } from 'next/font/google';
 import { Button } from '@/components/ui/button';
-import { Wrench, ArrowRight, X, Check, Navigation, Clock, FileText, Smartphone, Star } from 'lucide-react';
 import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
 
 const inter = Inter({ subsets: ['latin'] });
 const sora = Sora({ subsets: ['latin'], weight: ['400', '600', '700', '800'] });
@@ -30,7 +30,7 @@ export default function MarketingLandingPage() {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center">
-              <Wrench className="w-4 h-4 text-white" />
+              <TradeFlowLogo size="md" />
             </div>
             <span className={`${sora.className} font-bold text-xl tracking-tight`}>TradeFlow</span>
           </div>
@@ -238,7 +238,7 @@ export default function MarketingLandingPage() {
         <footer className="border-t border-slate-100 dark:border-slate-800 py-12 mt-20">
           <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <Wrench className="w-5 h-5 text-indigo-500" />
+              <TradeFlowLogo size="md" />
               <span className="font-semibold">TradeFlow © 2026</span>
             </div>
             <CompactControlsBar />

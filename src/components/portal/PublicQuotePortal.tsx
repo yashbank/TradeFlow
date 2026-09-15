@@ -10,6 +10,7 @@ import { respondToQuotePublicAction } from '@/actions/public-quotes';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { CheckCircle2, XCircle, Phone, Mail, Wrench, ShieldCheck, Download } from 'lucide-react';
 import { useToast } from '@/lib/toast/ToastContext';
+import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
 
 interface PublicQuotePortalProps {
   quote: any;
@@ -105,7 +106,7 @@ export function PublicQuotePortal({ quote, token }: PublicQuotePortalProps) {
         <div className="bg-white dark:bg-zinc-900 rounded-xl p-5 border border-slate-200 dark:border-zinc-800 shadow-sm flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-blue-600 text-white p-2.5 rounded-lg">
-              <Wrench className="w-6 h-6" />
+              <TradeFlowLogo size="md" />
             </div>
             <div>
               <h1 className="font-bold text-slate-900 dark:text-zinc-100 text-lg sm:text-xl">

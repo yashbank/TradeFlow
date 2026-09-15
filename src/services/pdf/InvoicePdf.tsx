@@ -2,6 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { Invoice } from '@/types/database';
+import { TradeFlowLogoPdf } from '@/components/common/TradeFlowLogoPdf';
 
 const styles = StyleSheet.create({
   page: {
@@ -186,6 +187,7 @@ export function InvoicePdfDocument({ invoice, organization }: InvoicePdfProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
+            <TradeFlowLogoPdf />
             <Text style={styles.businessName}>{org?.name || 'TradeFlow Plumbing'}</Text>
             {org?.phone && <Text style={styles.businessDetails}>{org.phone}</Text>}
             {org?.email && <Text style={styles.businessDetails}>{org.email}</Text>}
