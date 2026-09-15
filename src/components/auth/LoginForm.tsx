@@ -41,62 +41,42 @@ export function LoginForm() {
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:grid lg:grid-cols-12 bg-slate-50 dark:bg-zinc-950 transition-colors duration-200">
-      {/* Left Column: Luxury Ambient Brand Showcase (Desktop only) */}
-      <div className="hidden lg:flex lg:col-span-6 xl:col-span-7 relative p-12 flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-950 via-zinc-900 to-sky-950 text-white border-r border-slate-800">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+      {/* Left Column: 4K Photographic Architectural Craftsmanship Showcase */}
+      <div className="hidden lg:flex lg:col-span-6 xl:col-span-7 relative p-12 flex-col justify-between overflow-hidden text-white border-r border-slate-800">
+        {/* 4K High-Definition Master Trade & Architecture Background */}
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 scale-105 hover:scale-100"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=2000&q=85')`,
+          }}
+        />
+        {/* Dark Film Grain & Fluid Gradient Vignette */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-950/40 backdrop-blur-[2px]" />
 
         {/* Brand Header */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-sky-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/30">
+          <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-lg">
             <TradeFlowLogo size="md" />
           </div>
           <div>
             <span className="font-black text-2xl tracking-tight text-white">TradeFlow</span>
-            <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-500/30">
-              Enterprise OS
-            </span>
           </div>
         </div>
 
-        {/* Centerpiece: Real-time Telemetry Showcase */}
-        <div className="relative z-10 space-y-6 max-w-lg">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>High-Velocity Dispatch Telemetry</span>
-          </div>
-
-          <h2 className="text-3xl xl:text-4xl font-black tracking-tight leading-tight">
-            Turn Dispatch Friction into Same-Day Cash Flow.
+        {/* Minimal Hero Statement */}
+        <div className="relative z-10 space-y-4 max-w-lg">
+          <h2 className="text-3xl xl:text-5xl font-black tracking-tight leading-tight text-white drop-shadow-md">
+            The Operating System for Master Trades.
           </h2>
-
-          <div className="space-y-3 pt-2">
-            <div className="p-4 rounded-2xl bg-white/5 dark:bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3.5">
-              <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <div className="text-xs">
-                <span className="font-bold text-white block">Real-time GPS Van Radar</span>
-                <span className="text-zinc-400">Zero phone calls to locate nearby technicians</span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white/5 dark:bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-3.5">
-              <div className="p-2.5 rounded-xl bg-sky-500/20 text-sky-400">
-                <Clock className="w-5 h-5" />
-              </div>
-              <div className="text-xs">
-                <span className="font-bold text-white block">15-Minute Stopwatch Billing</span>
-                <span className="text-zinc-400">Accurate labor capture with customer signature on glass</span>
-              </div>
-            </div>
-          </div>
+          <p className="text-sm sm:text-base text-slate-300 leading-relaxed drop-shadow-sm font-normal">
+            Automated scheduling, live van tracking, digital sign-off, and same-day payouts in one unified platform.
+          </p>
         </div>
 
-        {/* Footer info */}
-        <div className="relative z-10 text-xs text-zinc-500 flex items-center justify-between border-t border-white/10 pt-6">
-          <span>Trusted by 2,500+ master trades globally</span>
-          <span>SOC-2 Type II Certified Security</span>
+        {/* Minimal Footer */}
+        <div className="relative z-10 text-xs text-slate-400 flex items-center justify-between border-t border-white/15 pt-4">
+          <span>Enterprise-Grade Security</span>
+          <span>Instant Settlement Engine</span>
         </div>
       </div>
 

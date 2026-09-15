@@ -4,12 +4,12 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  CalendarCheck2,
-  Receipt,
-  Settings,
+  Compass,
+  Users2,
+  FileSpreadsheet,
+  Zap,
+  CreditCard,
+  SlidersHorizontal,
   LogOut,
   Wrench,
   ShieldCheck,
@@ -39,17 +39,17 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
   const isTechnician = role === 'technician';
   const navItems = isTechnician
     ? [
-        { label: t('nav.schedule'), href: '/dashboard', icon: LayoutDashboard },
-        { label: t('nav.my_jobs'), href: '/jobs', icon: CalendarCheck2 },
-        { label: t('nav.customers'), href: '/customers', icon: Users },
+        { label: t('nav.schedule'), href: '/dashboard', icon: Compass },
+        { label: t('nav.my_jobs'), href: '/jobs', icon: Zap },
+        { label: t('nav.customers'), href: '/customers', icon: Users2 },
       ]
     : [
-        { label: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard },
-        { label: t('nav.customers'), href: '/customers', icon: Users },
-        { label: t('nav.quotes'), href: '/quotes', icon: FileText },
-        { label: t('nav.jobs'), href: '/jobs', icon: CalendarCheck2 },
-        { label: t('nav.invoices'), href: '/invoices', icon: Receipt },
-        { label: t('nav.settings'), href: '/settings', icon: Settings },
+        { label: t('nav.dashboard'), href: '/dashboard', icon: Compass },
+        { label: t('nav.customers'), href: '/customers', icon: Users2 },
+        { label: t('nav.quotes'), href: '/quotes', icon: FileSpreadsheet },
+        { label: t('nav.jobs'), href: '/jobs', icon: Zap },
+        { label: t('nav.invoices'), href: '/invoices', icon: CreditCard },
+        { label: t('nav.settings'), href: '/settings', icon: SlidersHorizontal },
       ];
 
   function getNavIconStyle(href: string, isActive: boolean) {
@@ -82,8 +82,8 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-transparent text-foreground transition-colors duration-200">
-      {/* Desktop Animated Hover Sidebar */}
-      <aside className="hidden md:flex flex-col w-[72px] hover:w-64 glass-panel-elevated min-h-screen p-3 sticky top-0 h-screen z-30 transition-all duration-300 ease-in-out group/sidebar overflow-hidden">
+      {/* Desktop Animated Emergent Hover Sidebar */}
+      <aside className="hidden md:flex flex-col w-[72px] hover:w-64 glass-panel-elevated min-h-screen p-3 sticky top-0 h-screen z-30 transition-all duration-300 ease-in-out group/sidebar overflow-hidden hover:shadow-[0_0_50px_rgba(14,165,233,0.15)] dark:hover:shadow-[0_0_50px_rgba(139,92,246,0.25)]">
         {/* Brand Header */}
         <div className="flex items-center pl-0.5 pr-2.5 py-4 mb-4">
           <div className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-2 mr-2 rounded-xl shrink-0 spring-icon shadow-sm flex items-center justify-center">
@@ -189,17 +189,20 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Desktop Top Navbar (Header Bar) - Minimal */}
+        {/* Desktop Top Navbar (Header Bar) - Minimal with Emergent Hover Island */}
         <div className="hidden md:flex items-center justify-between px-8 py-4 sticky top-0 z-20 bg-transparent backdrop-blur-sm">
           <div className="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-zinc-400">
             <span className="capitalize">{role} Portal</span>
             <CommandPalette />
           </div>
 
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <LanguageSelector />
-            <CurrencySelector />
+          {/* Top-Right Emergent Controls Island with Hover & Micro-interaction */}
+          <div className="group/topctrl relative flex items-center">
+            <div className="flex items-center gap-2 p-1.5 rounded-2xl glass-panel-elevated border border-slate-200/70 dark:border-zinc-800/80 shadow-xs hover:shadow-lg transition-all duration-300 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl transform group-hover/topctrl:scale-[1.02]">
+              <ThemeToggle />
+              <LanguageSelector />
+              <CurrencySelector />
+            </div>
           </div>
         </div>
 
