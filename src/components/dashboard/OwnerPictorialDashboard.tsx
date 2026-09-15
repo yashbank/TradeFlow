@@ -689,7 +689,7 @@ export function OwnerPictorialDashboard({
               {completedJobs} of {totalJobs} Done
             </p>
             <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-              {jobs.filter((j) => j.status === 'in_progress').length} currently active on site
+              {(jobs || []).filter((j) => j?.status === 'in_progress').length} currently active on site
             </p>
           </div>
         </Card>
@@ -797,7 +797,7 @@ export function OwnerPictorialDashboard({
               </div>
             ) : (
               activeJobs.slice(0, 3).map((job) => (
-                <Link key={job.id} href={`/jobs/${job.id}`} className="block">
+                <Link key={job?.id} href={`/jobs/${job?.id}`} className="block">
                   <div className="p-3.5 rounded-2xl bg-white/40 dark:bg-zinc-800/40 hover:bg-white/70 dark:hover:bg-zinc-800/70 border border-slate-200/80 dark:border-zinc-700/80 transition-all flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center shrink-0 text-xs font-bold">
@@ -805,15 +805,15 @@ export function OwnerPictorialDashboard({
                       </div>
                       <div>
                         <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100">
-                          {job.title}
+                          {job?.title}
                         </h4>
                         <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                          {job.customer?.name || 'Customer'} • {job.customer?.city || 'Springfield'}
+                          {job?.customer?.name || 'Customer'} • {job?.customer?.city || 'Springfield'}
                         </p>
                       </div>
                     </div>
-                    <Badge variant={job.status === 'in_progress' ? 'default' : 'secondary'} className="text-[10px]">
-                      {job.job_number}
+                    <Badge variant={job?.status === 'in_progress' ? 'default' : 'secondary'} className="text-[10px]">
+                      {job?.job_number}
                     </Badge>
                   </div>
                 </Link>
@@ -862,12 +862,12 @@ export function OwnerPictorialDashboard({
       {/* 4.5. Extra Analytical Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <RevenueTrendWidget weeklyPoints={weeklyPoints} totalCents={collectedCents} />
-        <TechnicianActivityWidget activeCount={activeCrew.filter(c => c.isWorking).length} totalCount={teamMembers.length} />
+        <TechnicianActivityWidget activeCount={activeCrew.filter(c => c.isWorking).length} totalCount={(teamMembers || []).length} />
         <JobStatusPipelineWidget 
-          pending={jobs.filter(j => j.status === 'scheduled' || j.status === 'pending').length} 
-          inProgress={jobs.filter(j => j.status === 'in_progress').length}
-          completed={jobs.filter(j => j.status === 'completed').length}
-          invoiced={jobs.filter(j => j.status === 'invoiced').length}
+          pending={(jobs || []).filter(j => j?.status === 'scheduled' || j?.status === 'pending').length} 
+          inProgress={(jobs || []).filter(j => j?.status === 'in_progress').length}
+          completed={(jobs || []).filter(j => j?.status === 'completed').length}
+          invoiced={(jobs || []).filter(j => j?.status === 'invoiced').length}
         />
         <AvgResponseTimeWidget minutes={24} />
       </div>

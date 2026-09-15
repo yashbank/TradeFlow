@@ -323,7 +323,7 @@ export function GanttDispatchView({ jobs, teamMembers }: GanttDispatchViewProps)
 
   // ── Build rows: one per technician + one "Unassigned" row ──────────────────
   const rows: { id: string | null; name: string; initials: string }[] = [
-    ...teamMembers.map((m) => ({
+    ...(teamMembers || []).map((m) => ({
       id: m.id,
       name: m.full_name || m.email || "Unknown",
       initials: (m.full_name || m.email || "?").charAt(0).toUpperCase(),
@@ -334,14 +334,14 @@ export function GanttDispatchView({ jobs, teamMembers }: GanttDispatchViewProps)
   // ── Assign a stable colour to each job by its index in the full list ───────
   const jobColorMap = useMemo(() => {
     const map = new Map<string, (typeof JOB_COLORS)[number]>();
-    localJobs.forEach((j, i) => map.set(j.id, jobColor(i)));
+    (localJobs || []).forEach((j, i) => map.set(j?.id, jobColor(i)));
     return map;
   }, [localJobs]);
 
   // ── Filter jobs that fall on each day ─────────────────────────────────────
   function jobsForCell(techId: string | null, dayIndex: number): Job[] {
     const day = weekDays[dayIndex];
-    return localJobs.filter((j) => {
+    return (localJobs || []).filter((j) => {
       const matchTech =
         techId === null ? !j.assigned_to_user_id : j.assigned_to_user_id === techId;
       const d = jobDate(j);
@@ -351,8 +351,8 @@ export function GanttDispatchView({ jobs, teamMembers }: GanttDispatchViewProps)
   }
 
   // Jobs with no date yet (unscheduled pool)
-  const unscheduledJobs = localJobs.filter((j) => !j.scheduled_start);
-  const scheduledCount = localJobs.filter((j) => j.scheduled_start).length;
+  const unscheduledJobs = (localJobs || []).filter((j) => !j?.scheduled_start);
+  const scheduledCount = (localJobs || []).filter((j) => j?.scheduled_start).length;
 
   const today = new Date();
 

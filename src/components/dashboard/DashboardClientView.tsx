@@ -70,8 +70,8 @@ export function DashboardClientView({
   // Owner/Admin role: render the high-aesthetic executive pictorial dashboard with real data
   return (
     <OwnerPictorialDashboard
-      metrics={metrics}
-      activity={activity}
+      metrics={metrics || {}}
+      activity={activity || { recentJobs: [], recentQuotes: [] }}
       jobs={myJobs}
       teamMembers={teamMembers}
       user={user}

@@ -79,7 +79,7 @@ export default function MarketingLandingPage() {
       title: 'Incoming Dispatch Triage',
       client: 'Apex Commercial Plaza',
       location: '1200 Healthcare Way, Chicago IL',
-      issue: 'Critical water main rupture in Basement B2 (Immediate Dispatch)',
+      issue: 'Leaking 50-gallon water heater in utility room (Immediate Dispatch)',
       eta: '8 mins to location',
       icon: PhoneCall,
       actionPrompt: 'Auto-Route Nearest Van →',
@@ -101,7 +101,7 @@ export default function MarketingLandingPage() {
       title: 'Digital Stopwatch & Sign-Off on Glass',
       client: 'Apex Commercial Plaza',
       labor: '01:45:00 (Rounded to 2.0h billable)',
-      parts: '2x Commercial Ball Valves, 1x PRV Kit',
+      parts: '1x Bradford White 50-Gal Heater, 2x Flex Lines',
       signature: 'Signed on glass by Building Director Dr. S. Connor',
       icon: Clock,
       actionPrompt: 'Generate Instant Invoice →',
@@ -112,7 +112,7 @@ export default function MarketingLandingPage() {
       title: 'Invoice Settled & Capital Deposited',
       client: 'Apex Commercial Plaza',
       invoiceNumber: 'INV-2026-0001',
-      amount: '$1,450.00',
+      amount: '$847.50',
       settlement: 'Paid instantly via On-Site Card Tap / Stripe',
       icon: Receipt,
       actionPrompt: 'Restart Simulation ⟲',
@@ -227,10 +227,10 @@ export default function MarketingLandingPage() {
           {/* Floating Glass Metric Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl stagger-group">
             {[
-              { label: 'Active Fleets', value: '2,500+', desc: 'Master contractors' },
-              { label: 'Dispatch Velocity', value: '<8 min', desc: 'Average response time' },
-              { label: 'On-Time Arrival', value: '99.4%', desc: 'GPS-guided precision' },
-              { label: 'Capital Billed', value: '$48M+', desc: 'Instant card settlement' },
+              { label: 'Target Market', value: 'Built for', desc: 'Plumbing & HVAC fleets' },
+              { label: 'Dispatch Velocity', value: '<8 min', desc: 'Quote-to-dispatch target' },
+              { label: 'On-Time Arrival', value: '99.4%', desc: 'SLA compliance target' },
+              { label: 'Payments', value: 'Instant Billing', desc: 'Same-day card settlement' },
             ].map((stat, i) => (
               <div
                 key={i}

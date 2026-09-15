@@ -140,8 +140,8 @@ export function TechnicianFieldPortal({
   const [isOnDuty, setIsOnDuty] = useState(true);
 
   // Active Job selection (strictly active, non-completed, non-cancelled orders)
-  const activeJobs = myJobs.filter((j) => j.status !== 'completed' && j.status !== 'cancelled');
-  const completedJobs = myJobs.filter((j) => j.status === 'completed');
+  const activeJobs = (myJobs || []).filter((j) => j?.status !== 'completed' && j?.status !== 'cancelled');
+  const completedJobs = (myJobs || []).filter((j) => j?.status === 'completed');
   const [selectedJobId, setSelectedJobId] = useState<string>(activeJobs[0]?.id || '');
 
   // Keep selectedJobId synchronized with activeJobs queue
@@ -633,7 +633,7 @@ export function TechnicianFieldPortal({
               <div className="space-y-1 max-w-xl">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
-                    Stop #{myJobs.findIndex((j) => j.id === activeJob.id) + 1} of {myJobs.length}
+                    Stop #{(myJobs || []).findIndex((j) => j?.id === activeJob.id) + 1} of {(myJobs || []).length}
                   </span>
                   <span className="text-slate-400">•</span>
                   <span className="text-xs font-mono font-bold text-slate-500 dark:text-zinc-400">
