@@ -84,20 +84,14 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
       {/* Desktop Animated Hover Sidebar */}
       <aside className="hidden md:flex flex-col w-[72px] hover:w-64 glass-panel-elevated min-h-screen p-3 sticky top-0 h-screen z-30 transition-all duration-300 ease-in-out group/sidebar overflow-hidden">
         {/* Brand Header */}
-        <div className="flex items-center space-x-3 px-1.5 py-3 mb-3 border-b border-slate-200/50 dark:border-zinc-800/60">
-          <div className="bg-gradient-to-tr from-sky-500 to-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-sky-500/25 shrink-0 spring-icon">
-            <Wrench className="w-5 h-5" />
+        <div className="flex items-center space-x-3 px-1.5 py-4 mb-4">
+          <div className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-2 rounded-xl shrink-0 spring-icon shadow-sm">
+            <Wrench className="w-4 h-4" />
           </div>
-          <div className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200 overflow-hidden whitespace-nowrap min-w-0">
-            <h1 className="font-bold text-slate-900 dark:text-zinc-100 truncate text-sm leading-tight">
+          <div className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 overflow-hidden whitespace-nowrap min-w-0">
+            <h1 className="font-semibold text-slate-900 dark:text-zinc-100 truncate text-sm">
               {organization.name}
             </h1>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium capitalize truncate">
-                {role} {t('nav.workspace')}
-              </p>
-            </div>
           </div>
         </div>
 
@@ -194,20 +188,14 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Desktop Top Navbar (Header Bar) */}
-        <div className="hidden md:flex items-center justify-between px-8 py-3.5 glass-panel-elevated sticky top-0 z-20">
-          <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 dark:text-zinc-400">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-lg bg-sky-500/10 dark:bg-cyan-950/60 text-sky-700 dark:text-cyan-300 font-bold border border-sky-500/20">
-                TradeFlow FSM
-              </span>
-              <span>•</span>
-              <span className="capitalize">{role} Portal</span>
-            </div>
+        {/* Desktop Top Navbar (Header Bar) - Minimal */}
+        <div className="hidden md:flex items-center justify-between px-8 py-4 sticky top-0 z-20 bg-transparent backdrop-blur-sm">
+          <div className="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-zinc-400">
+            <span className="capitalize">{role} Portal</span>
             <CommandPalette />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <ThemeToggle />
             <LanguageSelector />
             <CurrencySelector />
