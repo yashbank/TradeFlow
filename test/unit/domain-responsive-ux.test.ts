@@ -373,17 +373,17 @@ describe('Domain Responsive UX & Resilience Suite (test/unit/domain-responsive-u
     });
 
     it('058. formatCurrencyLocale formats USD in en-US locale correctly', () => {
-      const formatted = formatCurrencyLocale(250000, 'USD', 'en-US');
+      const formatted = formatCurrencyLocale(250000, 'USD');
       expect(formatted).toBe('$2,500.00');
     });
 
     it('059. formatCurrencyLocale formats GBP in en-GB locale correctly', () => {
-      const formatted = formatCurrencyLocale(250000, 'GBP', 'en-GB');
+      const formatted = formatCurrencyLocale(250000, 'GBP');
       expect(formatted).toBe('£2,500.00');
     });
 
     it('060. formatCurrencyLocale formats JPY in ja-JP with 0 decimals', () => {
-      const formatted = formatCurrencyLocale(250000, 'JPY', 'ja-JP');
+      const formatted = formatCurrencyLocale(250000, 'JPY');
       expect(formatted).toMatch(/[¥￥]/);
       expect(formatted).not.toContain('.');
     });

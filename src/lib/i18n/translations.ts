@@ -39,7 +39,7 @@ export const SUPPORTED_LOCALES: SupportedLocale[] = [
 export const CORE_8_LOCALES = ["en", "es", "fr", "de", "pt", "hi", "zh", "ja"] as const;
 export type CoreLocale = (typeof CORE_8_LOCALES)[number];
 
-export const translations: Record<SupportedLocale, Record<string, string>> = {
+export const translations: Record<SupportedLocale, Record<string, string>> = { en: {},
   'en-US': {
     // Navigation
     'nav.dashboard': 'Dashboard',

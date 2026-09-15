@@ -256,7 +256,7 @@ describe('Domain Gantt Dispatch & Map Architecture Suite (test/unit/domain-gantt
     });
 
     it('032. map layer persistence state simulation', () => {
-      let currentMode = 'standard' as const;
+      let currentMode: any = 'standard';
       currentMode = toggleMapLayer(currentMode);
       expect(currentMode).toBe('satellite');
       currentMode = toggleMapLayer(currentMode);
