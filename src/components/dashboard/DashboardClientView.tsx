@@ -17,6 +17,7 @@ interface DashboardClientViewProps {
   role: UserRole;
 }
 
+
 export function DashboardClientView({
   metrics = {},
   activity = { recentJobs: [], recentQuotes: [] },
