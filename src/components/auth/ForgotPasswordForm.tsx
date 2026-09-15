@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { requestPasswordResetAction } from '@/actions/auth';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
-import { Wrench, ArrowLeft, CheckCircle2, Mail } from 'lucide-react';
+import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
 
 export function ForgotPasswordForm() {
   const { t } = useTranslation();
@@ -45,7 +45,7 @@ export function ForgotPasswordForm() {
       <div className="flex items-center justify-between max-w-md w-full mx-auto">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-sky-600 flex items-center justify-center text-white">
-            <Wrench className="w-4 h-4" />
+            <TradeFlowLogo size="md" />
           </div>
           <span className="font-black text-lg text-slate-900 dark:text-zinc-100">TradeFlow</span>
         </Link>

@@ -9,6 +9,7 @@ import { loginUserAction } from '@/actions/auth';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
 import {
+import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
   Wrench,
   ShieldCheck,
   Zap,
@@ -49,7 +50,7 @@ export function LoginForm() {
         {/* Brand Header */}
         <div className="relative z-10 flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-sky-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/30">
-            <Wrench className="w-6 h-6" />
+            <TradeFlowLogo size="md" />
           </div>
           <div>
             <span className="font-black text-2xl tracking-tight text-white">TradeFlow</span>
@@ -111,7 +112,7 @@ export function LoginForm() {
         <div className="flex items-center justify-between w-full mb-6 lg:hidden">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-sky-600 flex items-center justify-center text-white">
-              <Wrench className="w-4 h-4" />
+              <TradeFlowLogo size="md" />
             </div>
             <span className="font-black text-lg text-slate-900 dark:text-zinc-100">TradeFlow</span>
           </Link>

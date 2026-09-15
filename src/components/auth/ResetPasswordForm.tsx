@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { resetPasswordAction } from '@/actions/auth';
-import { Wrench, ArrowLeft } from 'lucide-react';
+import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
 
 export function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
@@ -31,7 +31,7 @@ export function ResetPasswordForm() {
       <Card className="w-full max-w-md shadow-md dark:bg-zinc-900 dark:border-zinc-800">
         <CardHeader className="text-center pb-4">
           <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
-            <Wrench className="w-6 h-6" />
+            <TradeFlowLogo size="md" />
           </div>
           <CardTitle className="text-2xl font-black text-slate-900 dark:text-zinc-100">Set New Password</CardTitle>
           <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
