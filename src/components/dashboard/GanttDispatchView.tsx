@@ -64,7 +64,17 @@ const JOB_COLORS = [
   { bg: "bg-pink-500",   border: "border-pink-600",   text: "text-white", ring: "ring-pink-400"   },
 ];
 
-function jobColor(index: number) {
+const STATUS_JOB_COLORS: Record<string, { bg: string; border: string; text: string; ring: string }> = {
+  scheduled:   { bg: "bg-sky-500",    border: "border-sky-600",    text: "text-white", ring: "ring-sky-400" },
+  in_progress: { bg: "bg-amber-500",  border: "border-amber-600",  text: "text-white", ring: "ring-amber-400" },
+  completed:   { bg: "bg-emerald-500",border: "border-emerald-600",text: "text-white", ring: "ring-emerald-400" },
+  cancelled:   { bg: "bg-rose-500",   border: "border-rose-600",   text: "text-white", ring: "ring-rose-400" },
+};
+
+function jobColor(index: number, status?: string) {
+  if (status && STATUS_JOB_COLORS[status]) {
+    return STATUS_JOB_COLORS[status];
+  }
   return JOB_COLORS[index % JOB_COLORS.length];
 }
 
@@ -331,10 +341,10 @@ export function GanttDispatchView({ jobs, teamMembers }: GanttDispatchViewProps)
     { id: null, name: "Unassigned", initials: "?" },
   ];
 
-  // ── Assign a stable colour to each job by its index in the full list ───────
+  // ── Assign a stable colour to each job by its status / index ─────────────
   const jobColorMap = useMemo(() => {
-    const map = new Map<string, (typeof JOB_COLORS)[number]>();
-    (localJobs || []).forEach((j, i) => map.set(j?.id, jobColor(i)));
+    const map = new Map<string, { bg: string; border: string; text: string; ring: string }>();
+    (localJobs || []).forEach((j, i) => map.set(j?.id, jobColor(i, j?.status)));
     return map;
   }, [localJobs]);
 
@@ -687,6 +697,30 @@ export function GanttDispatchView({ jobs, teamMembers }: GanttDispatchViewProps)
             No unscheduled jobs remaining. Drag any job from the calendar down here to remove its schedule.
           </p>
         )}
+      </div>
+
+      {/* ── Status Color Legend ───────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-4 px-4 py-3 rounded-xl border border-slate-200/70 dark:border-zinc-800/80 bg-slate-50/50 dark:bg-zinc-900/40 text-xs text-slate-600 dark:text-zinc-300">
+        <span className="font-bold text-slate-800 dark:text-zinc-100 flex items-center gap-1.5">
+          <CalendarDays className="w-3.5 h-3.5 text-sky-500" />
+          Status Legend:
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-sky-500 ring-2 ring-sky-500/20" />
+          <span className="font-medium">Scheduled / Dispatched</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-500/20" />
+          <span className="font-medium">In Progress / En Route</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
+          <span className="font-medium">Completed / Verified</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-rose-500/20" />
+          <span className="font-medium">Cancelled</span>
+        </span>
       </div>
 
       {/* ── Empty State ───────────────────────────────────────────────────────── */}

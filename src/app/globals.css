@@ -344,3 +344,57 @@ a:active,
   from { opacity: 0; transform: translateY(4px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* ==========================================================================
+   NEON THEME ACCESSIBILITY & CONTRAST ENHANCEMENTS
+   ========================================================================== */
+.colorful label,
+[data-theme="colorful"] label {
+  color: #F8FAFC !important;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.colorful .text-slate-900,
+.colorful .dark\:text-zinc-100,
+.colorful [class*="text-zinc-100"],
+.colorful [class*="text-slate-900"],
+[data-theme="colorful"] .text-slate-900,
+[data-theme="colorful"] .dark\:text-zinc-100 {
+  color: #FFFFFF !important;
+}
+
+.colorful .text-slate-700,
+.colorful .dark\:text-zinc-300,
+[data-theme="colorful"] .text-slate-700,
+[data-theme="colorful"] .dark\:text-zinc-300 {
+  color: #F1F5F9 !important;
+}
+
+.colorful .text-slate-500,
+.colorful .dark\:text-zinc-400,
+.colorful .dark\:text-zinc-500,
+[data-theme="colorful"] .text-slate-500,
+[data-theme="colorful"] .dark\:text-zinc-400,
+[data-theme="colorful"] .dark\:text-zinc-500 {
+  color: #CBD5E1 !important;
+}
+
+.colorful input,
+.colorful select,
+.colorful textarea,
+[data-theme="colorful"] input,
+[data-theme="colorful"] select,
+[data-theme="colorful"] textarea {
+  background-color: rgba(36, 18, 72, 0.85) !important;
+  border-color: rgba(168, 85, 247, 0.45) !important;
+  color: #FFFFFF !important;
+}
+
+.colorful input::placeholder,
+.colorful textarea::placeholder,
+[data-theme="colorful"] input::placeholder,
+[data-theme="colorful"] textarea::placeholder {
+  color: rgba(203, 213, 225, 0.7) !important;
+}
+

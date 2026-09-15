@@ -85,8 +85,8 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
       {/* Desktop Animated Hover Sidebar */}
       <aside className="hidden md:flex flex-col w-[72px] hover:w-64 glass-panel-elevated min-h-screen p-3 sticky top-0 h-screen z-30 transition-all duration-300 ease-in-out group/sidebar overflow-hidden">
         {/* Brand Header */}
-        <div className="flex items-center space-x-3 px-1.5 py-4 mb-4">
-          <div className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-2 rounded-xl shrink-0 spring-icon shadow-sm flex items-center justify-center">
+        <div className="flex items-center pl-0.5 pr-2.5 py-4 mb-4">
+          <div className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-2 mr-2 rounded-xl shrink-0 spring-icon shadow-sm flex items-center justify-center">
             <TradeFlowLogo size="md" />
           </div>
           <div className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 overflow-hidden whitespace-nowrap min-w-0">
