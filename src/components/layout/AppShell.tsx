@@ -91,7 +91,7 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
           </div>
           <div className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 overflow-hidden whitespace-nowrap min-w-0">
             <h1 className="font-semibold text-slate-900 dark:text-zinc-100 truncate text-sm">
-              {organization.name}
+              {organization?.name || 'TradeFlow'}
             </h1>
           </div>
         </div>
@@ -135,11 +135,11 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-slate-200 to-slate-300 dark:from-zinc-800 dark:to-zinc-700 text-slate-800 dark:text-zinc-200 font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs border border-white/20">
-                {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200 overflow-hidden whitespace-nowrap min-w-0 pr-1">
-                <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">{user.full_name}</p>
-                <p className="text-[11px] text-slate-400 dark:text-zinc-500 truncate">{user.email}</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">{user?.full_name || 'User'}</p>
+                <p className="text-[11px] text-slate-400 dark:text-zinc-500 truncate">{user?.email || ''}</p>
               </div>
             </div>
             <form
@@ -165,7 +165,7 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
             <TradeFlowLogo size="md" />
           </div>
           <span className="font-bold text-slate-900 dark:text-zinc-100 text-xs truncate max-w-[130px]">
-            {organization.name}
+            {organization?.name || 'TradeFlow'}
           </span>
         </div>
 

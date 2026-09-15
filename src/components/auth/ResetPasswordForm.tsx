@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { resetPasswordAction } from '@/actions/auth';
 import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
+import { ArrowLeft } from 'lucide-react';
 
 export function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);

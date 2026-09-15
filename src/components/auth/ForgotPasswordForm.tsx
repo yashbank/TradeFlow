@@ -11,6 +11,7 @@ import { requestPasswordResetAction } from '@/actions/auth';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
 import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
+import { Mail, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 export function ForgotPasswordForm() {
   const { t } = useTranslation();

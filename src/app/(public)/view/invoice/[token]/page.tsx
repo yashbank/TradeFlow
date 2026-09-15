@@ -4,6 +4,7 @@ import { InvoiceService } from '@/services/InvoiceService';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
+import { Download, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 

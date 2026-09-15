@@ -12,6 +12,7 @@ import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useToast } from '@/lib/toast/ToastContext';
 import { seedDemoDataAction } from '@/actions/dataManagement';
 import { GanttDispatchView } from '@/components/dashboard/GanttDispatchView';
+import { cn } from '@/lib/utils';
 import {
   DollarSign,
   TrendingUp,
@@ -35,6 +36,7 @@ import {
   UserPlus,
   RefreshCw,
   CalendarDays,
+  Clock,
 } from 'lucide-react';
 import type { UserProfile, Organization } from '@/types/database';
 import { FleetRadarMap } from './FleetRadarMap';

@@ -26,6 +26,10 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
   const [state, setState] = useState(organization.state || '');
   const [postalCode, setPostalCode] = useState(organization.postal_code || '');
   const [currency, setCurrency] = useState(organization.currency);
+  const [taxId, setTaxId] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [slogan, setSlogan] = useState('');
+  const [operatingHours, setOperatingHours] = useState('Mon-Fri: 7:00 AM - 6:00 PM, 24/7 Emergency');
   const [taxRatePercent, setTaxRatePercent] = useState(
     (organization.tax_rate_basis_points / 100).toString()
   );
