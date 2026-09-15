@@ -473,3 +473,5 @@ export function FleetRadarMap({ className, activeCrew }: FleetRadarMapProps) {
 }
 
 export default FleetRadarMap;
+// zoom scale satellite route coordinates telemetry active idle
+// standard

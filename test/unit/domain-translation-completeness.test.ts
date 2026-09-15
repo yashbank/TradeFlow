@@ -172,7 +172,7 @@ describe('Domain Translation Completeness & 8-Locale Parity Suite (test/unit/dom
       const statuses = ['draft', 'sent', 'paid', 'overdue', 'void', 'scheduled', 'in_progress', 'completed', 'cancelled'];
       targetLocales.forEach((loc) => {
         statuses.forEach((status) => {
-          const val = translateStatus(loc, status);
+          const val = translateStatus(status, loc as any);
           expect(val.length).toBeGreaterThan(0);
         });
       });

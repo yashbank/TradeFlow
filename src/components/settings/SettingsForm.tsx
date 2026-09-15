@@ -277,3 +277,4 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
     </div>
   );
 }
+// license, website, operating hours, avatar, tax ID
