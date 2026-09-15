@@ -290,7 +290,6 @@ function AvgResponseTimeWidget({ minutes }: { minutes: number }) {
 // --- END NEW WIDGETS ---
 
 export function OwnerPictorialDashboard({
-
   metrics = {},
   activity = { recentJobs: [], recentQuotes: [] },
   jobs = [],
@@ -310,6 +309,8 @@ export function OwnerPictorialDashboard({
   const [isSeeding, setIsSeeding] = useState(false);
   const [dispatchTab, setDispatchTab] = useState<'all' | 'gantt' | 'radar'>('all');
 
+  const safeMetrics = metrics || {};
+
   async function handleSeedDemoData() {
     setIsSeeding(true);
     const res = await seedDemoDataAction();
@@ -327,11 +328,11 @@ export function OwnerPictorialDashboard({
   }
 
   // Real Database Financial Metrics (No Mock Numbers) — memoized to avoid re-computing on unrelated renders
-  const collectedCents = useMemo(() => metrics.revenueMtdCents || 0, [metrics.revenueMtdCents]);
-  const outstandingCents = useMemo(() => metrics.outstandingReceivablesCents || 0, [metrics.outstandingReceivablesCents]);
+  const collectedCents = useMemo(() => safeMetrics.revenueMtdCents || 0, [safeMetrics.revenueMtdCents]);
+  const outstandingCents = useMemo(() => safeMetrics.outstandingReceivablesCents || 0, [safeMetrics.outstandingReceivablesCents]);
   const totalInvoicedCents = useMemo(
-    () => metrics.totalInvoicedMtdCents || (collectedCents + outstandingCents),
-    [metrics.totalInvoicedMtdCents, collectedCents, outstandingCents]
+    () => safeMetrics.totalInvoicedMtdCents || (collectedCents + outstandingCents),
+    [safeMetrics.totalInvoicedMtdCents, collectedCents, outstandingCents]
   );
 
   const collectionPercent = useMemo(
@@ -342,12 +343,12 @@ export function OwnerPictorialDashboard({
     [collectedCents, totalInvoicedCents]
   );
 
-  const quoteWinPercent = useMemo(() => metrics.quoteWinRatePercentage || 0, [metrics.quoteWinRatePercentage]);
+  const quoteWinPercent = useMemo(() => safeMetrics.quoteWinRatePercentage || 0, [safeMetrics.quoteWinRatePercentage]);
 
-  const totalJobs = useMemo(() => metrics.totalJobsCount || jobs.length || 0, [metrics.totalJobsCount, jobs]);
+  const totalJobs = useMemo(() => safeMetrics.totalJobsCount || (jobs || []).length || 0, [safeMetrics.totalJobsCount, jobs]);
   const completedJobs = useMemo(
-    () => metrics.completedJobsCount || jobs.filter((j) => j.status === 'completed').length || 0,
-    [metrics.completedJobsCount, jobs]
+    () => safeMetrics.completedJobsCount || (jobs || []).filter((j) => j?.status === 'completed').length || 0,
+    [safeMetrics.completedJobsCount, jobs]
   );
   const slaOnTimePercent = useMemo(
     () => (totalJobs > 0 ? Math.min(100, Math.round((completedJobs / totalJobs) * 100)) : 100),
@@ -358,8 +359,8 @@ export function OwnerPictorialDashboard({
   const activeCrew = useMemo(
     () =>
       (teamMembers || []).map((member, idx) => {
-        const assignedActiveJob = jobs.find(
-          (j) => j.assigned_to_user_id === member.id && (j.status === 'in_progress' || j.status === 'scheduled')
+        const assignedActiveJob = (jobs || []).find(
+          (j) => j?.assigned_to_user_id === member?.id && (j?.status === 'in_progress' || j?.status === 'scheduled')
         );
 
         let statusText = 'Available / Standby';
@@ -368,11 +369,11 @@ export function OwnerPictorialDashboard({
 
         if (assignedActiveJob) {
           if (assignedActiveJob.status === 'in_progress') {
-            statusText = `On-Site: ${assignedActiveJob.title}`;
+            statusText = `On-Site: ${assignedActiveJob.title || 'Work Order'}`;
             jobTag = assignedActiveJob.job_number || 'ACTIVE';
             isWorking = true;
           } else {
-            statusText = `Scheduled: ${assignedActiveJob.title}`;
+            statusText = `Scheduled: ${assignedActiveJob.title || 'Work Order'}`;
             jobTag = assignedActiveJob.job_number || 'SCHEDULED';
           }
         }
@@ -384,9 +385,9 @@ export function OwnerPictorialDashboard({
         const dist = distances[idx % distances.length];
 
         return {
-          id: member.id,
-          tech: member.full_name || member.email,
-          role: member.role,
+          id: member?.id || `tech-${idx}`,
+          tech: member?.full_name || member?.email || 'Technician',
+          role: member?.role || 'Field Service Pro',
           status: statusText,
           job: jobTag,
           isWorking,
@@ -399,15 +400,15 @@ export function OwnerPictorialDashboard({
 
   // Active / Emergency Service Jobs Triage
   const activeJobs = useMemo(
-    () => jobs.filter((j) => j.status === 'in_progress' || j.status === 'scheduled'),
+    () => (jobs || []).filter((j) => j?.status === 'in_progress' || j?.status === 'scheduled'),
     [jobs]
   );
 
   // Real 7-Day Revenue Velocity Sparkline Path Construction
   const { pathD, areaD, weeklyPoints } = useMemo(() => {
     const weeklyPoints =
-      Array.isArray(metrics.weeklyRevenue) && metrics.weeklyRevenue.length === 7
-        ? metrics.weeklyRevenue
+      Array.isArray(safeMetrics.weeklyRevenue) && safeMetrics.weeklyRevenue.length === 7
+        ? safeMetrics.weeklyRevenue
         : [0, 0, 0, 0, 0, 0, 0];
 
     const maxWeeklyRevenue = Math.max(...weeklyPoints, 10000); // at least $100 to avoid flat div by zero
@@ -429,80 +430,68 @@ export function OwnerPictorialDashboard({
     }, '');
 
     return { pathD: pd, areaD: `${pd} L 700,120 L 0,120 Z`, weeklyPoints };
-  }, [metrics.weeklyRevenue]);
+  }, [safeMetrics.weeklyRevenue]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* 1. Header Banner & Quick Actions */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 glass-panel-elevated p-6 rounded-3xl border border-sky-500/20 shadow-md">
+      {/* 1. Sleek Minimal Executive Header & Quick Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-2 border-b border-slate-200/60 dark:border-zinc-800/60 pb-5">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-700 dark:text-sky-300 font-black text-[11px] uppercase tracking-wider border border-sky-500/30">
-              Executive Telemetry
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="text-slate-400">•</span>
-            <span className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
-              Live FSM Command Center
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+              Live Fleet Telemetry
+            </span>
+            <span className="text-slate-300 dark:text-zinc-700">•</span>
+            <span className="text-[11px] text-slate-400 dark:text-zinc-500">
+              {lastSyncTime
+                ? `Synced ${lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+                : 'Active'}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-zinc-100">
-            {organization.name}
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            {organization?.name || 'TradeFlow Workspace'}
           </h1>
-          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-            Real-time monitoring of crew dispatches, customer proposals, and cash flow.
-          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Live Radar Telemetry Beacon */}
-          <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 shadow-sm backdrop-blur-sm">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-            </span>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                <Zap className="w-3 h-3 text-emerald-500 fill-emerald-500" />
-                Live Radar • 3s Sync
-              </span>
-              <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-medium">
-                {lastSyncTime
-                  ? `Synced ${lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
-                  : '3s Telemetry Active'}
-              </span>
-            </div>
-            {onManualSync && (
-              <button
-                type="button"
-                onClick={onManualSync}
-                title="Trigger immediate telemetry radar ping"
-                className="p-1 rounded-lg hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition-transform active:scale-90"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              </button>
-            )}
-          </div>
+          {onManualSync && (
+            <button
+              type="button"
+              onClick={onManualSync}
+              title="Refresh Telemetry"
+              className="p-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 transition-all active:scale-95 shadow-xs"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-sky-500' : ''}`} />
+            </button>
+          )}
 
           {FEATURES.DEMO_SEEDING && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleSeedDemoData}
-            disabled={isSeeding}
-            className="border-indigo-400/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 font-bold text-xs shadow-xs"
-          >
-            <Sparkles className={`w-3.5 h-3.5 mr-1 ${isSeeding ? 'animate-spin text-indigo-500' : 'text-indigo-500'}`} />
-            {isSeeding ? 'Seeding...' : 'Seed Demo Data'}
-          </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSeedDemoData}
+              disabled={isSeeding}
+              title="Populate test data: 10 clients, 100 jobs, 50 invoices"
+              className="border-indigo-400/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 font-bold text-xs shadow-xs h-9 px-3"
+            >
+              <Sparkles className={`w-3.5 h-3.5 mr-1.5 ${isSeeding ? 'animate-spin text-indigo-500' : 'text-indigo-500'}`} />
+              {isSeeding ? 'Seeding...' : 'Seed Data'}
+            </Button>
           )}
+
           <Link href="/quotes/new">
-            <Button size="sm" variant="outline" className="bg-white/80 dark:bg-zinc-800/80 font-bold text-xs">
-              <Plus className="w-3.5 h-3.5 mr-1" />
+            <Button size="sm" variant="outline" className="h-9 px-3 bg-white dark:bg-zinc-800 font-bold text-xs border-slate-200 dark:border-zinc-700 shadow-xs">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />
               {t('dash.btn.new_quote') || 'New Quote'}
             </Button>
           </Link>
+
           <Link href="/jobs/new">
-            <Button size="sm" className="bg-sky-600 hover:bg-sky-700 font-bold text-xs shadow-md shadow-sky-500/25">
+            <Button size="sm" className="h-9 px-3.5 bg-sky-600 hover:bg-sky-500 font-bold text-xs shadow-md shadow-sky-500/20 text-white">
               <CalendarCheck2 className="w-3.5 h-3.5 mr-1.5" />
               {t('dash.btn.schedule_job') || 'Dispatch Job'}
             </Button>
@@ -661,7 +650,7 @@ export function OwnerPictorialDashboard({
               {quoteWinPercent > 0 ? `${quoteWinPercent}% Converted` : 'Awaiting Quotes'}
             </p>
             <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-              {metrics.openQuotesCount || 0} active proposals sent
+              {safeMetrics?.openQuotesCount || 0} active proposals sent
             </p>
           </div>
         </Card>

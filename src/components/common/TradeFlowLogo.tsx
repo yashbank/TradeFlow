@@ -4,69 +4,85 @@ import React from 'react';
 
 interface TradeFlowLogoProps {
   variant?: 'icon' | 'full';
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   showText?: boolean;
 }
 
 export const TradeFlowLogo: React.FC<TradeFlowLogoProps> = ({
-  variant = 'full',
+  variant = 'icon',
   size = 'md',
   className = '',
-  showText = true,
+  showText = false,
 }) => {
   const sizeClasses = {
+    xs: 'w-5 h-5',
     sm: 'w-6 h-6',
     md: 'w-8 h-8',
-    lg: 'w-12 h-12',
-    xl: 'w-16 h-16',
+    lg: 'w-10 h-10',
+    xl: 'w-14 h-14',
   };
 
   const textClasses = {
-    sm: 'text-lg',
-    md: 'text-xl',
-    lg: 'text-3xl',
-    xl: 'text-4xl',
+    xs: 'text-sm font-bold',
+    sm: 'text-base font-extrabold',
+    md: 'text-lg font-black',
+    lg: 'text-2xl font-black',
+    xl: 'text-3xl font-black',
   };
 
-  const svgSize = sizeClasses[size];
-  const textSize = textClasses[size];
+  const svgSize = sizeClasses[size] || sizeClasses.md;
+  const textSize = textClasses[size] || textClasses.md;
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      <div className={`relative flex-shrink-0 ${svgSize}`}>
+    <div className={`inline-flex items-center gap-2.5 ${className}`}>
+      <div className={`relative flex-shrink-0 ${svgSize} flex items-center justify-center`}>
         <svg
           viewBox="0 0 100 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full drop-shadow-md dark:drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"
+          className="w-full h-full drop-shadow-sm transition-transform hover:scale-105 duration-200"
         >
           <defs>
-            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#8b5cf6" />
+            <linearGradient id="tf-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0284c7" />
+              <stop offset="50%" stopColor="#0ea5e9" />
+              <stop offset="100%" stopColor="#6366f1" />
             </linearGradient>
-            <linearGradient id="gradient2" x1="100%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#06b6d4" />
-              <stop offset="100%" stopColor="#3b82f6" />
+            <linearGradient id="tf-grad-2" x1="100%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#8b5cf6" />
+              <stop offset="60%" stopColor="#06b6d4" />
+              <stop offset="100%" stopColor="#38bdf8" />
             </linearGradient>
           </defs>
+
+          {/* Primary Flow Streamline */}
           <path
-            d="M30 20 C 60 20, 80 40, 80 70 C 80 80, 70 80, 70 70 C 70 50, 50 35, 30 35 C 20 35, 20 20, 30 20 Z"
-            fill="url(#gradient1)"
+            d="M22 28 C 48 14, 76 22, 82 46 C 86 64, 74 80, 58 82 C 40 84, 30 72, 38 56 C 44 44, 58 42, 66 48"
+            stroke="url(#tf-grad-1)"
+            strokeWidth="11"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
+
+          {/* Secondary Interlocking Hydraulic Stream */}
           <path
-            d="M70 80 C 40 80, 20 60, 20 30 C 20 20, 30 20, 30 30 C 30 50, 50 65, 70 65 C 80 65, 80 80, 70 80 Z"
-            fill="url(#gradient2)"
+            d="M78 72 C 52 86, 24 78, 18 54 C 14 36, 26 20, 42 18 C 60 16, 70 28, 62 44"
+            stroke="url(#tf-grad-2)"
+            strokeWidth="9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="opacity-90"
           />
-          <circle cx="50" cy="50" r="10" fill="#ffffff" className="dark:fill-gray-900" />
+
+          {/* Precision Core Node */}
+          <circle cx="50" cy="50" r="5" fill="#ffffff" className="dark:fill-cyan-300 shadow-sm" />
         </svg>
       </div>
 
-      {(variant === 'full' && showText) && (
+      {(variant === 'full' || showText) && (
         <span
-          className={`font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-cyan-400 ${textSize}`}
-          style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+          className={`tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-sky-900 to-indigo-950 dark:from-white dark:via-sky-200 dark:to-cyan-400 ${textSize}`}
         >
           TradeFlow
         </span>

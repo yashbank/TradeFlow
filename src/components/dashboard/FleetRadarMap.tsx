@@ -412,7 +412,7 @@ export function FleetRadarMap({ className, activeCrew }: FleetRadarMapProps) {
 
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 opacity-80 group-hover:opacity-0 transition-opacity whitespace-nowrap">
                   <Badge variant={van.isWorking ? "default" : "outline"} className={cn("text-[9px] px-1.5 py-0 shadow-sm", isSatellite && van.isWorking ? "bg-amber-600 hover:bg-amber-600" : "")}>
-                    {van.tech.split(' ')[0]}
+                    {(van.tech || 'Tech').split(' ')[0]}
                   </Badge>
                 </div>
 
@@ -421,12 +421,12 @@ export function FleetRadarMap({ className, activeCrew }: FleetRadarMapProps) {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                        {van.tech}
+                        {van.tech || 'Technician'}
                         {van.isWorking && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
                       </h4>
-                      <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 mt-0.5">{van.role}</p>
+                      <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 mt-0.5">{van.role || 'Service Pro'}</p>
                     </div>
-                    <Badge variant="secondary" className="text-[9px] bg-slate-100 dark:bg-zinc-800">{van.vanNumber}</Badge>
+                    <Badge variant="secondary" className="text-[9px] bg-slate-100 dark:bg-zinc-800">{van.vanNumber || 'V-01'}</Badge>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 mb-2 p-2 rounded-xl bg-slate-50 dark:bg-zinc-950/50 border border-slate-100 dark:border-zinc-800">
