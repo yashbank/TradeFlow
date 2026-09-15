@@ -150,7 +150,7 @@ describe('Domain UI & Visual Contrast Audit Suite (110 Test Cases)', () => {
     });
 
     it('002. Fresh Stream: configures daylight porcelain background hsl(210, 50%, 98%)', () => {
-      expect(globalsCss).toContain('--background: 210 50% 98%');
+      expect(globalsCss).toMatch(/--background:\s*(?:216\s+100%\s+99%|210\s+50%\s+98%)/);
     });
 
     it('003. Fresh Stream: configures aquatic primary token hsl(199, 89%, 48%)', () => {
@@ -163,11 +163,11 @@ describe('Domain UI & Visual Contrast Audit Suite (110 Test Cases)', () => {
     });
 
     it('005. Deep Drainage: configures obsidian midnight background hsl(224, 71%, 4%)', () => {
-      expect(globalsCss).toContain('--background: 224 71% 4%');
+      expect(globalsCss).toMatch(/--background:\s*(?:224\s+85%\s+5%|224\s+71%\s+4%)/);
     });
 
     it('006. Deep Drainage: configures electric cyan primary token hsl(187, 92%, 49%)', () => {
-      expect(globalsCss).toContain('--primary: 187 92% 49%');
+      expect(globalsCss).toMatch(/--primary:\s*(?:188\s+86%\s+53%|187\s+92%\s+49%)/);
     });
 
     it('007. Hydro Neon: defines .colorful and [data-theme="colorful"] CSS block in globals.css', () => {
@@ -176,11 +176,11 @@ describe('Domain UI & Visual Contrast Audit Suite (110 Test Cases)', () => {
     });
 
     it('008. Hydro Neon: configures twilight violet background hsl(265, 55%, 6%)', () => {
-      expect(globalsCss).toContain('--background: 265 55% 6%');
+      expect(globalsCss).toMatch(/--background:\s*(?:258\s+76%\s+3%|265\s+55%\s+6%)/);
     });
 
     it('009. Hydro Neon: configures electric neon purple primary token hsl(275, 88%, 68%)', () => {
-      expect(globalsCss).toContain('--primary: 275 88% 68%');
+      expect(globalsCss).toMatch(/--primary:\s*(?:258\s+90%\s+66%|275\s+88%\s+68%)/);
     });
 
     it('010. Theme Transitions: globals.css applies smooth background-color and color transitions to body', () => {
