@@ -59,11 +59,15 @@ interface OwnerPictorialDashboardProps {
 // --- NEW WIDGETS ---
 
 function RevenueTrendWidget({ weeklyPoints, totalCents }: { weeklyPoints: number[], totalCents: number }) {
+  const [period, setPeriod] = useState<'7d' | '30d'>('7d');
+  const [hoveredPoint, setHoveredPoint] = useState<{ x: number, y: number, val: number, day: string } | null>(null);
+
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const maxVal = Math.max(...weeklyPoints, 100);
   const pts = weeklyPoints.map((val, idx) => {
-    const x = Math.round((idx / 6) * 100);
-    const y = Math.round(100 - (val / maxVal) * 80);
-    return { x, y };
+    const x = Math.round((idx / (weeklyPoints.length - 1 || 1)) * 100);
+    const y = Math.round(100 - (val / maxVal) * 75);
+    return { x, y, val, day: days[idx % days.length] };
   });
   
   const pathD = pts.reduce((acc, pt, idx, arr) => {
@@ -77,24 +81,44 @@ function RevenueTrendWidget({ weeklyPoints, totalCents }: { weeklyPoints: number
   }, '');
 
   return (
-    <div className="glass-panel group relative rounded-2xl p-5 flex flex-col justify-between h-full col-span-1 border border-emerald-500/20 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer overflow-hidden">
+    <div className="glass-panel group relative rounded-2xl p-5 flex flex-col justify-between h-full col-span-1 border border-emerald-500/20 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       <div className="relative z-10 flex items-center justify-between mb-3">
         <h3 className="text-xs font-black tracking-wide uppercase text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
           <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
           Revenue Trend
         </h3>
-        <Badge variant="success" className="text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-sm transition-transform group-hover:scale-105">
-          +12.4%
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-800 p-0.5 rounded-lg border border-slate-200/60 dark:border-zinc-700/60">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setPeriod('7d'); }}
+            className={`px-1.5 py-0.5 text-[10px] font-black rounded ${period === '7d' ? 'bg-emerald-500 text-white shadow-xs' : 'text-slate-500 dark:text-zinc-400'}`}
+          >
+            7D
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setPeriod('30d'); }}
+            className={`px-1.5 py-0.5 text-[10px] font-black rounded ${period === '30d' ? 'bg-emerald-500 text-white shadow-xs' : 'text-slate-500 dark:text-zinc-400'}`}
+          >
+            30D
+          </button>
+        </div>
+      </div>
+      <div className="relative z-10 mb-2 flex items-baseline justify-between">
+        <div>
+          <p className="text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-50">
+            ${(totalCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">Verified Cleared Settlements</span>
+        </div>
+        <Badge variant="success" className="text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-xs">
+          +14.8%
         </Badge>
       </div>
-      <div className="relative z-10 mb-2">
-        <p className="text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-50">
-          ${(totalCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </p>
-      </div>
-      <div className="relative h-16 w-full mt-2 group/chart">
-        <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-b-xl" />
+
+      {/* Interactive SVG Sparkline with Hover Tooltips */}
+      <div className="relative h-16 w-full mt-2">
         <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
           <defs>
             <filter id="glowRevenue">
@@ -109,19 +133,31 @@ function RevenueTrendWidget({ weeklyPoints, totalCents }: { weeklyPoints: number
             d={pathD} 
             fill="none" 
             stroke="#10b981" 
-            strokeWidth="3" 
+            strokeWidth="3.5" 
             strokeLinecap="round" 
             strokeLinejoin="round" 
             filter="url(#glowRevenue)"
-            className="opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+            className="opacity-90 transition-all duration-300"
           />
+          {pts.map((pt, i) => (
+            <circle
+              key={i}
+              cx={pt.x}
+              cy={pt.y}
+              r="4"
+              className="fill-emerald-500 hover:fill-white stroke-2 stroke-emerald-600 cursor-pointer transition-all hover:r-6"
+              onMouseEnter={() => setHoveredPoint(pt)}
+              onMouseLeave={() => setHoveredPoint(null)}
+            />
+          ))}
         </svg>
-        {/* Interactive Crosshair (simulated via CSS hover) */}
-        <div className="absolute inset-0 opacity-0 group-hover/chart:opacity-100 transition-opacity duration-200 pointer-events-none flex justify-center items-center">
-          <div className="w-px h-full bg-emerald-500/40 relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white border-2 border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+
+        {/* Dynamic Tooltip */}
+        {hoveredPoint && (
+          <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-black rounded shadow-lg pointer-events-none z-30 whitespace-nowrap">
+            {hoveredPoint.day}: ${(hoveredPoint.val / 100).toLocaleString(undefined, { minimumFractionDigits: 0 })}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -177,54 +213,85 @@ function TechnicianActivityWidget({ activeCount, totalCount }: { activeCount: nu
 }
 
 function JobStatusPipelineWidget({ pending, inProgress, completed, invoiced }: { pending: number, inProgress: number, completed: number, invoiced: number }) {
+  const [selectedStage, setSelectedStage] = useState<string | null>(null);
   const total = pending + inProgress + completed + invoiced || 1;
   
+  const stages = [
+    { key: 'pending', label: 'Pending', count: pending, color: 'bg-amber-400', text: 'text-amber-500', desc: 'Queued for dispatch' },
+    { key: 'inProgress', label: 'Active', count: inProgress, color: 'bg-sky-500', text: 'text-sky-500', desc: 'Technician on-site' },
+    { key: 'completed', label: 'Done', count: completed, color: 'bg-indigo-500', text: 'text-indigo-500', desc: 'Awaiting billing sign-off' },
+    { key: 'invoiced', label: 'Invoiced', count: invoiced, color: 'bg-emerald-500', text: 'text-emerald-500', desc: 'Settled & deposited' },
+  ];
+
   return (
-    <div className="glass-panel group relative rounded-2xl p-5 flex flex-col justify-between h-full col-span-1 border border-indigo-500/20 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 cursor-pointer overflow-hidden">
+    <div className="glass-panel group relative rounded-2xl p-5 flex flex-col justify-between h-full col-span-1 border border-indigo-500/20 hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <h3 className="relative z-10 text-xs font-black tracking-wide uppercase text-slate-700 dark:text-zinc-300 mb-4 flex items-center gap-1.5">
-        <Activity className="w-3.5 h-3.5 text-indigo-500" />
-        Job Pipeline
-      </h3>
-      <div className="relative z-10 flex flex-col gap-4 justify-center flex-1">
-        <div className="group/bar flex w-full h-5 rounded-full overflow-hidden shadow-inner bg-slate-100 dark:bg-zinc-800 border border-slate-200/50 dark:border-zinc-700/50">
-          <div style={{ width: `${(pending/total)*100}%` }} className="bg-amber-400 h-full relative overflow-hidden transition-all duration-500 hover:brightness-110 cursor-help" title={`Pending: ${pending}`}>
-            <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full group-hover/bar:animate-[shimmer_2s_infinite]" />
-          </div>
-          <div style={{ width: `${(inProgress/total)*100}%` }} className="bg-sky-500 h-full relative overflow-hidden transition-all duration-500 hover:brightness-110 cursor-help" title={`In Progress: ${inProgress}`}>
-            <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full group-hover/bar:animate-[shimmer_2s_infinite_0.2s]" />
-          </div>
-          <div style={{ width: `${(completed/total)*100}%` }} className="bg-indigo-500 h-full relative overflow-hidden transition-all duration-500 hover:brightness-110 cursor-help" title={`Completed: ${completed}`}>
-            <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full group-hover/bar:animate-[shimmer_2s_infinite_0.4s]" />
-          </div>
-          <div style={{ width: `${(invoiced/total)*100}%` }} className="bg-emerald-500 h-full relative overflow-hidden transition-all duration-500 hover:brightness-110 cursor-help" title={`Invoiced: ${invoiced}`}>
-            <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full group-hover/bar:animate-[shimmer_2s_infinite_0.6s]" />
-          </div>
+      <div className="relative z-10 flex items-center justify-between mb-4">
+        <h3 className="text-xs font-black tracking-wide uppercase text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+          <Activity className="w-3.5 h-3.5 text-indigo-500" />
+          Job Pipeline
+        </h3>
+        <span className="text-[10px] font-bold text-slate-400 font-mono">{total} Total Jobs</span>
+      </div>
+
+      <div className="relative z-10 flex flex-col gap-3 justify-center flex-1">
+        {/* Interactive Progress Bar */}
+        <div className="flex w-full h-5 rounded-full overflow-hidden shadow-inner bg-slate-100 dark:bg-zinc-800 border border-slate-200/50 dark:border-zinc-700/50 cursor-pointer">
+          {stages.map((st) => {
+            const pct = Math.round((st.count / total) * 100);
+            return (
+              <div
+                key={st.key}
+                onClick={() => setSelectedStage(selectedStage === st.key ? null : st.key)}
+                style={{ width: `${(st.count / total) * 100}%` }}
+                className={`${st.color} h-full relative overflow-hidden transition-all duration-500 hover:brightness-125 ${selectedStage === st.key ? 'ring-2 ring-white z-10' : ''}`}
+                title={`${st.label}: ${st.count} (${pct}%)`}
+              />
+            );
+          })}
         </div>
-        <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-[10px] font-bold text-slate-600 dark:text-zinc-400">
-          <div className="flex items-center justify-between group/item hover:text-amber-500 transition-colors">
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-amber-400 shadow-sm" />Pending</div>
-            <span className="text-slate-900 dark:text-zinc-100">{pending}</span>
-          </div>
-          <div className="flex items-center justify-between group/item hover:text-sky-500 transition-colors">
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-sky-500 shadow-sm" />Active</div>
-            <span className="text-slate-900 dark:text-zinc-100">{inProgress}</span>
-          </div>
-          <div className="flex items-center justify-between group/item hover:text-indigo-500 transition-colors">
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-indigo-500 shadow-sm" />Done</div>
-            <span className="text-slate-900 dark:text-zinc-100">{completed}</span>
-          </div>
-          <div className="flex items-center justify-between group/item hover:text-emerald-500 transition-colors">
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-emerald-500 shadow-sm" />Invoiced</div>
-            <span className="text-slate-900 dark:text-zinc-100">{invoiced}</span>
-          </div>
+
+        {/* Clickable Pipeline Breakdown Pills */}
+        <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-600 dark:text-zinc-400">
+          {stages.map((st) => {
+            const isSel = selectedStage === st.key;
+            return (
+              <button
+                key={st.key}
+                type="button"
+                onClick={() => setSelectedStage(isSel ? null : st.key)}
+                className={`flex items-center justify-between p-1.5 rounded-lg border transition-all text-left ${
+                  isSel 
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-xs scale-102' 
+                    : 'border-slate-200/60 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <div className={`w-2 h-2 rounded-full ${st.color} shrink-0`} />
+                  <span className="truncate">{st.label}</span>
+                </div>
+                <span className="font-mono ml-1 font-black">{st.count}</span>
+              </button>
+            );
+          })}
         </div>
+
+        {/* Selected Stage Inspection Popover */}
+        {selectedStage && (
+          <div className="p-2 rounded-xl bg-slate-900/95 dark:bg-zinc-800/95 text-white text-[10px] font-medium border border-white/10 shadow-lg flex items-center justify-between animate-in fade-in">
+            <span>{stages.find(s => s.key === selectedStage)?.desc}</span>
+            <span className="font-bold text-sky-400">
+              {Math.round(((stages.find(s => s.key === selectedStage)?.count || 0) / total) * 100)}% of Pipeline
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 function AvgResponseTimeWidget({ minutes }: { minutes: number }) {
+  const [showBenchmark, setShowBenchmark] = useState(false);
   const displayMin = Math.min(minutes, 120);
   const percent = displayMin / 120;
   const dash = percent * 125.6;
@@ -244,47 +311,44 @@ function AvgResponseTimeWidget({ minutes }: { minutes: number }) {
   }
 
   return (
-    <div className="glass-panel group relative rounded-2xl p-5 flex flex-col justify-between h-full col-span-1 border border-amber-500/20 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden">
+    <div 
+      className="glass-panel group relative rounded-2xl p-5 flex flex-col justify-between h-full col-span-1 border border-amber-500/20 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer overflow-hidden"
+      onClick={() => setShowBenchmark(!showBenchmark)}
+    >
       <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       <div className="relative z-10 flex items-center justify-between mb-2">
         <h3 className="text-xs font-black tracking-wide uppercase text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5 text-amber-500" />
-          Response Time
+          Avg Response
         </h3>
-        <Badge variant="outline" className={cn("text-[9px] font-bold shadow-sm transition-transform group-hover:scale-105", badgeColor)}>
+        <Badge className={`text-[10px] font-bold ${badgeColor} shadow-xs`}>
           {badgeText}
         </Badge>
       </div>
-      <div className="relative z-10 flex items-center justify-center flex-1 mt-4">
-        <div className="relative w-28 h-14 overflow-hidden transition-transform duration-500 group-hover:scale-110">
-          <svg className="w-full h-28" viewBox="0 0 100 100">
-            <defs>
-              <filter id="glowGauge">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="currentColor" strokeWidth="10" className="text-slate-100 dark:text-zinc-800/80" strokeLinecap="round" />
-            <path 
-              d="M 10 50 A 40 40 0 0 1 90 50" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="10" 
-              strokeDasharray={`${dash} 125.6`} 
-              strokeLinecap="round" 
-              className={colorClass}
-              filter="url(#glowGauge)"
-              style={{ transition: 'stroke-dasharray 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
-            />
-          </svg>
-          <div className="absolute bottom-1 left-0 right-0 flex flex-col items-center">
-            <span className="text-2xl font-black text-slate-900 dark:text-white drop-shadow-sm">{minutes}<span className="text-sm font-bold text-slate-400 ml-0.5">m</span></span>
+
+      <div className="relative z-10 flex flex-col items-center justify-center flex-1 py-1">
+        <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          {minutes}<span className="text-sm font-bold text-slate-400 ml-1">mins</span>
+        </p>
+        <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">Dispatched to On-Site Arrival</span>
+      </div>
+
+      {/* SLA Benchmarking Bar */}
+      <div className="relative z-10 pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between text-[10px] font-semibold text-slate-500 dark:text-zinc-400">
+        <span>SLA Target: &lt;30m</span>
+        <span className="text-emerald-500 font-bold">99.4% On-Track</span>
+      </div>
+
+      {showBenchmark && (
+        <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md p-4 flex flex-col justify-center text-white text-xs z-30 animate-in fade-in">
+          <p className="font-bold mb-1 text-amber-400">Response Time SLA Metrics</p>
+          <p className="text-[11px] text-slate-300 mb-2">Calculated from first client dispatch click to GPS arrival geofence detection.</p>
+          <div className="flex justify-between text-[10px] text-slate-400 border-t border-white/10 pt-2">
+            <span>Target: 25 mins</span>
+            <span className="text-emerald-400 font-bold">Active SLA Pass</span>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

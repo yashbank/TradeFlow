@@ -143,25 +143,29 @@ export function FleetRadarMap({ className, activeCrew }: FleetRadarMapProps) {
   const dragStart = useRef({ x: 0, y: 0 });
 
   const vehicles = useMemo<VehicleMarkerData[]>(() => {
-    return DEFAULT_FIXED_VEHICLES.map((defaultVan, idx) => {
-      if (activeCrew && activeCrew[idx]) {
-        const crew = activeCrew[idx];
+    if (activeCrew && activeCrew.length > 0) {
+      return activeCrew.map((crew, idx) => {
+        const fallback = DEFAULT_FIXED_VEHICLES[idx % DEFAULT_FIXED_VEHICLES.length];
         return {
-          ...defaultVan,
-          id: crew.id || defaultVan.id,
-          tech: crew.tech || defaultVan.tech,
-          role: crew.role || defaultVan.role,
-          status: crew.status || defaultVan.status,
-          job: crew.job || defaultVan.job,
-          isWorking: crew.isWorking !== undefined ? crew.isWorking : defaultVan.isWorking,
-          lat: crew.lat || defaultVan.lat,
-          lng: crew.lng || defaultVan.lng,
-          destLat: crew.destLat || defaultVan.destLat,
-          destLng: crew.destLng || defaultVan.destLng,
+          id: crew.id || fallback.id,
+          tech: crew.tech || fallback.tech,
+          role: crew.role || fallback.role,
+          status: crew.status || (crew.isWorking ? 'On-Site Execution' : 'Standby / Available'),
+          job: crew.job || fallback.job,
+          isWorking: Boolean(crew.isWorking),
+          lat: crew.lat ?? fallback.lat,
+          lng: crew.lng ?? fallback.lng,
+          destLat: crew.destLat ?? fallback.destLat,
+          destLng: crew.destLng ?? fallback.destLng,
+          phone: crew.phone || fallback.phone,
+          vanNumber: crew.vanNumber || `Van #${String(idx + 1).padStart(2, '0')}`,
+          battery: crew.battery || 88 + ((idx * 4) % 12),
+          signal: crew.signal || 4,
+          eta: crew.eta || (crew.isWorking ? 'On-Site' : 'Available'),
         };
-      }
-      return defaultVan;
-    });
+      });
+    }
+    return DEFAULT_FIXED_VEHICLES;
   }, [activeCrew]);
 
   const filteredVehicles = useMemo(() => {
@@ -317,41 +321,61 @@ export function FleetRadarMap({ className, activeCrew }: FleetRadarMapProps) {
             className="absolute inset-0 origin-center transition-transform duration-300 ease-out will-change-transform"
             style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom * 0.5 + 0.5})` }}
           >
-            {/* Base Layer */}
+            {/* Base Map Layer */}
             {isSatellite ? (
               <>
-                <div className="absolute inset-0 opacity-10 mix-blend-overlay" />
-                <div className="absolute inset-0 bg-gradient-to-br from-[#1a202c]/80 via-[#2d3748]/40 to-[#1a202c]/90 pointer-events-none" />
-                <div className="absolute inset-0 pointer-events-none opacity-30 mix-blend-color-dodge bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/40 via-transparent to-transparent" />
+                {/* Satellite Imagery Dark Terrain */}
+                <div className="absolute inset-0 bg-[#0c1017]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-950/30 via-slate-950/80 to-black pointer-events-none" />
+                <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#334155_1px,transparent_1px),linear-gradient(to_bottom,#334155_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
+
+                {/* Satellite Telemetry Radar Sweeps */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  {[1, 2, 3, 4].map(ring => (
+                    <div
+                      key={ring}
+                      className="absolute rounded-full border border-amber-500/20"
+                      style={{ width: `${ring * 220}px`, height: `${ring * 220}px` }}
+                    />
+                  ))}
+                  <div className="absolute inset-0 origin-center pointer-events-none animate-[spin_8s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_280deg,rgba(245,158,11,0.15)_360deg)]" />
+                </div>
               </>
             ) : (
               <>
-                {/* Arterial street grid */}
-                <div className="absolute inset-0 pointer-events-none opacity-[0.07] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px]" />
-                <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(to_right,#ffffff_2px,transparent_2px),linear-gradient(to_bottom,#ffffff_2px,transparent_2px)] bg-[size:160px_160px]" />
-                <div className="absolute inset-0 bg-gradient-to-br from-sky-950/40 via-transparent to-indigo-950/40 pointer-events-none" />
+                {/* Cartographic GIS Vector Street Grid */}
+                <div className="absolute inset-0 bg-[#080d1a] dark:bg-[#020612]" />
+                
+                {/* Arterial Highways & Boulevard Lines */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40">
+                  <line x1="0" y1="35%" x2="100%" y2="35%" stroke="#0284c7" strokeWidth="2.5" strokeDasharray="8 4" />
+                  <line x1="0" y1="70%" x2="100%" y2="70%" stroke="#38bdf8" strokeWidth="2" />
+                  <line x1="40%" y1="0" x2="40%" y2="100%" stroke="#0284c7" strokeWidth="2.5" />
+                  <line x1="75%" y1="0" x2="75%" y2="100%" stroke="#38bdf8" strokeWidth="2" strokeDasharray="6 3" />
+                  {/* Secondary Streets */}
+                  <line x1="15%" y1="0" x2="15%" y2="100%" stroke="#1e293b" strokeWidth="1.5" />
+                  <line x1="0" y1="15%" x2="100%" y2="15%" stroke="#1e293b" strokeWidth="1.5" />
+                  <line x1="0" y1="85%" x2="100%" y2="85%" stroke="#1e293b" strokeWidth="1.5" />
+                </svg>
+
+                {/* Street Grid Mesh */}
+                <div className="absolute inset-0 pointer-events-none opacity-[0.08] bg-[linear-gradient(to_right,#38bdf8_1px,transparent_1px),linear-gradient(to_bottom,#38bdf8_1px,transparent_1px)] bg-[size:45px_45px]" />
+
+                {/* Metropolitan District Labels */}
+                <div className="absolute top-[8%] left-[6%] pointer-events-none">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-sky-400/60 font-mono">Metro North District</span>
+                </div>
+                <div className="absolute top-[42%] left-[45%] pointer-events-none">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-sky-400/70 font-mono">Central Hub • Plaza</span>
+                </div>
+                <div className="absolute bottom-[10%] right-[10%] pointer-events-none">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400/60 font-mono">South Commercial Park</span>
+                </div>
+                <div className="absolute top-[18%] right-[8%] pointer-events-none">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-teal-400/60 font-mono">East Bay Logistics</span>
+                </div>
               </>
             )}
-
-            {/* Radar Sweeps & Concentric Rings */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              {[1, 2, 3, 4].map(ring => (
-                <div
-                  key={ring}
-                  className={cn(
-                    "absolute rounded-full border transition-colors duration-700",
-                    isSatellite ? "border-amber-500/20" : "border-sky-500/20"
-                  )}
-                  style={{ width: `${ring * 250}px`, height: `${ring * 250}px` }}
-                />
-              ))}
-              <div
-                className={cn(
-                  "absolute inset-0 origin-center pointer-events-none animate-[spin_6s_linear_infinite]",
-                  isSatellite ? "bg-[conic-gradient(from_0deg,transparent_0deg,transparent_280deg,rgba(245,158,11,0.15)_360deg)]" : "bg-[conic-gradient(from_0deg,transparent_0deg,transparent_280deg,rgba(14,165,233,0.15)_360deg)]"
-                )}
-              />
-            </div>
 
             {/* SVG Layer for Route Paths */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" style={{ overflow: 'visible' }}>
