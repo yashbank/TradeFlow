@@ -7,10 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { loginUserAction } from '@/actions/auth';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
 import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
 import {
-import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
-  Wrench,
   ShieldCheck,
   Zap,
   CheckCircle2,

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { registerUserAction } from '@/actions/auth';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
+import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
 import {
 
   CheckCircle2,
