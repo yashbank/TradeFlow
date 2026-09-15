@@ -35,6 +35,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import type { UserProfile, Organization } from '@/types/database';
+import { FleetRadarMap } from './FleetRadarMap';
 
 interface OwnerPictorialDashboardProps {
   metrics?: any;
@@ -579,120 +580,7 @@ export function OwnerPictorialDashboard({
       </div>
 
       {/* 3. Real Metropolitan Fleet Radar Map (Wired to Real Team & Jobs) */}
-      <Card className="glass-panel-elevated overflow-hidden border border-sky-500/30">
-        <CardHeader className="p-6 pb-3 border-b border-slate-200/60 dark:border-zinc-800/60 flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-300">
-              <Navigation className="w-4 h-4" />
-            </div>
-            <div>
-              <CardTitle className="text-sm font-bold text-slate-900 dark:text-zinc-100">
-                Metropolitan Field Service Radar
-              </CardTitle>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Live GPS telemetry of dispatched technicians & active customer stops
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              {activeCrew.length} Technician{activeCrew.length === 1 ? '' : 's'} Active
-            </span>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-6">
-          <div className="relative h-72 w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-inner">
-            {/* Grid & Radar Circles */}
-            <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-15" />
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-48 h-48 rounded-full border border-sky-500/20" />
-              <div className="w-96 h-96 rounded-full border border-sky-500/10" />
-            </div>
-
-            {/* Radar Sweep Effect */}
-            <div className="absolute inset-0 origin-center bg-gradient-to-r from-transparent via-sky-500/10 to-transparent pointer-events-none animate-[spin_8s_linear_infinite]" />
-
-            {/* Zero State: No Team Members Registered Yet */}
-            {activeCrew.length === 0 ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-20">
-                <div className="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center mb-3 border border-sky-500/30">
-                  <Users className="w-6 h-6" />
-                </div>
-                <h4 className="text-sm font-bold text-white">
-                  Fleet Radar Standby • No Field Technicians Registered
-                </h4>
-                <p className="text-xs text-slate-400 mt-1 max-w-md">
-                  Add field plumbers in Settings so they can log in on mobile, navigate to job orders, and report real-time on-site telemetry.
-                </p>
-                <Link href="/settings" className="mt-4">
-                  <Button size="sm" className="bg-sky-600 hover:bg-sky-700 text-xs font-bold shadow-md">
-                    <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-                    Add Field Technicians
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              /* Real Technician Radar Markers */
-              activeCrew.map((van) => (
-                <div
-                  key={van.id}
-                  style={{ top: `${van.lat}%`, left: `${van.lng}%` }}
-                  className="absolute -translate-x-1/2 -translate-y-1/2 z-10 group cursor-pointer"
-                >
-                  <div className="relative flex flex-col items-center">
-                    <div className={`w-9 h-9 rounded-2xl text-white flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900 transition-transform group-hover:scale-110 ${
-                      van.isWorking ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-sky-500 shadow-sky-500/50'
-                    }`}>
-                      <Wrench className="w-4 h-4" />
-                    </div>
-                    <span className="text-[10px] font-bold text-white bg-slate-900/90 px-2 py-0.5 rounded-full mt-1 border border-white/20 whitespace-nowrap shadow-md">
-                      {van.tech}
-                    </span>
-                  </div>
-
-                  {/* Hover Details Popover */}
-                  <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-48 p-2.5 rounded-xl bg-slate-900/95 backdrop-blur border border-sky-400/40 text-white shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">
-                    <p className="text-xs font-bold">{van.tech}</p>
-                    <p className="text-[11px] text-sky-400 mt-0.5">{van.status}</p>
-                    <div className="mt-1.5 flex justify-between text-[10px] text-slate-400">
-                      <span>Order: {van.job}</span>
-                      <span>Role: {van.role}</span>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Real Team Roster Strip */}
-          {activeCrew.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-              {activeCrew.map((crew) => (
-                <div
-                  key={crew.id}
-                  className="p-3 rounded-xl bg-white/50 dark:bg-zinc-800/50 border border-slate-200/80 dark:border-zinc-700/80 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-300 font-bold flex items-center justify-center text-xs">
-                      {crew.tech.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-zinc-100">{crew.tech}</h4>
-                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 truncate max-w-[140px]">{crew.status}</p>
-                    </div>
-                  </div>
-                  <Badge variant={crew.isWorking ? 'success' : 'secondary'} className="text-[9px] py-0">
-                    {crew.job}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <FleetRadarMap activeCrew={activeCrew} />
 
       {/* 4. Priority Dispatch Triage (Wired to Real Database Jobs) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
