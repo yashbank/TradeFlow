@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { updateOrganizationAction } from '@/actions/organization';
 import { createCheckoutSessionAction, createPortalSessionAction } from '@/actions/billing';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Save, Check } from 'lucide-react';
+import { CreditCard, Save, Check, User, Camera, Upload, Trash2 } from 'lucide-react';
 import { TeamManagement } from '@/components/team/TeamManagement';
 import { DataManagementCard } from './DataManagementCard';
 import type { Organization, Subscription } from '@/types/database';
@@ -40,6 +40,49 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [profileImage, setProfileImage] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('tradeflow_user_avatar_url');
+    }
+    return null;
+  });
+
+  function handleAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+      setError('Unsupported file type. Please upload a JPG, JPEG, PNG, or WEBP file.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size exceeds 5MB limit. Please upload a smaller image.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      setProfileImage(dataUrl);
+      try {
+        localStorage.setItem('tradeflow_user_avatar_url', dataUrl);
+        window.dispatchEvent(new Event('tradeflow_avatar_updated'));
+      } catch (err) {
+        console.error('Failed to store avatar', err);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleRemoveAvatar() {
+    setProfileImage(null);
+    try {
+      localStorage.removeItem('tradeflow_user_avatar_url');
+      window.dispatchEvent(new Event('tradeflow_avatar_updated'));
+    } catch {}
+  }
 
   async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault();
@@ -271,6 +314,76 @@ export function SettingsForm({ organization, subscription }: SettingsFormProps) 
             </Button>
           </CardFooter>
         </form>
+      </Card>
+
+      {/* User Profile Avatar & Personal Identity Card */}
+      <Card className="glass-panel p-6 rounded-2xl border border-slate-200/80 dark:border-zinc-800">
+        <CardHeader className="p-0 pb-4 flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+              <User className="w-4 h-4 text-sky-500" />
+              User Profile & Avatar Icon
+            </CardTitle>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+              Upload your custom profile photo (supports JPG, JPEG, PNG, WEBP up to 5MB)
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0 pt-2 flex flex-col sm:flex-row items-center gap-6">
+          <div className="relative group">
+            <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800 flex items-center justify-center shadow-md">
+              {profileImage ? (
+                <img src={profileImage} alt="User Avatar Preview" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-10 h-10 text-slate-400 dark:text-zinc-500" />
+              )}
+            </div>
+            <label
+              htmlFor="avatar-upload-input"
+              className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-bold cursor-pointer transition-opacity backdrop-blur-xs"
+            >
+              <Camera className="w-5 h-5 mb-1" />
+              Change
+            </label>
+          </div>
+
+          <div className="space-y-2 text-center sm:text-left flex-1">
+            <input
+              id="avatar-upload-input"
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={handleAvatarFileChange}
+              className="hidden"
+            />
+            <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => document.getElementById('avatar-upload-input')?.click()}
+                className="text-xs font-bold"
+              >
+                <Upload className="w-3.5 h-3.5 mr-1.5" />
+                Upload Profile Icon
+              </Button>
+              {profileImage && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveAvatar}
+                  className="text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" />
+                  Remove
+                </Button>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-400 dark:text-zinc-500">
+              Your profile icon will appear on dispatch assignments, invoices, customer sign-off portals, and the navigation bar.
+            </p>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Field Technicians & Crew Management */}

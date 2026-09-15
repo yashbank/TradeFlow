@@ -35,6 +35,20 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
   const pathname = usePathname();
   const { t } = useTranslation();
   const { theme } = useTheme();
+  const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    function loadAvatar() {
+      try {
+        const saved = localStorage.getItem('tradeflow_user_avatar_url');
+        if (saved) setAvatarUrl(saved);
+        else setAvatarUrl(null);
+      } catch {}
+    }
+    loadAvatar();
+    window.addEventListener('tradeflow_avatar_updated', loadAvatar);
+    return () => window.removeEventListener('tradeflow_avatar_updated', loadAvatar);
+  }, []);
 
   const isTechnician = role === 'technician';
   const navItems = isTechnician
@@ -134,8 +148,12 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
         <div className="pt-3 border-t border-slate-200/50 dark:border-zinc-800/60">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-slate-200 to-slate-300 dark:from-zinc-800 dark:to-zinc-700 text-slate-800 dark:text-zinc-200 font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs border border-white/20">
-                {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-slate-200 to-slate-300 dark:from-zinc-800 dark:to-zinc-700 text-slate-800 dark:text-zinc-200 font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs border border-white/20 overflow-hidden">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  user?.full_name?.charAt(0)?.toUpperCase() || 'U'
+                )}
               </div>
               <div className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200 overflow-hidden whitespace-nowrap min-w-0 pr-1">
                 <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate">{user?.full_name || 'User'}</p>
