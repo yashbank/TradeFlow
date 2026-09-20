@@ -96,7 +96,7 @@ export class ProspectPipelineOrchestrator {
 
       try {
         let candidates: ProspectCandidate[] = [];
-        if (process.env.GOOGLE_PLACES_API_KEY) {
+        if (process.env.GOOGLE_PLACES_API_KEY_NEW || process.env.GOOGLE_PLACES_API_KEY) {
           candidates = await this.placesClient.textSearch(
             query,
             market.city,

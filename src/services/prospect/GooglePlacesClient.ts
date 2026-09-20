@@ -9,7 +9,7 @@ export class GooglePlacesClient {
   private baseUrl = 'https://places.googleapis.com/v1';
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.GOOGLE_PLACES_API_KEY || '';
+    this.apiKey = apiKey || process.env.GOOGLE_PLACES_API_KEY_NEW || process.env.GOOGLE_PLACES_API_KEY || '';
   }
 
   /**
