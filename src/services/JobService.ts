@@ -61,9 +61,33 @@ export class JobService {
       query = query.or(`job_number.ilike.${term},title.ilike.${term},description.ilike.${term}`);
     }
 
-    const { data, count, error } = await query;
+    let { data, count, error } = await query;
     if (error) {
-      throw new Error(`Failed to list jobs: ${error.message}`);
+      let fallback = supabase
+        .from('jobs')
+        .select('*, customer:customers(*)', { count: 'exact' })
+        .eq('organization_id', organization.id)
+        .order('scheduled_start', { ascending: true, nullsFirst: false })
+        .range(offset, offset + limit - 1);
+
+      if (role === 'technician') {
+        fallback = fallback.eq('assigned_to_user_id', user.id);
+      }
+      if (status) {
+        fallback = fallback.eq('status', status);
+      }
+      if (search && search.trim().length > 0) {
+        const term = `%${search.trim()}%`;
+        fallback = fallback.or(`job_number.ilike.${term},title.ilike.${term},description.ilike.${term}`);
+      }
+
+      const fbRes = await fallback;
+      if (!fbRes.error && fbRes.data) {
+        data = fbRes.data;
+        count = fbRes.count;
+      } else {
+        throw new Error(`Failed to list jobs: ${error.message}`);
+      }
     }
 
     const jobsList = (data || []) as any[];

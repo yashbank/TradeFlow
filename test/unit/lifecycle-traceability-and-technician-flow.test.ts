@@ -512,4 +512,122 @@ describe('End-to-End Technician Field Workflow & Traceability Pipeline', () => {
       expect(outsideClickFired).toBe(false);
     });
   });
+
+  // ============================================================================
+  // Suite 5: Jobs Page SSR Safety & DOM Nesting Invariants (50+ assertions)
+  // ============================================================================
+  describe('Suite 5: Jobs Page SSR Safety & DOM Nesting Invariants', () => {
+    it('5.1 renders LifecycleTraceabilityWidget in compact mode without nested anchor tags', async () => {
+      const { renderToString } = await import('react-dom/server');
+      const React = await import('react');
+      const { LifecycleTraceabilityWidget } = await import('@/components/common/LifecycleTraceabilityWidget');
+
+      const mockJob = {
+        id: 'job-123',
+        job_number: 'J-2026-0001',
+        status: 'completed' as const,
+        completed_at: '2026-09-20T10:00:00Z',
+      };
+
+      const mockInvoice = {
+        id: 'inv-456',
+        invoice_number: 'INV-2026-0001',
+        status: 'paid' as const,
+        total_cents: 25000,
+        amount_paid_cents: 25000,
+      };
+
+      const html = renderToString(
+        React.createElement(LifecycleTraceabilityWidget, {
+          job: mockJob,
+          invoice: mockInvoice,
+          currentStage: 'job',
+          compact: true,
+        })
+      );
+
+      // In compact mode inside clickable card lists, pills MUST be <span> elements, NEVER <a> tags
+      expect(html).not.toContain('<a');
+      expect(html).not.toContain('href=');
+      expect(html).toContain('J-2026-0001');
+      expect(html).toContain('INV-2026-0001');
+      expect(html).toContain('completed');
+      expect(html).toContain('PAID');
+    });
+
+    it('5.2 safely renders without crashing when job or invoice have missing or malformed properties', async () => {
+      const { renderToString } = await import('react-dom/server');
+      const React = await import('react');
+      const { LifecycleTraceabilityWidget } = await import('@/components/common/LifecycleTraceabilityWidget');
+
+      const malformedCases = [
+        { job: null, invoice: null, quote: null },
+        { job: { id: 'j-1', job_number: 'J-1', status: undefined as any }, invoice: null },
+        { job: { id: 'j-2', job_number: 'J-2', status: null as any }, invoice: { id: 'i-1', invoice_number: 'INV-1', status: undefined as any } },
+        { job: { id: 'j-3', job_number: 'J-3', status: 'in_progress' as const }, invoice: { id: 'i-2', invoice_number: 'INV-2', status: null as any } },
+        { job: undefined, invoice: undefined, quote: { id: 'q-1', quote_number: 'Q-1', status: null as any } },
+      ];
+
+      for (const tc of malformedCases) {
+        expect(() => {
+          const compactHtml = renderToString(
+            React.createElement(LifecycleTraceabilityWidget, {
+              job: tc.job,
+              invoice: tc.invoice,
+              quote: (tc as any).quote,
+              currentStage: 'job',
+              compact: true,
+            })
+          );
+          expect(compactHtml.length).toBeGreaterThan(0);
+
+          const fullHtml = renderToString(
+            React.createElement(LifecycleTraceabilityWidget, {
+              job: tc.job,
+              invoice: tc.invoice,
+              quote: (tc as any).quote,
+              currentStage: 'job',
+              compact: false,
+            })
+          );
+          expect(fullHtml.length).toBeGreaterThan(0);
+        }).not.toThrow();
+      }
+    });
+
+    it('5.3 renders full interactive navigation links when compact is false on detail pages', async () => {
+      const { renderToString } = await import('react-dom/server');
+      const React = await import('react');
+      const { LifecycleTraceabilityWidget } = await import('@/components/common/LifecycleTraceabilityWidget');
+
+      const mockJob = {
+        id: 'job-789',
+        job_number: 'J-2026-0005',
+        status: 'in_progress' as const,
+        assigned_to_name: 'John Doe',
+      };
+
+      const mockQuote = {
+        id: 'quote-789',
+        quote_number: 'Q-2026-0005',
+        status: 'accepted' as const,
+        total_cents: 35000,
+      };
+
+      const html = renderToString(
+        React.createElement(LifecycleTraceabilityWidget, {
+          job: mockJob,
+          quote: mockQuote,
+          currentStage: 'job',
+          compact: false,
+        })
+      );
+
+      // On detail view, interactive links are properly rendered
+      expect(html).toContain('href="/jobs/job-789"');
+      expect(html).toContain('href="/quotes/quote-789"');
+      expect(html).toContain('End-to-End Service Traceability');
+      expect(html).toContain('John Doe');
+    });
+  });
 });

@@ -1,3 +1,5 @@
+'use client';
+
 // ==============================================================================
 // src/components/common/LifecycleTraceabilityWidget.tsx — End-to-End Pipeline Stepper
 // ==============================================================================
@@ -81,25 +83,23 @@ export function LifecycleTraceabilityWidget({
           }`}
         >
           <FileText className="w-3 h-3" />
-          {quote ? `${quote.quote_number}: ${quote.status.toUpperCase()}` : 'Quote'}
+          {quote ? `${quote.quote_number}: ${(quote.status || 'draft').toUpperCase()}` : 'Quote'}
         </span>
 
         <ArrowRight className="w-3 h-3 text-slate-300 dark:text-zinc-600 shrink-0" />
 
         {/* Job pill */}
         {job ? (
-          <Link
-            href={`/jobs/${job.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border transition-colors hover:opacity-80 ${
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border ${
               isJobDone
                 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
                 : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30'
             }`}
           >
             <Wrench className="w-3 h-3" />
-            {job.job_number} ({job.status.replace('_', ' ')})
-          </Link>
+            {job.job_number} ({(job.status || 'scheduled').replace('_', ' ')})
+          </span>
         ) : (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border bg-slate-100/50 dark:bg-zinc-800/40 text-slate-400 dark:text-zinc-500 border-dashed border-slate-300 dark:border-zinc-700">
             No Job Yet
@@ -110,18 +110,16 @@ export function LifecycleTraceabilityWidget({
 
         {/* Invoice pill */}
         {invoice ? (
-          <Link
-            href={`/invoices/${invoice.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border transition-colors hover:opacity-80 ${
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border ${
               isInvoicePaid
                 ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40'
                 : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30'
             }`}
           >
             <Receipt className="w-3 h-3" />
-            {invoice.invoice_number} ({invoice.status.toUpperCase()})
-          </Link>
+            {invoice.invoice_number} ({(invoice.status || 'draft').toUpperCase()})
+          </span>
         ) : (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border bg-slate-100/50 dark:bg-zinc-800/40 text-slate-400 dark:text-zinc-500 border-dashed border-slate-300 dark:border-zinc-700">
             Pending Invoice
@@ -230,7 +228,7 @@ export function LifecycleTraceabilityWidget({
                     }
                     className="text-[10px] py-0 font-bold"
                   >
-                    {job.status.replace('_', ' ').toUpperCase()}
+                    {(job.status || 'scheduled').replace('_', ' ').toUpperCase()}
                   </Badge>
                 ) : (
                   <span className="text-[10px] text-slate-400 font-medium">NOT CREATED</span>
@@ -333,7 +331,7 @@ export function LifecycleTraceabilityWidget({
                     variant={isInvoicePaid ? 'success' : invoice.status === 'sent' ? 'default' : 'secondary'}
                     className="text-[10px] py-0 font-bold"
                   >
-                    {invoice.status.toUpperCase()}
+                    {(invoice.status || 'draft').toUpperCase()}
                   </Badge>
                 ) : (
                   <span className="text-[10px] text-slate-400 font-medium">NOT BILLED</span>

@@ -141,7 +141,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
                             {job.assigned_to && (
                               <span className="flex items-center text-slate-700 dark:text-zinc-300 font-semibold">
                                 <User className="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0" />
-                                {job.assigned_to.full_name}
+                                {typeof job.assigned_to === 'object' ? job.assigned_to?.full_name || 'Assigned' : 'Assigned'}
                               </span>
                             )}
                           </div>
