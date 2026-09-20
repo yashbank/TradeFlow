@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { TechnicianFieldPortal } from './TechnicianFieldPortal';
 import { OwnerPictorialDashboard } from './OwnerPictorialDashboard';
 import type { UserProfile, Organization, UserRole } from '@/types/database';
+import type { PrimaryTrade } from '@/types/trades';
 
 interface DashboardClientViewProps {
   metrics?: any;
@@ -15,8 +16,8 @@ interface DashboardClientViewProps {
   user: UserProfile;
   organization: Organization;
   role: UserRole;
+  primaryTrade?: PrimaryTrade;
 }
-
 
 export function DashboardClientView({
   metrics = {},
@@ -27,6 +28,7 @@ export function DashboardClientView({
   user,
   organization,
   role,
+  primaryTrade = 'plumbing',
 }: DashboardClientViewProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -81,6 +83,7 @@ export function DashboardClientView({
       isAutoSyncing={isAutoSyncing}
       onToggleAutoSync={() => setIsAutoSyncing((prev) => !prev)}
       onManualSync={handleManualSync}
+      primaryTrade={primaryTrade}
     />
   );
 }

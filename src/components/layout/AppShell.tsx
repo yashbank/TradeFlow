@@ -23,19 +23,38 @@ import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import type { Organization, UserProfile, UserRole } from '@/types/database';
 import { TradeFlowLogo } from '@/components/common/TradeFlowLogo';
+import { type PrimaryTrade, TRADE_PRESETS_CONFIG } from '@/types/trades';
 
 interface AppShellProps {
   children: React.ReactNode;
   organization: Organization;
   user: UserProfile;
   role: UserRole;
+  primaryTrade?: PrimaryTrade;
 }
 
-export function AppShell({ children, organization, user, role }: AppShellProps) {
+export function AppShell({ children, organization, user, role, primaryTrade = 'plumbing' }: AppShellProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
   const { theme } = useTheme();
   const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
+  const [activeTrade, setActiveTrade] = React.useState<PrimaryTrade>(primaryTrade);
+
+  React.useEffect(() => {
+    if (primaryTrade) setActiveTrade(primaryTrade);
+  }, [primaryTrade]);
+
+  React.useEffect(() => {
+    function handleTradeUpdate(e: any) {
+      if (e.detail?.trade) {
+        setActiveTrade(e.detail.trade);
+      }
+    }
+    window.addEventListener('tradeflow_preset_updated', handleTradeUpdate);
+    return () => window.removeEventListener('tradeflow_preset_updated', handleTradeUpdate);
+  }, []);
+
+  const tradeConfig = TRADE_PRESETS_CONFIG[activeTrade] || TRADE_PRESETS_CONFIG.plumbing;
 
   React.useEffect(() => {
     function loadAvatar() {
@@ -107,6 +126,9 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
             <h1 className="font-semibold text-slate-900 dark:text-zinc-100 truncate text-sm">
               {organization?.name || 'TradeFlow'}
             </h1>
+            <p className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 tracking-wide uppercase truncate">
+              {tradeConfig.title}
+            </p>
           </div>
         </div>
 
@@ -182,9 +204,14 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
           <div className="bg-gradient-to-tr from-sky-500 to-blue-600 text-white p-1.5 rounded-lg shadow-sm">
             <TradeFlowLogo size="md" />
           </div>
-          <span className="font-bold text-slate-900 dark:text-zinc-100 text-xs truncate max-w-[130px]">
-            {organization?.name || 'TradeFlow'}
-          </span>
+          <div className="flex flex-col truncate max-w-[130px]">
+            <span className="font-bold text-slate-900 dark:text-zinc-100 text-xs truncate">
+              {organization?.name || 'TradeFlow'}
+            </span>
+            <span className="text-[9px] font-semibold text-sky-600 dark:text-sky-400 truncate">
+              {tradeConfig.badge}
+            </span>
+          </div>
         </div>
 
         {/* Controls: Command Palette, Theme, Language, Currency, Logout */}
@@ -209,8 +236,12 @@ export function AppShell({ children, organization, user, role }: AppShellProps) 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Desktop Top Navbar (Header Bar) - Minimal with Emergent Hover Island */}
         <div className="hidden md:flex items-center justify-between px-8 py-4 sticky top-0 z-20 bg-transparent backdrop-blur-sm">
-          <div className="flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-zinc-400">
-            <span className="capitalize">{role} Portal</span>
+          <div className="flex items-center gap-3 text-xs font-medium text-slate-500 dark:text-zinc-400">
+            <span className="capitalize font-semibold text-slate-700 dark:text-zinc-300">{role} Portal</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 font-semibold text-[11px] border border-sky-500/20 shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+              {tradeConfig.title} ({tradeConfig.badge})
+            </span>
             <CommandPalette />
           </div>
 

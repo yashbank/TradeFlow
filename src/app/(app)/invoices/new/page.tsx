@@ -5,6 +5,7 @@ import { InvoiceBuilder } from '@/components/invoices/InvoiceBuilder';
 
 import { JobService } from '@/services/JobService';
 import { QuoteService } from '@/services/QuoteService';
+import { TenantIntegrationService } from '@/services/TenantIntegrationService';
 
 interface NewInvoicePageProps {
   searchParams: Promise<{ customer_id?: string }>;
@@ -14,10 +15,11 @@ export default async function NewInvoicePage({ searchParams }: NewInvoicePagePro
   const { customer_id } = await searchParams;
   const { organization } = await AuthService.requireRole(['owner', 'admin']);
 
-  const [{ customers }, completedJobsRes, acceptedQuotesRes] = await Promise.all([
+  const [{ customers }, completedJobsRes, acceptedQuotesRes, tenantConfig] = await Promise.all([
     CustomerService.list('', 100),
     JobService.list('completed', '', 20, 0).catch(() => ({ jobs: [], totalCount: 0 })),
     QuoteService.list('accepted', '', 20, 0).catch(() => ({ quotes: [], totalCount: 0 })),
+    TenantIntegrationService.getIntegrations(organization.id).catch(() => null),
   ]);
 
   return (
@@ -39,6 +41,7 @@ export default async function NewInvoicePage({ searchParams }: NewInvoicePagePro
         defaultTerms={organization.invoice_terms}
         completedJobs={completedJobsRes.jobs || []}
         acceptedQuotes={acceptedQuotesRes.quotes || []}
+        primaryTrade={tenantConfig?.primaryTrade || 'plumbing'}
       />
     </div>
   );

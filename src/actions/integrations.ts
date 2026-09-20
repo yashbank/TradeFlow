@@ -46,6 +46,9 @@ export async function updateTenantIntegrationsAction(updates: {
     const data = await TenantIntegrationService.updateIntegrations(updates, organization.id);
     revalidatePath('/settings');
     revalidatePath('/dashboard');
+    revalidatePath('/invoices/new');
+    revalidatePath('/quotes/new');
+    revalidatePath('/', 'layout');
     return { success: true, data };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to update integrations.' };

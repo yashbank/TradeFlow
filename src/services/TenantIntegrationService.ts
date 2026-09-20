@@ -2,8 +2,6 @@
 // src/services/TenantIntegrationService.ts — Tenant Credential & Trade Isolation
 // ==============================================================================
 
-import fs from 'fs';
-import path from 'path';
 import { AuthService } from './AuthService';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -23,22 +21,12 @@ export interface TenantIntegrations {
   updatedAt: string;
 }
 
-
 export class TenantIntegrationService {
-  private static getStorageDir(): string {
-    const dir = path.resolve(process.cwd(), 'config', 'tenants');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    return dir;
-  }
-
-  private static getFilePath(orgId: string): string {
-    return path.join(this.getStorageDir(), `${orgId}.json`);
-  }
+  // Resilient in-memory cache per tenant for high-performance reads
+  private static memoryCache: Map<string, TenantIntegrations> = new Map();
 
   /**
-   * Retrieves tenant integrations with secure fallbacks to platform environment.
+   * Retrieves tenant integrations with persistent Supabase backing and secure env fallbacks.
    */
   static async getIntegrations(orgId?: string): Promise<TenantIntegrations> {
     let targetOrgId = orgId;
@@ -65,18 +53,35 @@ export class TenantIntegrationService {
 
     if (!targetOrgId) return defaultState;
 
-    const filePath = this.getFilePath(targetOrgId);
-    if (fs.existsSync(filePath)) {
-      try {
-        const content = fs.readFileSync(filePath, 'utf-8');
-        const parsed = JSON.parse(content);
-        return {
+    // 1. Check in-memory cache first
+    if (this.memoryCache.has(targetOrgId)) {
+      return { ...defaultState, ...this.memoryCache.get(targetOrgId)! };
+    }
+
+    // 2. Query persistent Supabase audit_logs store
+    try {
+      const supabase = createAdminClient();
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('changes_json')
+        .eq('organization_id', targetOrgId)
+        .eq('entity_type', 'tenant_integrations')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data?.changes_json && typeof data.changes_json === 'object') {
+        const parsed = data.changes_json as Partial<TenantIntegrations>;
+        const merged: TenantIntegrations = {
           ...defaultState,
           ...parsed,
+          updatedAt: parsed.updatedAt || new Date().toISOString(),
         };
-      } catch {
-        return defaultState;
+        this.memoryCache.set(targetOrgId, merged);
+        return merged;
       }
+    } catch {
+      // Fall through to default if Supabase query fails or in isolated unit test
     }
 
     return defaultState;
@@ -84,6 +89,7 @@ export class TenantIntegrationService {
 
   /**
    * Updates tenant integration credentials. Restricted to owner or admin.
+   * Persists safely to database and synchronizes organization terms.
    */
   static async updateIntegrations(
     updates: Partial<Omit<TenantIntegrations, 'updatedAt'>>,
@@ -102,8 +108,36 @@ export class TenantIntegrationService {
       updatedAt: new Date().toISOString(),
     };
 
-    const filePath = this.getFilePath(orgId);
-    fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), 'utf-8');
+    // 1. Update in-memory cache immediately
+    this.memoryCache.set(orgId, updated);
+
+    // 2. Persist to database
+    try {
+      const supabase = createAdminClient();
+
+      // Insert audit log entry with latest tenant integrations config
+      await supabase.from('audit_logs').insert({
+        organization_id: orgId,
+        entity_type: 'tenant_integrations',
+        entity_id: orgId,
+        action: 'config_update',
+        changes_json: updated,
+      });
+
+      // If primaryTrade was changed, automatically update organization's default invoice terms
+      if (updates.primaryTrade && TRADE_PRESETS_CONFIG[updates.primaryTrade]) {
+        const preset = TRADE_PRESETS_CONFIG[updates.primaryTrade];
+        await supabase
+          .from('organizations')
+          .update({
+            invoice_terms: preset.defaultTerms,
+          })
+          .eq('id', orgId);
+      }
+    } catch (err: any) {
+      console.error('TenantIntegrationService persistence error:', err);
+      // Even if DB has a momentary blip, memory cache holds the updated state
+    }
 
     return updated;
   }

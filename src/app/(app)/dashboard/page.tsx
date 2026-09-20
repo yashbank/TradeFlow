@@ -2,6 +2,7 @@ import React from 'react';
 import { DashboardService } from '@/services/DashboardService';
 import { AuthService } from '@/services/AuthService';
 import { JobService } from '@/services/JobService';
+import { TenantIntegrationService } from '@/services/TenantIntegrationService';
 import { DashboardClientView } from '@/components/dashboard/DashboardClientView';
 import { redirect } from 'next/navigation';
 
@@ -13,7 +14,7 @@ export default async function DashboardPage() {
 
   const isTechnician = context.role === 'technician';
 
-  const [metrics, activity, jobsRes, teamMembers] = await Promise.all([
+  const [metrics, activity, jobsRes, teamMembers, tenantConfig] = await Promise.all([
     isTechnician
       ? Promise.resolve(null)
       : DashboardService.getMetrics().catch(() => ({
@@ -37,6 +38,7 @@ export default async function DashboardPage() {
       : DashboardService.getRecentActivity().catch(() => ({ recentJobs: [], recentQuotes: [] })),
     JobService.list().catch(() => ({ jobs: [], totalCount: 0 })),
     isTechnician ? Promise.resolve([]) : JobService.getTeamMembers().catch(() => []),
+    TenantIntegrationService.getIntegrations(context.organization.id).catch(() => null),
   ]);
 
   return (
@@ -49,6 +51,7 @@ export default async function DashboardPage() {
       user={context.user}
       organization={context.organization}
       role={context.role}
+      primaryTrade={tenantConfig?.primaryTrade || 'plumbing'}
     />
   );
 }

@@ -39,6 +39,7 @@ import {
   Clock,
 } from 'lucide-react';
 import type { UserProfile, Organization } from '@/types/database';
+import { type PrimaryTrade, TRADE_PRESETS_CONFIG } from '@/types/trades';
 import { FleetRadarMap } from './FleetRadarMap';
 
 interface OwnerPictorialDashboardProps {
@@ -53,6 +54,7 @@ interface OwnerPictorialDashboardProps {
   isAutoSyncing?: boolean;
   onToggleAutoSync?: () => void;
   onManualSync?: () => void;
+  primaryTrade?: PrimaryTrade;
 }
 
 
@@ -367,6 +369,7 @@ export function OwnerPictorialDashboard({
   isAutoSyncing = true,
   onToggleAutoSync,
   onManualSync,
+  primaryTrade = 'plumbing',
 }: OwnerPictorialDashboardProps) {
   const router = useRouter();
   const toast = useToast();
@@ -375,6 +378,7 @@ export function OwnerPictorialDashboard({
   const [isSeeding, setIsSeeding] = useState(false);
   const [dispatchTab, setDispatchTab] = useState<'all' | 'gantt' | 'radar'>('all');
 
+  const tradeConfig = TRADE_PRESETS_CONFIG[primaryTrade] || TRADE_PRESETS_CONFIG.plumbing;
   const safeMetrics = metrics || {};
 
   async function handleSeedDemoData() {
@@ -521,6 +525,18 @@ export function OwnerPictorialDashboard({
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             {organization?.name || 'TradeFlow Workspace'}
           </h1>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5">
+            <Badge
+              variant="outline"
+              className="text-xs px-2.5 py-0.5 font-bold border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300 flex items-center gap-1.5 shadow-2xs"
+            >
+              <Wrench className="w-3.5 h-3.5 text-sky-500" />
+              {tradeConfig.title} ({tradeConfig.badge})
+            </Badge>
+            <span className="text-xs text-slate-500 dark:text-zinc-400 hidden sm:inline">
+              {tradeConfig.description}
+            </span>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

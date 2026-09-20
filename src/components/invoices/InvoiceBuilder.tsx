@@ -44,39 +44,6 @@ interface LineItemState {
   taxable: boolean;
 }
 
-const PLUMBING_INVOICE_PRESETS = [
-  {
-    description: 'Standard Plumbing Service Diagnostic & Callout',
-    price: 95.0,
-    taxable: true,
-  },
-  {
-    description: 'Emergency Pipe Leak Repair & Section Replacement',
-    price: 275.0,
-    taxable: true,
-  },
-  {
-    description: 'Motorized Main Line Drain Cleanout & Snaking',
-    price: 185.0,
-    taxable: false, // Labor often non-taxable depending on state
-  },
-  {
-    description: 'Water Heater Heating Element & Thermostat Swap',
-    price: 320.0,
-    taxable: true,
-  },
-  {
-    description: 'Bathroom Faucet Replacement & Supply Line Hookup',
-    price: 210.0,
-    taxable: true,
-  },
-  {
-    description: 'Toilet Rebuild (Fluidmaster Valve, Flapper, Bolts)',
-    price: 165.0,
-    taxable: true,
-  },
-];
-
 export function InvoiceBuilder({
   customers,
   defaultCustomerId,
@@ -90,6 +57,9 @@ export function InvoiceBuilder({
   const router = useRouter();
   const toast = useToast();
   const [selectedTrade, setSelectedTrade] = useState<PrimaryTrade>(primaryTrade);
+  const tradeConfig = TRADE_PRESETS_CONFIG[primaryTrade] || TRADE_PRESETS_CONFIG.plumbing;
+  const initialPreset = tradeConfig.invoicePresets[0];
+
   const [customerId, setCustomerId] = useState(
     defaultCustomerId || (customers[0]?.id || '')
   );
@@ -102,7 +72,7 @@ export function InvoiceBuilder({
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [notes, setNotes] = useState('Thank you for choosing our services!');
   const [terms, setTerms] = useState(
-    defaultTerms || 'Payment due within 14 days of invoice date. Late fees apply after due date.'
+    defaultTerms || tradeConfig.defaultTerms
   );
   const [sourceJobId, setSourceJobId] = useState<string | null>(null);
   const [sourceQuoteId, setSourceQuoteId] = useState<string | null>(null);
@@ -112,10 +82,10 @@ export function InvoiceBuilder({
   const [items, setItems] = useState<LineItemState[]>([
     {
       id: 'item-1',
-      description: 'Plumbing Service Call & Repair Labor',
+      description: initialPreset?.description || 'Diagnostic & Service Callout',
       quantity: 1,
-      unitPrice: 150.0,
-      taxable: true,
+      unitPrice: initialPreset?.price || 150.0,
+      taxable: initialPreset?.taxable ?? true,
     },
   ]);
 

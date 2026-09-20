@@ -12,12 +12,15 @@ import { Plus, Trash2, Sparkles, Send, Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/lib/toast/ToastContext';
 import type { Customer, SupportedCurrency } from '@/types/database';
+import { type PrimaryTrade, TRADE_PRESETS_CONFIG } from '@/types/trades';
 
 interface QuoteBuilderProps {
   customers: Customer[];
   defaultCustomerId?: string;
   taxRateBasisPoints: number;
   currency: SupportedCurrency;
+  primaryTrade?: PrimaryTrade;
+  defaultTerms?: string;
 }
 
 interface LineItemState {
@@ -33,27 +36,35 @@ export function QuoteBuilder({
   defaultCustomerId,
   taxRateBasisPoints,
   currency,
+  primaryTrade = 'plumbing',
+  defaultTerms,
 }: QuoteBuilderProps) {
   const router = useRouter();
   const toast = useToast();
+  const [selectedTrade, setSelectedTrade] = useState<PrimaryTrade>(primaryTrade);
+  const tradeConfig = TRADE_PRESETS_CONFIG[selectedTrade] || TRADE_PRESETS_CONFIG.plumbing;
+
   const [customerId, setCustomerId] = useState(defaultCustomerId || (customers[0]?.id || ''));
   const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0]);
   const [expiryDate, setExpiryDate] = useState(
     new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
   const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [notes, setNotes] = useState('Includes 1-year labor warranty.');
-  const [terms, setTerms] = useState('Payment due upon completion of plumbing service.');
+  const [notes, setNotes] = useState('Includes 1-year trade warranty.');
+  const [terms, setTerms] = useState(
+    defaultTerms || tradeConfig.defaultTerms
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const initialPreset = tradeConfig.invoicePresets[0];
   const [items, setItems] = useState<LineItemState[]>([
     {
       id: 'item-1',
-      description: 'Standard Service Call & Diagnostic Inspection',
+      description: initialPreset?.description || 'Standard Diagnostic & Inspection Callout',
       quantity: 1,
-      unitPrice: 95.0,
-      taxable: true,
+      unitPrice: initialPreset?.price || 95.0,
+      taxable: initialPreset?.taxable ?? true,
     },
   ]);
 
@@ -211,39 +222,48 @@ export function QuoteBuilder({
       </Card>
 
       {/* 1-Tap Quick Preset Buttons */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400 flex items-center mr-1">
-          <Sparkles className="w-3.5 h-3.5 mr-1 text-amber-500" />
-          Quick Presets:
-        </span>
-        <button
-          type="button"
-          onClick={() => addItem('50-Gallon Water Heater Supply & Installation', 1, 1650.0, true)}
-          className="text-xs bg-white dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-sky-400 dark:hover:border-sky-500 px-3 py-1.5 rounded-xl font-medium text-slate-700 dark:text-zinc-300 transition-colors shadow-2xs"
-        >
-          + Water Heater ($1,650)
-        </button>
-        <button
-          type="button"
-          onClick={() => addItem('Main Sewer Line Snaking & Clear Blockage', 1, 180.0, true)}
-          className="text-xs bg-white dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-sky-400 dark:hover:border-sky-500 px-3 py-1.5 rounded-xl font-medium text-slate-700 dark:text-zinc-300 transition-colors shadow-2xs"
-        >
-          + Drain Snaking ($180)
-        </button>
-        <button
-          type="button"
-          onClick={() => addItem('Garbage Disposal Replacement', 1, 280.0, true)}
-          className="text-xs bg-white dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-sky-400 dark:hover:border-sky-500 px-3 py-1.5 rounded-xl font-medium text-slate-700 dark:text-zinc-300 transition-colors shadow-2xs"
-        >
-          + Garbage Disposal ($280)
-        </button>
-        <button
-          type="button"
-          onClick={() => addItem('Plumbing Labor Service (Hourly)', 2, 110.0, true)}
-          className="text-xs bg-white dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-sky-400 dark:hover:border-sky-500 px-3 py-1.5 rounded-xl font-medium text-slate-700 dark:text-zinc-300 transition-colors shadow-2xs"
-        >
-          + Labor 2 hrs ($220)
-        </button>
+      <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400 flex items-center mr-1">
+            <Sparkles className="w-3.5 h-3.5 mr-1 text-amber-500" />
+            Quick Presets ({tradeConfig.title}):
+          </span>
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+            {(['plumbing', 'hvac', 'electrical', 'roofing', 'general'] as PrimaryTrade[]).map((tr) => (
+              <button
+                key={tr}
+                type="button"
+                onClick={() => {
+                  setSelectedTrade(tr);
+                  const nextConfig = TRADE_PRESETS_CONFIG[tr];
+                  if (nextConfig) {
+                    setTerms(nextConfig.defaultTerms);
+                  }
+                }}
+                className={`text-[11px] px-2.5 py-1 rounded-full font-semibold transition-all shrink-0 ${
+                  selectedTrade === tr
+                    ? 'bg-sky-600 text-white shadow-xs'
+                    : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-700'
+                }`}
+              >
+                {TRADE_PRESETS_CONFIG[tr].title.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {tradeConfig.invoicePresets.map((preset) => (
+            <button
+              key={preset.description}
+              type="button"
+              onClick={() => addItem(preset.description, 1, preset.price, preset.taxable)}
+              className="text-xs bg-white dark:bg-zinc-800/90 border border-slate-200 dark:border-zinc-700 hover:border-sky-400 dark:hover:border-sky-500 px-3 py-1.5 rounded-xl font-medium text-slate-700 dark:text-zinc-300 transition-colors shadow-2xs"
+            >
+              + {preset.description.slice(0, 36)}... ({formatCurrency(preset.price * 100, currency)})
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Line Items Table Builder */}

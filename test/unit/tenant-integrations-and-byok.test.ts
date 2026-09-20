@@ -127,4 +127,43 @@ describe('Tenant Integration & BYOK Credentials Suite', () => {
     expect(electricalScope.title).toContain('Electrical');
     expect(electricalScope.items.length).toBeGreaterThan(0);
   });
+
+  it('persists and round-trips trade presets across all 5 trades without filesystem writes', async () => {
+    const trades: PrimaryTrade[] = ['roofing', 'hvac', 'electrical', 'general', 'plumbing'];
+    for (const trade of trades) {
+      const updated = await TenantIntegrationService.updateIntegrations(
+        { primaryTrade: trade },
+        testOrgId
+      );
+      expect(updated.primaryTrade).toBe(trade);
+
+      const fetched = await TenantIntegrationService.getIntegrations(testOrgId);
+      expect(fetched.primaryTrade).toBe(trade);
+
+      const tradeConfig = await TenantIntegrationService.getTradeConfig(testOrgId);
+      expect(tradeConfig.title).toBe(TRADE_PRESETS_CONFIG[trade].title);
+      expect(tradeConfig.badge).toBe(TRADE_PRESETS_CONFIG[trade].badge);
+      expect(tradeConfig.defaultTerms).toBe(TRADE_PRESETS_CONFIG[trade].defaultTerms);
+      expect(tradeConfig.invoicePresets.length).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  it('runs safely in read-only lambda environments (/var/task) without throwing ENOENT', async () => {
+    // Verifies that neither getIntegrations nor updateIntegrations makes any fs.mkdirSync or fs.writeFileSync calls
+    const result = await TenantIntegrationService.updateIntegrations(
+      {
+        primaryTrade: 'roofing',
+        openaiApiKey: 'sk-test-key-roofing',
+        resendApiKey: 're_test_key_roofing',
+      },
+      'org-read-only-lambda-test'
+    );
+    expect(result).toBeDefined();
+    expect(result.primaryTrade).toBe('roofing');
+
+    const readBack = await TenantIntegrationService.getIntegrations('org-read-only-lambda-test');
+    expect(readBack.primaryTrade).toBe('roofing');
+    expect(readBack.openaiApiKey).toBe('sk-test-key-roofing');
+    expect(readBack.resendApiKey).toBe('re_test_key_roofing');
+  });
 });

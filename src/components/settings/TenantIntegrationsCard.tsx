@@ -27,6 +27,7 @@ import {
   Loader2,
   Radio,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/lib/toast/ToastContext';
 import {
   getTenantIntegrationsAction,
@@ -40,6 +41,7 @@ import {
 } from '@/types/trades';
 
 export function TenantIntegrationsCard() {
+  const router = useRouter();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,7 +92,7 @@ export function TenantIntegrationsCard() {
     setTestingOpenAi(false);
     if (res.valid) {
       setOpenaiStatus('valid');
-      toast.success('OpenAI Connected', 'Valid API key verified with active quota.');
+      toast.success('OpenAI Connected', 'Valid API key verified with model endpoint.');
     } else {
       setOpenaiStatus('invalid');
       toast.error('Connection Failed', res.error || 'OpenAI verification failed.');
@@ -129,7 +131,13 @@ export function TenantIntegrationsCard() {
     setSaving(false);
 
     if (res.success) {
+      window.dispatchEvent(
+        new CustomEvent('tradeflow_preset_updated', {
+          detail: { trade: primaryTrade },
+        })
+      );
       toast.success('Integrations Saved', 'Custom client credentials and trade presets updated.');
+      router.refresh();
     } else {
       toast.error('Save Failed', res.error || 'Failed to save integrations.');
     }
@@ -193,8 +201,38 @@ export function TenantIntegrationsCard() {
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setPrimaryTrade(opt.id)}
-                  className={`p-3.5 rounded-2xl border text-left transition-all flex items-start gap-3 select-none ${
+                  onClick={async () => {
+                    setPrimaryTrade(opt.id);
+                    window.dispatchEvent(
+                      new CustomEvent('tradeflow_preset_updated', {
+                        detail: { trade: opt.id },
+                      })
+                    );
+                    try {
+                      const res = await updateTenantIntegrationsAction({
+                        primaryTrade: opt.id,
+                        openaiApiKey: openaiKey.trim() || null,
+                        resendApiKey: resendKey.trim() || null,
+                        resendFromEmail: resendFromEmail.trim() || null,
+                        stripePublishableKey: stripePubKey.trim() || null,
+                        stripeSecretKey: stripeSecKey.trim() || null,
+                        googlePlacesApiKey: googleKey.trim() || null,
+                        aiFeaturesEnabled: aiEnabled,
+                      });
+                      if (res.success) {
+                        toast.success(
+                          'Preset Switched',
+                          `Workspace primary trade updated to ${TRADE_PRESETS_CONFIG[opt.id].title}.`
+                        );
+                        router.refresh();
+                      } else {
+                        toast.error('Save Failed', res.error || 'Failed to update preset.');
+                      }
+                    } catch (err: any) {
+                      toast.error('Save Failed', err.message || 'Failed to update preset.');
+                    }
+                  }}
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex items-start gap-3 select-none cursor-pointer ${
                     isSelected
                       ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/30 shadow-md ring-1 ring-sky-500/50'
                       : 'border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-white/50 dark:bg-zinc-900/50'
