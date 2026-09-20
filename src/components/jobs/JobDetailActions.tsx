@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { updateJobStatusAction, convertJobToInvoiceAction, updateJobAction, deleteJobAction, assignJobTechnicianAction } from '@/actions/jobs';
-import { Play, CheckCircle, Receipt, X, Pencil, Clock, MapPin, Trash2, UserCheck, User } from 'lucide-react';
+import { Play, CheckCircle, Receipt, X, Pencil, Clock, MapPin, Trash2, UserCheck, User, Plus, PenTool, Sparkles, DollarSign } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/lib/toast/ToastContext';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { DeleteConfirmationModal } from '@/components/common/DeleteConfirmationModal';
+import { serializeTechnicianData, parseTechnicianData, type TechnicianBillItem, type TechnicianPhoto } from '@/lib/jobs/technicianData';
 import type { Job } from '@/types/database';
 
 interface JobDetailActionsProps {
@@ -24,10 +25,90 @@ export function JobDetailActions({ job, teamMembers = [] }: JobDetailActionsProp
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [internalNotes, setInternalNotes] = useState(job.internal_notes || '');
+  
+  // Technician Field Submissions
+  const initialTechData = useMemo(() => parseTechnicianData(job.internal_notes), [job.internal_notes]);
+  const [summaryNotes, setSummaryNotes] = useState(initialTechData.summaryNotes);
+  const [billItems, setBillItems] = useState<TechnicianBillItem[]>(initialTechData.billItems);
+  const [customerSignerName, setCustomerSignerName] = useState(initialTechData.customerSignerName || '');
+  const [customerSignature, setCustomerSignature] = useState(initialTechData.customerSignature || '');
+  const [photos, setPhotos] = useState<TechnicianPhoto[]>(initialTechData.photos || []);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [isUpdatingJob, setIsUpdatingJob] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function startDrawing(e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    setIsDrawing(true);
+    const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    ctx.beginPath();
+    ctx.moveTo(clientX - rect.left, clientY - rect.top);
+  }
+
+  function draw(e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    ctx.lineTo(clientX - rect.left, clientY - rect.top);
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  function stopDrawing() {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+    if (canvasRef.current) {
+      setCustomerSignature(canvasRef.current.toDataURL());
+    }
+  }
+
+  function clearSignature() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setCustomerSignature('');
+  }
+
+  function addBillItem(desc = '', qty = 1, price = 0, taxable = true) {
+    setBillItems((prev) => [
+      ...prev,
+      {
+        id: `tech-item-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        description: desc,
+        quantity: qty,
+        unitPrice: price,
+        taxable,
+      },
+    ]);
+  }
+
+  function removeBillItem(id: string) {
+    setBillItems((prev) => prev.filter((it) => it.id !== id));
+  }
+
+  function updateBillItem(id: string, field: keyof TechnicianBillItem, value: any) {
+    setBillItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, [field]: value } : it))
+    );
+  }
 
   async function handleDeleteJob() {
     const res = await deleteJobAction(job.id);
@@ -67,13 +148,22 @@ export function JobDetailActions({ job, teamMembers = [] }: JobDetailActionsProp
   async function handleComplete() {
     setLoading(true);
     setError(null);
-    const res = await updateJobStatusAction(job.id, 'completed', internalNotes.trim());
+    const serializedNotes = serializeTechnicianData({
+      summaryNotes: summaryNotes.trim(),
+      customerSignerName: customerSignerName.trim() || undefined,
+      customerSignature: customerSignature || undefined,
+      signedAt: customerSignature || customerSignerName ? new Date().toISOString() : undefined,
+      photos,
+      billItems,
+    });
+
+    const res = await updateJobStatusAction(job.id, 'completed', serializedNotes);
     setLoading(false);
     if (!res.success) {
       setError(res.error || 'Failed to complete job');
       toast.error('Completion Failed', res.error || 'Failed to complete job');
     } else {
-      toast.success('Job Completed', `Work order #${job.job_number || ''} marked complete`);
+      toast.success('Job Completed', `Work order #${job.job_number || ''} marked complete with field additions`);
       setShowCompleteModal(false);
       router.refresh();
     }
@@ -261,10 +351,18 @@ export function JobDetailActions({ job, teamMembers = [] }: JobDetailActionsProp
       </div>
 
       {showCompleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <Card className="w-full max-w-md dark:bg-zinc-900 dark:border-zinc-800">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
-              <CardTitle className="text-lg dark:text-zinc-100">Complete Job</CardTitle>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <Card className="w-full max-w-xl dark:bg-zinc-900 dark:border-zinc-800 max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800 sticky top-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                  <CheckCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-bold dark:text-zinc-100">Complete Work Order #{job.job_number}</CardTitle>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">Record technician notes, billable field items & customer signature</p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowCompleteModal(false)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
@@ -272,29 +370,202 @@ export function JobDetailActions({ job, teamMembers = [] }: JobDetailActionsProp
                 <X className="w-5 h-5" />
               </button>
             </CardHeader>
-            <CardContent className="space-y-3 pt-4">
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Mark this plumbing job completed. You can add internal notes or parts used before issuing the invoice.
-              </p>
+
+            <CardContent className="space-y-5 pt-4 flex-1">
+              {/* 1. Work Summary Notes */}
               <div>
-                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">
-                  Internal Completion Notes / Work Summary:
+                <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block mb-1">
+                  Technician Work Summary & Diagnostic Notes *
                 </label>
                 <textarea
                   rows={3}
-                  value={internalNotes}
-                  onChange={(e) => setInternalNotes(e.target.value)}
-                  placeholder="e.g. Replaced faulty pressure relief valve. Tested cold/hot pressure at 60 PSI."
-                  className="w-full text-xs rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 p-2.5 focus:ring-2 focus:ring-blue-500"
+                  value={summaryNotes}
+                  onChange={(e) => setSummaryNotes(e.target.value)}
+                  placeholder="e.g. Replaced faulty pressure relief valve and flushed line. Verified pressure at 60 PSI."
+                  className="w-full text-xs rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 p-3 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
+
+              {/* 2. Billable Field Items & Extra Labor */}
+              <div className="border border-slate-200 dark:border-zinc-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-zinc-800/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-xs font-bold text-slate-900 dark:text-zinc-100">
+                      Field Additions & Billable Items ({billItems.length})
+                    </span>
+                  </div>
+                  {billItems.length > 0 && (
+                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                      Subtotal: ${(billItems.reduce((acc, it) => acc + (it.quantity * it.unitPrice), 0)).toFixed(2)}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                  Add parts used or extra labor on-site. These automatically flow into the invoice when converted or imported!
+                </p>
+
+                {/* Quick Addition Preset Buttons */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => addBillItem('Standard Diagnostic & Service Callout', 1, 95.0, true)}
+                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Diagnostic ($95)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => addBillItem('Additional On-Site Labor Hour', 1, 110.0, false)}
+                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Extra Labor ($110)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => addBillItem('Emergency After-Hours Service Surcharge', 1, 150.0, true)}
+                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Emergency ($150)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => addBillItem('Replacement Brass Valve & Fitting', 1, 85.0, true)}
+                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Valve Part ($85)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => addBillItem('', 1, 0, true)}
+                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition-colors flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Custom Item
+                  </button>
+                </div>
+
+                {/* Items List */}
+                {billItems.length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    {billItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="p-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs"
+                      >
+                        <input
+                          type="text"
+                          value={item.description}
+                          onChange={(e) => updateBillItem(item.id, 'description', e.target.value)}
+                          placeholder="Item or Labor Description"
+                          className="flex-1 w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg p-1.5 text-xs text-slate-900 dark:text-zinc-100"
+                        />
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-slate-400">Qty:</span>
+                            <input
+                              type="number"
+                              min="0.25"
+                              step="0.25"
+                              value={item.quantity}
+                              onChange={(e) => updateBillItem(item.id, 'quantity', parseFloat(e.target.value) || 1)}
+                              className="w-14 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg p-1.5 text-xs text-slate-900 dark:text-zinc-100 text-center"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-slate-400">$</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={item.unitPrice}
+                              onChange={(e) => updateBillItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                              className="w-18 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg p-1.5 text-xs text-slate-900 dark:text-zinc-100 text-right font-medium"
+                            />
+                          </div>
+                          <label className="flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={item.taxable}
+                              onChange={(e) => updateBillItem(item.id, 'taxable', e.target.checked)}
+                              className="rounded text-emerald-600 focus:ring-emerald-500"
+                            />
+                            Tax
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => removeBillItem(item.id)}
+                            className="text-slate-400 hover:text-rose-500 p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Customer Signature on Glass */}
+              <div className="border border-slate-200 dark:border-zinc-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-zinc-800/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <PenTool className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                    <span className="text-xs font-bold text-slate-900 dark:text-zinc-100">
+                      Customer Sign-off on Glass (Digital Signature)
+                    </span>
+                  </div>
+                  {customerSignature && (
+                    <button
+                      type="button"
+                      onClick={clearSignature}
+                      className="text-[11px] font-bold text-rose-500 hover:underline"
+                    >
+                      Clear Signature
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 dark:text-zinc-400 block mb-1">
+                    Customer Full Name
+                  </label>
+                  <Input
+                    value={customerSignerName}
+                    onChange={(e) => setCustomerSignerName(e.target.value)}
+                    placeholder="e.g. Arya Yadav"
+                    className="min-h-[38px] text-xs"
+                  />
+                </div>
+
+                <div className="relative border border-slate-200 dark:border-zinc-700 rounded-xl overflow-hidden bg-white dark:bg-zinc-900">
+                  <canvas
+                    ref={canvasRef}
+                    width={480}
+                    height={120}
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={draw}
+                    onTouchEnd={stopDrawing}
+                    className="w-full h-[120px] touch-none cursor-crosshair"
+                  />
+                  {!customerSignature && !isDrawing && (
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-slate-400 dark:text-zinc-500 text-xs">
+                      Sign on line with finger or stylus ✍️
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardContent>
-            <CardFooter className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
-              <Button variant="outline" onClick={() => setShowCompleteModal(false)}>
+
+            <CardFooter className="flex justify-end gap-2 p-3 border-t border-slate-100 dark:border-zinc-800 sticky bottom-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md">
+              <Button variant="outline" onClick={() => setShowCompleteModal(false)} className="min-h-[44px]">
                 Cancel
               </Button>
-              <Button variant="success" onClick={handleComplete} disabled={loading}>
-                {loading ? 'Completing...' : 'Mark Completed'}
+              <Button variant="success" onClick={handleComplete} disabled={loading} className="min-h-[44px] font-bold">
+                {loading ? 'Completing...' : 'Mark Completed & Save Scope'}
               </Button>
             </CardFooter>
           </Card>

@@ -29,6 +29,7 @@ import {
   MapPin,
   CalendarCheck2,
   ChevronDown,
+  X,
 } from 'lucide-react';
 import { CompactControlsBar } from '@/components/ui/CompactControlsBar';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
@@ -42,11 +43,13 @@ export default function MarketingLandingPage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const [demoActiveTab, setDemoActiveTab] = useState<'dispatch' | 'radar' | 'signature' | 'billing'>('dispatch');
 
-  // Close menu on click outside
+  // Close menu on click outside only if menu was opened
   useEffect(() => {
     function handleClickOutside(event: MouseEvent | TouchEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (controlsOpen && menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setControlsOpen(false);
       }
     }
@@ -56,7 +59,7 @@ export default function MarketingLandingPage() {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, []);
+  }, [controlsOpen]);
 
   // IntersectionObserver for scroll-reveal effects
   useEffect(() => {
@@ -247,18 +250,176 @@ export default function MarketingLandingPage() {
             <span>TradeFlow — Same-Day Dispatch & Invoicing Engine</span>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 scroll-reveal w-full sm:w-auto relative z-20">
-            <Button asChild size="lg" className="rounded-full h-14 px-8 text-base bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto shadow-xl shadow-sky-500/30 transition-all hover:scale-105 active:scale-95 group font-bold min-h-[52px] touch-manipulation">
-              <Link href="/signup" className="flex items-center justify-center">
-                Start 14-Day Free Trial <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full h-14 px-8 text-base w-full sm:w-auto border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 font-bold min-h-[52px] touch-manipulation">
-              <a href="#simulator" className="flex items-center justify-center">
-                <Play className="mr-2 w-4 h-4 text-sky-500 fill-sky-500" /> Test Drive Simulator
-              </a>
-            </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 w-full sm:w-auto relative z-30">
+            <Link
+              id="hero-cta-trial"
+              href="/signup"
+              className="inline-flex items-center justify-center rounded-full h-14 px-8 text-base bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white w-full sm:w-auto shadow-xl shadow-sky-500/30 transition-all hover:scale-105 active:scale-95 group font-bold min-h-[52px] touch-manipulation cursor-pointer select-none"
+            >
+              Start 14-Day Free Trial
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+
+            <button
+              id="hero-cta-demo"
+              type="button"
+              onClick={() => setDemoModalOpen(true)}
+              className="inline-flex items-center justify-center rounded-full h-14 px-8 text-base w-full sm:w-auto border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 font-bold min-h-[52px] touch-manipulation cursor-pointer select-none"
+            >
+              <Play className="mr-2 w-4 h-4 text-sky-500 fill-sky-500" /> Watch Demo
+            </button>
           </div>
+
+          {/* Interactive Walkthrough Demo Tour Modal */}
+          {demoModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in">
+              <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative text-left">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-6">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs font-bold mb-1">
+                      <Sparkles className="w-3.5 h-3.5" /> Interactive Platform Walkthrough
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                      TradeFlow 4-Stage Operating System
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDemoModalOpen(false)}
+                    className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    aria-label="Close modal"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Tour Selector Tabs */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+                  {[
+                    { id: 'dispatch', label: '1. AI Dispatch', icon: Zap },
+                    { id: 'radar', label: '2. Fleet Radar', icon: Navigation },
+                    { id: 'signature', label: '3. Glass Sign', icon: CheckCircle2 },
+                    { id: 'billing', label: '4. Instant Bill', icon: Receipt },
+                  ].map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = demoActiveTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setDemoActiveTab(tab.id as any)}
+                        className={`p-3 rounded-2xl text-xs font-bold transition-all border flex items-center gap-2 ${
+                          isActive
+                            ? 'bg-sky-500/15 border-sky-500 text-sky-600 dark:text-sky-400 shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span className="truncate">{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Active Tour Panel */}
+                <div className="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 mb-6">
+                  {demoActiveTab === 'dispatch' && (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider">Module 1: Triage & Smart Dispatch</span>
+                        <Badge variant="default" className="text-[10px]">SLA Target &lt;8 Min</Badge>
+                      </div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                        Emergency Calls Auto-Triaged to Closest Available Technician
+                      </h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Incoming customer calls instantly parse location, trade discipline (Plumbing, HVAC, Electrical), and match against live van GPS coordinates to minimize drive time and eliminate idle van costs.
+                      </p>
+                    </div>
+                  )}
+
+                  {demoActiveTab === 'radar' && (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider">Module 2: Live Fleet Radar</span>
+                        <Badge variant="success" className="text-[10px]">99.4% On-Time</Badge>
+                      </div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                        Real-Time Telematics & Dynamic Route Optimization
+                      </h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Monitor van positions on high-contrast satellite radar. Dispatchers can drag-and-drop work orders onto Gantt timelines with automatic drive-time calculation and instant push alerts to mobile crew tablets.
+                      </p>
+                    </div>
+                  )}
+
+                  {demoActiveTab === 'signature' && (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider">Module 3: Field Verification</span>
+                        <Badge variant="default" className="text-[10px]">Zero Dispute Rate</Badge>
+                      </div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                        Customer Signature on Glass & Timestamped Proof of Repair
+                      </h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Technicians capture digital signatures directly on driveway tablets alongside before/after camera photos. Legally binding proof is permanently attached to the work order before departing the job site.
+                      </p>
+                    </div>
+                  )}
+
+                  {demoActiveTab === 'billing' && (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider">Module 4: Instant Settlement</span>
+                        <Badge variant="success" className="text-[10px]">Instant Payout</Badge>
+                      </div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                        Same-Day Card Invoicing & Vector PDF Generation
+                      </h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Work orders convert into professional vector PDF invoices with 1 tap. Customers receive live SMS/Email payment links with Apple Pay & Google Pay checkout, achieving same-day money in the bank.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Modal Footer Actions */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDemoModalOpen(false);
+                      const el = document.getElementById('simulator');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="inline-flex items-center text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400"
+                  >
+                    <Play className="w-3.5 h-3.5 mr-1.5 text-sky-500 fill-sky-500" />
+                    Jump to Interactive 4-Step Simulator
+                  </button>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setDemoModalOpen(false)}
+                      className="flex-1 sm:flex-initial min-h-[44px] text-xs font-bold"
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      asChild
+                      className="flex-1 sm:flex-initial min-h-[44px] bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs"
+                    >
+                      <Link href="/signup">Start Free Trial Now</Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Floating Glass Metric Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl stagger-group">

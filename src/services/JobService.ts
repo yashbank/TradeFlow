@@ -66,16 +66,42 @@ export class JobService {
       throw new Error(`Failed to list jobs: ${error.message}`);
     }
 
+    const jobsList = (data || []) as any[];
+    const jobIds = jobsList.map((j) => j.id);
+    let invoicesByJobId: Record<string, any> = {};
+
+    if (jobIds.length > 0) {
+      try {
+        const { data: invoicesData } = await supabase
+          .from('invoices')
+          .select('id, invoice_number, status, source_job_id, total_cents, amount_paid_cents, paid_at')
+          .in('source_job_id', jobIds);
+
+        if (invoicesData) {
+          invoicesData.forEach((inv: any) => {
+            if (inv.source_job_id) invoicesByJobId[inv.source_job_id] = inv;
+          });
+        }
+      } catch {
+        // Fall through
+      }
+    }
+
+    const enhancedJobs = jobsList.map((j) => ({
+      ...j,
+      linked_invoice: invoicesByJobId[j.id] || null,
+    }));
+
     return {
-      jobs: (data || []) as Job[],
+      jobs: enhancedJobs as Job[],
       totalCount: count || 0,
     };
   }
 
   /**
-   * Retrieves single job by ID.
+   * Retrieves single job by ID with customer, quote, and linked invoice.
    */
-  static async getById(jobId: string): Promise<Job | null> {
+  static async getById(jobId: string): Promise<any | null> {
     const { organization, user, role } = await AuthService.requireContext();
     const supabase = await createClient();
 
@@ -91,7 +117,22 @@ export class JobService {
 
     const { data, error } = await query.single();
     if (error || !data) return null;
-    return data as Job;
+
+    try {
+      const { data: invData } = await supabase
+        .from('invoices')
+        .select('id, invoice_number, status, total_cents, amount_paid_cents, paid_at')
+        .eq('source_job_id', jobId)
+        .maybeSingle();
+
+      if (invData) {
+        (data as any).linked_invoice = invData;
+      }
+    } catch {
+      // Fall through
+    }
+
+    return data;
   }
 
   /**

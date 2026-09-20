@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { QuoteDetailActions } from '@/components/quotes/QuoteDetailActions';
 import { WorkflowPipelineTracker } from '@/components/common/WorkflowPipelineTracker';
+import { LifecycleTraceabilityWidget } from '@/components/common/LifecycleTraceabilityWidget';
 import { formatCurrency, formatDate, formatDateTime, getAppBaseUrl } from '@/lib/utils';
 import { ArrowLeft, User, Phone, MapPin, Calendar, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -35,11 +36,12 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
         <QuoteDetailActions quote={quote} publicUrl={publicUrl} />
       </div>
 
-      {/* Lifecycle Pipeline Step Indicator */}
-      <WorkflowPipelineTracker
+      {/* End-to-End Lifecycle Pipeline Stepper */}
+      <LifecycleTraceabilityWidget
+        quote={quote}
+        job={(quote as any).linked_job}
+        invoice={(quote as any).linked_invoice}
         currentStage="quote"
-        quoteStatus={quote.status}
-        quoteId={quote.id}
       />
 
       {/* Quote Status Banner */}
@@ -137,7 +139,7 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
-                {(quote.items || []).map((item) => (
+                {(quote.items || []).map((item: any) => (
                   <tr key={item.id} className="text-slate-800 dark:text-zinc-200">
                     <td className="py-3 font-medium">{item.description}</td>
                     <td className="py-3 text-center">{item.quantity}</td>

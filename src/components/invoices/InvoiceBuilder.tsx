@@ -23,6 +23,7 @@ import {
 import { useToast } from '@/lib/toast/ToastContext';
 import type { Customer, SupportedCurrency } from '@/types/database';
 import { type PrimaryTrade, TRADE_PRESETS_CONFIG } from '@/types/trades';
+import { parseTechnicianData } from '@/lib/jobs/technicianData';
 
 interface InvoiceBuilderProps {
   customers: Customer[];
@@ -163,8 +164,11 @@ export function InvoiceBuilder({
       setCustomerId(job.customer_id);
     }
 
-    // Case 1: Job has originating quote items attached
+    // Parse any technician field data (billable items, signature, summary notes)
+    const techData = parseTechnicianData(job.internal_notes);
     const quoteItems = job.source_quote?.items;
+
+    // Case 1: Job has originating quote items attached
     if (quoteItems && Array.isArray(quoteItems) && quoteItems.length > 0) {
       const importedLines: LineItemState[] = quoteItems.map((it: any, idx: number) => ({
         id: `job-quote-item-${idx}-${Date.now()}`,
@@ -173,22 +177,74 @@ export function InvoiceBuilder({
         unitPrice: (it.unit_price_cents || 0) / 100,
         taxable: Boolean(it.taxable),
       }));
+
+      // Append technician field billables if present
+      let techItemsCount = 0;
+      if (techData.billItems && techData.billItems.length > 0) {
+        techData.billItems.forEach((it, idx) => {
+          importedLines.push({
+            id: `job-tech-field-${idx}-${Date.now()}`,
+            description: `${it.description} (Field Addition)`,
+            quantity: it.quantity,
+            unitPrice: it.unitPrice,
+            taxable: it.taxable,
+          });
+          techItemsCount++;
+        });
+      }
+
       setItems(importedLines);
 
       if (job.source_quote?.discount_cents) {
         setDiscountAmount(job.source_quote.discount_cents / 100);
       }
-      if (job.source_quote?.notes || job.internal_notes) {
-        setNotes(job.source_quote?.notes || job.internal_notes || '');
+
+      const noteParts: string[] = [];
+      if (job.source_quote?.notes) noteParts.push(job.source_quote.notes);
+      if (techData.summaryNotes) noteParts.push(`Technician Field Summary: ${techData.summaryNotes}`);
+      if (techData.customerSignerName) {
+        noteParts.push(`Customer Sign-off: Signed on glass by ${techData.customerSignerName}${techData.signedAt ? ` (${techData.signedAt})` : ''}`);
       }
+      if (noteParts.length > 0) {
+        setNotes(noteParts.join('\n'));
+      }
+
       toast.success(
-        'Job & Quote Scope Imported',
-        `Imported ${importedLines.length} item(s) from Work Order #${job.job_number}.`
+        'Job & Scope Imported',
+        `Imported ${quoteItems.length} quote item(s)${techItemsCount > 0 ? ` + ${techItemsCount} technician field item(s)` : ''} from Work Order #${job.job_number}.`
       );
       return;
     }
 
-    // Case 2: Job description contains formatted bullet points
+    // Case 2: Standalone job with technician field billable items
+    if (techData.billItems && techData.billItems.length > 0) {
+      const importedLines: LineItemState[] = techData.billItems.map((it, idx) => ({
+        id: `job-tech-field-${idx}-${Date.now()}`,
+        description: it.description,
+        quantity: it.quantity,
+        unitPrice: it.unitPrice,
+        taxable: it.taxable,
+      }));
+      setItems(importedLines);
+
+      const noteParts: string[] = [];
+      if (techData.summaryNotes) noteParts.push(`Work Summary: ${techData.summaryNotes}`);
+      if (techData.customerSignerName) {
+        noteParts.push(`Customer Sign-off: Signed on glass by ${techData.customerSignerName}${techData.signedAt ? ` (${techData.signedAt})` : ''}`);
+      }
+      if (noteParts.length === 0 && job.description) {
+        noteParts.push(`Work completed for Order #${job.job_number}: ${job.title || ''}`);
+      }
+      setNotes(noteParts.join('\n'));
+
+      toast.success(
+        'Technician Scope Imported',
+        `Imported ${importedLines.length} technician field item(s) from Work Order #${job.job_number}.`
+      );
+      return;
+    }
+
+    // Case 3: Job description contains formatted bullet points
     if (job.description && (job.description.includes('•') || job.description.includes('\n- '))) {
       const lines = job.description.split('\n').filter((l: string) => l.trim().startsWith('•') || l.trim().startsWith('-'));
       if (lines.length > 0) {
@@ -218,7 +274,7 @@ export function InvoiceBuilder({
       }
     }
 
-    // Case 3: Standard single work order line with full description
+    // Case 4: Standard single work order line with full description
     const laborLine: LineItemState = {
       id: `job-${job.id}-labor`,
       description: `${job.title || 'Completed Trade Service'} — Order #${job.job_number}`,

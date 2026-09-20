@@ -65,16 +65,55 @@ export class QuoteService {
       throw new Error(`Failed to list quotes: ${error.message}`);
     }
 
+    const quotesList = data || [];
+    const quoteIds = quotesList.map((q: any) => q.id);
+    let jobsByQuoteId: Record<string, any> = {};
+    let invoicesByQuoteId: Record<string, any> = {};
+
+    if (quoteIds.length > 0) {
+      try {
+        const [jobsRes, invoicesRes] = await Promise.all([
+          supabase
+            .from('jobs')
+            .select('id, job_number, status, source_quote_id, completed_at')
+            .in('source_quote_id', quoteIds),
+          supabase
+            .from('invoices')
+            .select('id, invoice_number, status, source_quote_id, total_cents, amount_paid_cents, paid_at')
+            .in('source_quote_id', quoteIds),
+        ]);
+
+        if (jobsRes.data) {
+          jobsRes.data.forEach((j: any) => {
+            if (j.source_quote_id) jobsByQuoteId[j.source_quote_id] = j;
+          });
+        }
+        if (invoicesRes.data) {
+          invoicesRes.data.forEach((inv: any) => {
+            if (inv.source_quote_id) invoicesByQuoteId[inv.source_quote_id] = inv;
+          });
+        }
+      } catch {
+        // Fall through on optional relation errors
+      }
+    }
+
+    const enhancedQuotes = quotesList.map((q: any) => ({
+      ...q,
+      linked_job: jobsByQuoteId[q.id] || null,
+      linked_invoice: invoicesByQuoteId[q.id] || null,
+    }));
+
     return {
-      quotes: (data || []) as Quote[],
+      quotes: enhancedQuotes as any[],
       totalCount: count || 0,
     };
   }
 
   /**
-   * Retrieves single quote by ID with customer and items.
+   * Retrieves single quote by ID with customer, items, and linked workflow entities.
    */
-  static async getById(quoteId: string): Promise<Quote | null> {
+  static async getById(quoteId: string): Promise<any | null> {
     const { organization } = await AuthService.requireContext();
     const supabase = await createClient();
 
@@ -86,7 +125,42 @@ export class QuoteService {
       .single();
 
     if (error || !data) return null;
-    return data as Quote;
+
+    let linkedJob = null;
+    let linkedInvoice = null;
+
+    try {
+      const [jobRes, invRes] = await Promise.all([
+        supabase
+          .from('jobs')
+          .select('id, job_number, status, completed_at, assigned_to:user_profiles!assigned_to_user_id(full_name)')
+          .eq('source_quote_id', quoteId)
+          .maybeSingle(),
+        supabase
+          .from('invoices')
+          .select('id, invoice_number, status, total_cents, amount_paid_cents, paid_at')
+          .eq('source_quote_id', quoteId)
+          .maybeSingle(),
+      ]);
+
+      if (jobRes.data) {
+        linkedJob = {
+          ...jobRes.data,
+          assigned_to_name: (jobRes.data as any)?.assigned_to?.full_name || null,
+        };
+      }
+      if (invRes.data) {
+        linkedInvoice = invRes.data;
+      }
+    } catch {
+      // Fall through
+    }
+
+    return {
+      ...data,
+      linked_job: linkedJob,
+      linked_invoice: linkedInvoice,
+    };
   }
 
   /**
@@ -472,7 +546,7 @@ export class QuoteService {
 
     // Concatenate items into scope description
     const scopeDesc = quote.items && quote.items.length > 0
-      ? quote.items.map((i) => `• ${i.description} (Qty: ${i.quantity})`).join('\n')
+      ? quote.items.map((i: any) => `• ${i.description} (Qty: ${i.quantity})`).join('\n')
       : 'Plumbing work as per Quote ' + quote.quote_number;
 
     const { data: job, error: jobError } = await supabase

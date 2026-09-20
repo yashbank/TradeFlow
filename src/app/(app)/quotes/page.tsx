@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, ChevronRight, FileText } from 'lucide-react';
 import { ListSearchBar } from '@/components/common/ListSearchBar';
+import { LifecycleTraceabilityWidget } from '@/components/common/LifecycleTraceabilityWidget';
 import type { QuoteStatus } from '@/types/database';
 
 interface QuotesPageProps {
@@ -117,6 +118,17 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
                     <p className="text-xs text-slate-400 dark:text-zinc-500">
                       Issued {formatDate(quote.issue_date)} • Valid until {formatDate(quote.expiry_date)}
                     </p>
+
+                    {/* End-to-End Lifecycle Traceability Pill Stepper */}
+                    <div className="pt-2">
+                      <LifecycleTraceabilityWidget
+                        quote={quote}
+                        job={(quote as any).linked_job}
+                        invoice={(quote as any).linked_invoice}
+                        currentStage="quote"
+                        compact
+                      />
+                    </div>
                   </div>
 
                   <div className="flex items-center space-x-3 shrink-0">

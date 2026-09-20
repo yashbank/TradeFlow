@@ -9,6 +9,7 @@ import { calculateDocumentTotals } from '@/lib/finance/calculator';
 import { transitionInvoiceStatus } from '@/lib/state/machines';
 import type { CreateInvoiceInput, RecordPaymentInput } from '@/lib/validations/invoice';
 import type { Invoice, InvoiceStatus } from '@/types/database';
+import { parseTechnicianData } from '@/lib/jobs/technicianData';
 import crypto from 'crypto';
 
 export class InvoiceService {
@@ -64,8 +65,27 @@ export class InvoiceService {
       throw new Error(`Failed to list invoices: ${error.message}`);
     }
 
+    const invoices = (data || []) as any[];
+    const jobIds = Array.from(new Set(invoices.map((inv) => inv.source_job_id).filter(Boolean)));
+
+    if (jobIds.length > 0) {
+      const { data: jobsData } = await supabase
+        .from('jobs')
+        .select('id, job_number, status, title, completed_at, quote_id')
+        .in('id', jobIds);
+
+      if (jobsData && jobsData.length > 0) {
+        const jobMap = new Map(jobsData.map((j: any) => [j.id, j]));
+        invoices.forEach((inv) => {
+          if (inv.source_job_id && jobMap.has(inv.source_job_id)) {
+            inv.linked_job = jobMap.get(inv.source_job_id);
+          }
+        });
+      }
+    }
+
     return {
-      invoices: (data || []) as Invoice[],
+      invoices: invoices as Invoice[],
       totalCount: count || 0,
     };
   }
@@ -85,7 +105,52 @@ export class InvoiceService {
       .single();
 
     if (error || !data) return null;
-    return data as Invoice;
+
+    let linkedJob = null;
+    let linkedQuote = null;
+
+    try {
+      const promises: Promise<any>[] = [];
+      if (data.source_job_id) {
+        promises.push(
+          Promise.resolve(
+            supabase
+              .from('jobs')
+              .select('id, job_number, status, completed_at')
+              .eq('id', data.source_job_id)
+              .maybeSingle()
+          )
+        );
+      } else {
+        promises.push(Promise.resolve({ data: null }));
+      }
+
+      if (data.source_quote_id) {
+        promises.push(
+          Promise.resolve(
+            supabase
+              .from('quotes')
+              .select('id, quote_number, status, accepted_at, total_cents')
+              .eq('id', data.source_quote_id)
+              .maybeSingle()
+          )
+        );
+      } else {
+        promises.push(Promise.resolve({ data: null }));
+      }
+
+      const [jRes, qRes] = await Promise.all(promises);
+      if (jRes?.data) linkedJob = jRes.data;
+      if (qRes?.data) linkedQuote = qRes.data;
+    } catch {
+      // Fall through
+    }
+
+    return {
+      ...data,
+      linked_job: linkedJob,
+      linked_quote: linkedQuote,
+    } as any;
   }
 
   /**
@@ -192,15 +257,15 @@ export class InvoiceService {
       return existingInvoice as Invoice;
     }
 
-    // Build Line Items: pull from source quote if linked, otherwise default
-    let lineItems = [
-      {
-        description: job.title || 'Plumbing Service Completed',
-        quantity: 1,
-        unitPriceCents: 15000, // $150 default service fee
-        taxable: true,
-      },
-    ];
+    // Parse technician field submissions (billable items, signature, summary notes)
+    const techData = parseTechnicianData(job.internal_notes);
+
+    let lineItems: Array<{
+      description: string;
+      quantity: number;
+      unitPriceCents: number;
+      taxable: boolean;
+    }> = [];
 
     let discountCents = 0;
 
@@ -220,6 +285,18 @@ export class InvoiceService {
         }));
       }
 
+      // Append any additional parts or labor added by technician on site
+      if (techData.billItems && techData.billItems.length > 0) {
+        techData.billItems.forEach((it) => {
+          lineItems.push({
+            description: `${it.description} (Field Addition)`,
+            quantity: it.quantity,
+            unitPriceCents: Math.round(it.unitPrice * 100),
+            taxable: it.taxable,
+          });
+        });
+      }
+
       const { data: sourceQuote } = await supabase
         .from('quotes')
         .select('discount_cents')
@@ -229,6 +306,37 @@ export class InvoiceService {
       if (sourceQuote) {
         discountCents = Number(sourceQuote.discount_cents) || 0;
       }
+    } else {
+      // Standalone Job conversion
+      if (techData.billItems && techData.billItems.length > 0) {
+        lineItems = techData.billItems.map((it) => ({
+          description: it.description,
+          quantity: it.quantity,
+          unitPriceCents: Math.round(it.unitPrice * 100),
+          taxable: it.taxable,
+        }));
+      } else {
+        lineItems = [
+          {
+            description: job.title || 'Completed Trade Service',
+            quantity: 1,
+            unitPriceCents: 15000, // $150 standard diagnostic & service fee
+            taxable: true,
+          },
+        ];
+      }
+    }
+
+    // Build comprehensive invoice notes preserving technician summary and signoff
+    const notesParts: string[] = [];
+    if (techData.summaryNotes) {
+      notesParts.push(`Work Completed: ${techData.summaryNotes}`);
+    }
+    if (techData.customerSignerName) {
+      notesParts.push(`Customer Sign-off: Signed on glass by ${techData.customerSignerName}${techData.signedAt ? ` (${techData.signedAt})` : ''}`);
+    }
+    if (notesParts.length === 0 && job.description) {
+      notesParts.push(`Service completed for Work Order #${job.job_number}: ${job.title}`);
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
@@ -241,7 +349,7 @@ export class InvoiceService {
       issue_date: todayStr,
       due_date: dueDate,
       discount_cents: discountCents,
-      notes: job.internal_notes || null,
+      notes: notesParts.length > 0 ? notesParts.join('\n') : null,
       items: lineItems.map((item) => ({
         description: item.description,
         quantity: item.quantity,

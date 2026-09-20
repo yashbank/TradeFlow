@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { Receipt, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ListSearchBar } from '@/components/common/ListSearchBar';
+import { LifecycleTraceabilityWidget } from '@/components/common/LifecycleTraceabilityWidget';
 import type { InvoiceStatus } from '@/types/database';
 
 interface InvoicesPageProps {
@@ -101,50 +102,62 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
           invoices.map((inv) => (
             <Link key={inv.id} href={`/invoices/${inv.id}`} className="block">
               <Card className="card-hover-tactile hover:border-blue-400 dark:hover:border-blue-500 transition-all">
-                <CardContent className="p-4 sm:p-5 flex items-center justify-between gap-4">
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 dark:text-zinc-100 text-base">{inv.invoice_number}</span>
-                      <Badge
-                        variant={
-                          inv.status === 'paid'
-                            ? 'success'
-                            : inv.status === 'overdue'
-                            ? 'destructive'
-                            : inv.status === 'sent'
-                            ? 'default'
-                            : 'secondary'
-                        }
-                      >
-                        {inv.status}
-                      </Badge>
+                <CardContent className="p-4 sm:p-5 flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900 dark:text-zinc-100 text-base">{inv.invoice_number}</span>
+                        <Badge
+                          variant={
+                            inv.status === 'paid'
+                              ? 'success'
+                              : inv.status === 'overdue'
+                              ? 'destructive'
+                              : inv.status === 'sent'
+                              ? 'default'
+                              : 'secondary'
+                          }
+                        >
+                          {inv.status}
+                        </Badge>
+                      </div>
+
+                      <p className="text-sm font-bold text-slate-800 dark:text-zinc-200 truncate">
+                        {inv.customer?.first_name} {inv.customer?.last_name}
+                      </p>
+
+                      <p className="text-xs text-slate-400 dark:text-zinc-500">
+                        Issued {formatDate(inv.issue_date)} • Due {formatDate(inv.due_date)}
+                      </p>
                     </div>
 
-                    <p className="text-sm font-bold text-slate-800 dark:text-zinc-200 truncate">
-                      {inv.customer?.first_name} {inv.customer?.last_name}
-                    </p>
-
-                    <p className="text-xs text-slate-400 dark:text-zinc-500">
-                      Issued {formatDate(inv.issue_date)} • Due {formatDate(inv.due_date)}
-                    </p>
+                    <div className="flex items-center space-x-3 shrink-0">
+                      <div className="text-right">
+                        <span className="text-base font-black text-slate-900 dark:text-zinc-100 block">
+                          {formatCurrency(inv.total_cents)}
+                        </span>
+                        {inv.balance_due_cents > 0 ? (
+                          <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold block">
+                            Due: {formatCurrency(inv.balance_due_cents)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold block">
+                            Paid in Full
+                          </span>
+                        )}
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-slate-300 dark:text-zinc-600 shrink-0" />
+                    </div>
                   </div>
 
-                  <div className="flex items-center space-x-3 shrink-0">
-                    <div className="text-right">
-                      <span className="text-base font-black text-slate-900 dark:text-zinc-100 block">
-                        {formatCurrency(inv.total_cents)}
-                      </span>
-                      {inv.balance_due_cents > 0 ? (
-                        <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold block">
-                          Due: {formatCurrency(inv.balance_due_cents)}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold block">
-                          Paid in Full
-                        </span>
-                      )}
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-slate-300 dark:text-zinc-600 shrink-0" />
+                  {/* 4-Stage Traceability Strip */}
+                  <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/80">
+                    <LifecycleTraceabilityWidget
+                      invoice={inv}
+                      job={(inv as any).linked_job}
+                      currentStage="invoice"
+                      compact
+                    />
                   </div>
                 </CardContent>
               </Card>
