@@ -18,6 +18,9 @@ dist/
 .env.test.local
 .env.production.local
 secret.txt
+config/tenants/*.json
+!config/tenants/.gitkeep
+
 
 # Debug logs
 npm-debug.log*

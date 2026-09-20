@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/lib/toast/ToastContext';
 import type { Customer, SupportedCurrency } from '@/types/database';
+import { type PrimaryTrade, TRADE_PRESETS_CONFIG } from '@/types/trades';
 
 interface InvoiceBuilderProps {
   customers: Customer[];
@@ -31,6 +32,7 @@ interface InvoiceBuilderProps {
   defaultTerms?: string | null;
   completedJobs?: any[];
   acceptedQuotes?: any[];
+  primaryTrade?: PrimaryTrade;
 }
 
 interface LineItemState {
@@ -82,9 +84,11 @@ export function InvoiceBuilder({
   defaultTerms,
   completedJobs = [],
   acceptedQuotes = [],
+  primaryTrade = 'plumbing',
 }: InvoiceBuilderProps) {
   const router = useRouter();
   const toast = useToast();
+  const [selectedTrade, setSelectedTrade] = useState<PrimaryTrade>(primaryTrade);
   const [customerId, setCustomerId] = useState(
     defaultCustomerId || (customers[0]?.id || '')
   );
@@ -430,22 +434,42 @@ export function InvoiceBuilder({
         </Card>
       )}
 
-      {/* Plumbing Service Presets */}
-      <Card className="border-blue-100 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20">
+      {/* Multi-Trade Service Presets */}
+      <Card className="border-sky-500/20 dark:border-sky-500/30 bg-sky-50/30 dark:bg-sky-950/20 shadow-sm">
         <CardContent className="p-4 sm:p-5 space-y-3">
-          <div className="flex items-center gap-2 text-blue-900 dark:text-blue-300 font-semibold text-sm">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <span>1-Click Add Plumbing Service Presets</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-zinc-100 font-bold text-sm">
+              <Sparkles className="w-4 h-4 text-sky-500" />
+              <span>1-Click Add Trade Service Presets</span>
+            </div>
+            {/* Trade Selector Tabs */}
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+              {(['plumbing', 'hvac', 'electrical', 'roofing', 'general'] as PrimaryTrade[]).map((tr) => (
+                <button
+                  key={tr}
+                  type="button"
+                  onClick={() => setSelectedTrade(tr)}
+                  className={`text-[11px] px-2.5 py-1 rounded-full font-semibold transition-all shrink-0 ${
+                    selectedTrade === tr
+                      ? 'bg-sky-600 text-white shadow-xs'
+                      : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-700'
+                  }`}
+                >
+                  {TRADE_PRESETS_CONFIG[tr].title.split(' ')[0]}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {PLUMBING_INVOICE_PRESETS.map((preset) => (
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            {(TRADE_PRESETS_CONFIG[selectedTrade]?.invoicePresets || []).map((preset) => (
               <button
                 key={preset.description}
                 type="button"
                 onClick={() => addItem(preset.description, 1, preset.price, preset.taxable)}
-                className="text-xs px-3 py-1.5 rounded-lg border bg-white dark:bg-zinc-800/90 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-zinc-800 font-medium transition-colors shadow-xs"
+                className="text-xs px-3 py-1.5 rounded-xl border bg-white dark:bg-zinc-800/90 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-50/50 dark:hover:bg-zinc-800 font-medium transition-colors shadow-2xs"
               >
-                + {preset.description.split('&')[0]} ({formatCurrency(preset.price * 100, currency)})
+                + {preset.description.slice(0, 38)}... ({formatCurrency(preset.price * 100, currency)})
               </button>
             ))}
           </div>

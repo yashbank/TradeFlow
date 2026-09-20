@@ -1,16 +1,23 @@
-// ==============================================================================
-// src/services/NotificationService.ts — Transactional Email Delivery via Resend & React Email
-// ==============================================================================
-
-import { resend } from '@/lib/resend';
+import { resend as defaultResend } from '@/lib/resend';
+import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import { QuoteSentEmail } from '@/emails/QuoteSentEmail';
 import { QuoteAcceptedEmail } from '@/emails/QuoteAcceptedEmail';
 import { InvoiceSentEmail } from '@/emails/InvoiceSentEmail';
 import { PaymentReceiptEmail } from '@/emails/PaymentReceiptEmail';
+import { TenantIntegrationService } from './TenantIntegrationService';
 
 export class NotificationService {
-  private static readonly FROM_EMAIL = process.env.EMAIL_FROM || 'TradeFlow <notifications@tradeflow.app>';
+  private static async getClientAndSender(orgId?: string): Promise<{ client: Resend | null; fromEmail: string }> {
+    const { apiKey, fromEmail } = await TenantIntegrationService.resolveResendCredentials(orgId);
+    if (!apiKey || apiKey.includes('dummy') || apiKey.includes('mock')) {
+      return { client: null, fromEmail };
+    }
+    return {
+      client: new Resend(apiKey),
+      fromEmail,
+    };
+  }
 
   /**
    * Dispatches Quote Sent email to the homeowner with a direct link to the approval portal.
@@ -22,8 +29,10 @@ export class NotificationService {
     quoteNumber: string;
     totalFormatted: string;
     publicUrl: string;
+    orgId?: string;
   }) {
-    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('dummy') || process.env.RESEND_API_KEY.includes('mock')) {
+    const { client, fromEmail } = await this.getClientAndSender(params.orgId);
+    if (!client) {
       console.log(`[Email Mock] Quote Email to ${params.customerEmail}: ${params.publicUrl}`);
       return { id: 'mock_quote_email_id' };
     }
@@ -39,8 +48,8 @@ export class NotificationService {
         })
       );
 
-      return await resend.emails.send({
-        from: this.FROM_EMAIL,
+      return await client.emails.send({
+        from: fromEmail,
         to: params.customerEmail,
         subject: `Quote ${params.quoteNumber} from ${params.businessName}`,
         html: emailHtml,
@@ -62,8 +71,10 @@ export class NotificationService {
     totalFormatted: string;
     signerName: string;
     jobConvertUrl: string;
+    orgId?: string;
   }) {
-    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('dummy') || process.env.RESEND_API_KEY.includes('mock')) {
+    const { client, fromEmail } = await this.getClientAndSender(params.orgId);
+    if (!client) {
       console.log(`[Email Mock] Quote Accepted notice to ${params.ownerEmail}`);
       return { id: 'mock_accepted_email_id' };
     }
@@ -80,8 +91,8 @@ export class NotificationService {
         })
       );
 
-      return await resend.emails.send({
-        from: this.FROM_EMAIL,
+      return await client.emails.send({
+        from: fromEmail,
         to: params.ownerEmail,
         subject: `🎉 Quote ${params.quoteNumber} Approved by ${params.customerName}!`,
         html: emailHtml,
@@ -103,8 +114,10 @@ export class NotificationService {
     totalFormatted: string;
     dueDate: string;
     publicUrl: string;
+    orgId?: string;
   }) {
-    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('dummy') || process.env.RESEND_API_KEY.includes('mock')) {
+    const { client, fromEmail } = await this.getClientAndSender(params.orgId);
+    if (!client) {
       console.log(`[Email Mock] Invoice Email to ${params.customerEmail}: ${params.publicUrl}`);
       return { id: 'mock_invoice_email_id' };
     }
@@ -121,8 +134,8 @@ export class NotificationService {
         })
       );
 
-      return await resend.emails.send({
-        from: this.FROM_EMAIL,
+      return await client.emails.send({
+        from: fromEmail,
         to: params.customerEmail,
         subject: `Invoice ${params.invoiceNumber} from ${params.businessName}`,
         html: emailHtml,
@@ -145,8 +158,10 @@ export class NotificationService {
     balanceDueFormatted: string;
     paymentMethod: string;
     referenceNumber?: string | null;
+    orgId?: string;
   }) {
-    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('dummy') || process.env.RESEND_API_KEY.includes('mock')) {
+    const { client, fromEmail } = await this.getClientAndSender(params.orgId);
+    if (!client) {
       console.log(`[Email Mock] Payment Receipt to ${params.customerEmail}: ${params.amountPaidFormatted}`);
       return { id: 'mock_receipt_email_id' };
     }
@@ -164,8 +179,8 @@ export class NotificationService {
         })
       );
 
-      return await resend.emails.send({
-        from: this.FROM_EMAIL,
+      return await client.emails.send({
+        from: fromEmail,
         to: params.customerEmail,
         subject: `Payment Receipt for ${params.invoiceNumber} - ${params.businessName}`,
         html: emailHtml,

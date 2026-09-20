@@ -27,6 +27,7 @@
     "@supabase/supabase-js": "^2.47.10",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
+    "pdfkit": "^0.20.1",
     "next": "^15.5.25",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

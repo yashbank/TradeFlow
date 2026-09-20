@@ -4,6 +4,11 @@
 
 import React from 'react';
 import { renderToBuffer } from '@react-pdf/renderer';
+// Explicitly import standard fonts so Next.js serverless NFT bundler includes them in Vercel functions
+// @ts-ignore
+import 'pdfkit/standard-fonts/Helvetica';
+// @ts-ignore
+import 'pdfkit/standard-fonts/HelveticaBold';
 import { QuotePdfDocument } from './QuotePdf';
 import { InvoicePdfDocument } from './InvoicePdf';
 import type { Quote, Invoice } from '@/types/database';
