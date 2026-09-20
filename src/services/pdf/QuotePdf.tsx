@@ -167,7 +167,7 @@ export function QuotePdfDocument({ quote, organization }: QuotePdfProps) {
             <Text style={styles.docMeta}>Quote #: {quote.quote_number}</Text>
             <Text style={styles.docMeta}>Date: {formatDate(quote.issue_date)}</Text>
             <Text style={styles.docMeta}>Valid Until: {formatDate(quote.expiry_date)}</Text>
-            <Text style={styles.docMeta}>Status: {quote.status.toUpperCase()}</Text>
+            <Text style={styles.docMeta}>Status: {(quote.status || 'draft').toUpperCase()}</Text>
           </View>
         </View>
 

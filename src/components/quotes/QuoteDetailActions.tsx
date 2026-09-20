@@ -81,10 +81,20 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
       const endpoint = quote.public_token
         ? `/api/quotes/${quote.id}/pdf?token=${quote.public_token}&download=1`
         : `/api/quotes/${quote.id}/pdf?download=1`;
+
+      const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.open(endpoint, '_blank');
+        toast.success('Quote Opened', 'PDF proposal opened in new tab for saving or sharing');
+        return;
+      }
+
       const res = await fetch(endpoint);
       if (!res.ok) {
         const errorText = await res.text().catch(() => '');
-        throw new Error(errorText || 'PDF generation failed');
+        // If programmatic blob fails, try window.open fallback
+        window.open(endpoint, '_blank');
+        return;
       }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -97,7 +107,10 @@ export function QuoteDetailActions({ quote, publicUrl }: QuoteDetailActionsProps
       window.URL.revokeObjectURL(url);
       toast.success('Quote Downloaded', 'PDF saved to your device');
     } catch (err: any) {
-      toast.error('Download Failed', getFriendlyErrorMessage(err));
+      const endpoint = quote.public_token
+        ? `/api/quotes/${quote.id}/pdf?token=${quote.public_token}&download=1`
+        : `/api/quotes/${quote.id}/pdf?download=1`;
+      window.open(endpoint, '_blank');
     } finally {
       setDownloading(false);
     }

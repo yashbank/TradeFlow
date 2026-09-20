@@ -53,10 +53,19 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
       const endpoint = invoice.public_token
         ? `/api/invoices/${invoice.id}/pdf?token=${invoice.public_token}&download=1`
         : `/api/invoices/${invoice.id}/pdf?download=1`;
+
+      const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.open(endpoint, '_blank');
+        toast.success('Invoice Opened', 'PDF invoice opened in new tab for saving or sharing');
+        return;
+      }
+
       const res = await fetch(endpoint);
       if (!res.ok) {
         const errorText = await res.text().catch(() => '');
-        throw new Error(errorText || 'PDF generation failed');
+        window.open(endpoint, '_blank');
+        return;
       }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -69,7 +78,10 @@ export function InvoiceDetailActions({ invoice, publicUrl }: InvoiceDetailAction
       window.URL.revokeObjectURL(url);
       toast.success('Invoice Downloaded', 'PDF saved to your device');
     } catch (err: any) {
-      toast.error('Download Failed', getFriendlyErrorMessage(err));
+      const endpoint = invoice.public_token
+        ? `/api/invoices/${invoice.id}/pdf?token=${invoice.public_token}&download=1`
+        : `/api/invoices/${invoice.id}/pdf?download=1`;
+      window.open(endpoint, '_blank');
     } finally {
       setDownloading(false);
     }

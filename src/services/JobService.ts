@@ -43,7 +43,7 @@ export class JobService {
 
     let query = supabase
       .from('jobs')
-      .select('*, customer:customers(*), assigned_to:users!jobs_assigned_to_user_id_fkey(*)', { count: 'exact' })
+      .select('*, customer:customers(*), assigned_to:users!jobs_assigned_to_user_id_fkey(*), source_quote:quotes(*, items:quote_items(*))', { count: 'exact' })
       .eq('organization_id', organization.id)
       .order('scheduled_start', { ascending: true, nullsFirst: false })
       .range(offset, offset + limit - 1);
@@ -81,7 +81,7 @@ export class JobService {
 
     let query = supabase
       .from('jobs')
-      .select('*, customer:customers(*), assigned_to:users!jobs_assigned_to_user_id_fkey(*)')
+      .select('*, customer:customers(*), assigned_to:users!jobs_assigned_to_user_id_fkey(*), source_quote:quotes(*, items:quote_items(*))')
       .eq('id', jobId)
       .eq('organization_id', organization.id);
 

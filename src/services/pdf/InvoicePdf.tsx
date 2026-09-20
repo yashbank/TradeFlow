@@ -207,7 +207,7 @@ export function InvoicePdfDocument({ invoice, organization }: InvoicePdfProps) {
                 <Text style={styles.paidStampText}>PAID IN FULL</Text>
               </View>
             ) : (
-              <Text style={styles.docMeta}>Status: {invoice.status.toUpperCase()}</Text>
+              <Text style={styles.docMeta}>Status: {(invoice.status || 'draft').toUpperCase()}</Text>
             )}
           </View>
         </View>

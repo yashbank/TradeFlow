@@ -7,7 +7,7 @@
     "priority": 1,
     "enabled": true,
     "targetDailyLeads": 15,
-    "lastRun": "2026-09-20T20:33:10.767Z",
+    "lastRun": "2026-09-20T21:23:32.334Z",
     "queryVariants": [
       "plumbing contractor Dallas TX",
       "residential plumber Dallas TX",
@@ -22,7 +22,7 @@
     "priority": 2,
     "enabled": true,
     "targetDailyLeads": 15,
-    "lastRun": null,
+    "lastRun": "2026-09-20T21:26:35.440Z",
     "queryVariants": [
       "plumbing contractor Austin TX",
       "residential plumber Austin TX",
@@ -52,7 +52,7 @@
     "priority": 4,
     "enabled": true,
     "targetDailyLeads": 15,
-    "lastRun": null,
+    "lastRun": "2026-09-20T21:26:33.273Z",
     "queryVariants": [
       "plumbing contractor Sydney NSW",
       "emergency plumber Sydney",

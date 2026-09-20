@@ -40,7 +40,23 @@ const sora = Sora({ subsets: ['latin'], weight: ['400', '600', '700', '800'] });
 export default function MarketingLandingPage() {
   const { t } = useTranslation();
   const heroRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
+
+  // Close menu on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setControlsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
 
   // IntersectionObserver for scroll-reveal effects
   useEffect(() => {
@@ -153,6 +169,7 @@ export default function MarketingLandingPage() {
 
           {/* Right: Corner Hover/Tap Menu Island */}
           <div
+            ref={menuRef}
             className="relative group/corner"
             onMouseEnter={() => setControlsOpen(true)}
             onMouseLeave={() => setControlsOpen(false)}
@@ -181,16 +198,12 @@ export default function MarketingLandingPage() {
               <div className="p-3.5 rounded-2xl glass-panel-elevated border border-slate-200/80 dark:border-white/10 shadow-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl flex flex-col gap-3 min-w-[250px]">
                 {/* Direct Action CTAs */}
                 <div className="flex items-center gap-2">
-                  <Link href="/login" className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full text-xs font-bold rounded-xl h-9">
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link href="/signup" className="flex-1">
-                    <Button size="sm" className="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-xl shadow-md shadow-sky-500/25 h-9">
-                      Start Trial
-                    </Button>
-                  </Link>
+                  <Button asChild variant="outline" size="sm" className="flex-1 text-xs font-bold rounded-xl h-9">
+                    <Link href="/login">Sign In</Link>
+                  </Button>
+                  <Button asChild size="sm" className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-xl shadow-md shadow-sky-500/25 h-9">
+                    <Link href="/signup">Start Trial</Link>
+                  </Button>
                 </div>
 
                 {/* Preferences: Currency, Language, Theme */}
@@ -234,17 +247,17 @@ export default function MarketingLandingPage() {
             <span>TradeFlow — Same-Day Dispatch & Invoicing Engine</span>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 scroll-reveal w-full sm:w-auto">
-            <Link href="/signup" className="w-full sm:w-auto">
-              <Button size="lg" className="rounded-full h-14 px-8 text-base bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto shadow-xl shadow-sky-500/30 transition-all hover:scale-105 active:scale-95 group font-bold">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 scroll-reveal w-full sm:w-auto relative z-20">
+            <Button asChild size="lg" className="rounded-full h-14 px-8 text-base bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto shadow-xl shadow-sky-500/30 transition-all hover:scale-105 active:scale-95 group font-bold min-h-[52px] touch-manipulation">
+              <Link href="/signup" className="flex items-center justify-center">
                 Start 14-Day Free Trial <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <a href="#simulator" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="rounded-full h-14 px-8 text-base w-full sm:w-auto border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 font-bold">
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="rounded-full h-14 px-8 text-base w-full sm:w-auto border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 font-bold min-h-[52px] touch-manipulation">
+              <a href="#simulator" className="flex items-center justify-center">
                 <Play className="mr-2 w-4 h-4 text-sky-500 fill-sky-500" /> Test Drive Simulator
-              </Button>
-            </a>
+              </a>
+            </Button>
           </div>
 
           {/* Floating Glass Metric Cards */}
@@ -711,17 +724,16 @@ export default function MarketingLandingPage() {
                   </div>
                 </div>
 
-                <Link href="/signup">
-                  <Button
-                    className={`w-full font-bold text-xs rounded-xl h-11 ${
-                      pkg.highlight
-                        ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-lg shadow-sky-500/25'
-                        : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800'
-                    }`}
-                  >
-                    {pkg.cta}
-                  </Button>
-                </Link>
+                <Button
+                  asChild
+                  className={`w-full font-bold text-xs rounded-xl h-11 min-h-[44px] touch-manipulation ${
+                    pkg.highlight
+                      ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-lg shadow-sky-500/25'
+                      : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800'
+                  }`}
+                >
+                  <Link href="/signup">{pkg.cta}</Link>
+                </Button>
               </div>
             ))}
           </div>
@@ -737,11 +749,11 @@ export default function MarketingLandingPage() {
           <p className="text-base text-slate-400 max-w-2xl mx-auto mb-8 font-normal">
             Join thousands of field technicians and owners who replaced chaotic whiteboards with TradeFlow.
           </p>
-          <Link href="/signup">
-            <Button size="lg" className="rounded-full h-14 px-10 text-base bg-sky-500 hover:bg-sky-400 text-slate-950 font-black shadow-2xl hover:scale-105 active:scale-95 transition-all">
+          <Button asChild size="lg" className="rounded-full h-14 px-10 text-base bg-sky-500 hover:bg-sky-400 text-slate-950 font-black shadow-2xl hover:scale-105 active:scale-95 transition-all min-h-[52px] touch-manipulation">
+            <Link href="/signup">
               Start 14-Day Full Access Trial →
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </section>
 

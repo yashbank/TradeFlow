@@ -95,10 +95,12 @@ export function InvoiceBuilder({
   const [issueDate, setIssueDate] = useState(today);
   const [dueDate, setDueDate] = useState(net14);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
-  const [notes, setNotes] = useState('Thank you for choosing our plumbing services!');
+  const [notes, setNotes] = useState('Thank you for choosing our services!');
   const [terms, setTerms] = useState(
     defaultTerms || 'Payment due within 14 days of invoice date. Late fees apply after due date.'
   );
+  const [sourceJobId, setSourceJobId] = useState<string | null>(null);
+  const [sourceQuoteId, setSourceQuoteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -149,15 +151,76 @@ export function InvoiceBuilder({
   }
 
   function handleImportFromJob(job: any) {
+    setSourceJobId(job.id);
+    if (job.source_quote_id) {
+      setSourceQuoteId(job.source_quote_id);
+    }
     if (job.customer_id) {
       setCustomerId(job.customer_id);
     }
+
+    // Case 1: Job has originating quote items attached
+    const quoteItems = job.source_quote?.items;
+    if (quoteItems && Array.isArray(quoteItems) && quoteItems.length > 0) {
+      const importedLines: LineItemState[] = quoteItems.map((it: any, idx: number) => ({
+        id: `job-quote-item-${idx}-${Date.now()}`,
+        description: it.description || 'Completed Service Work',
+        quantity: Number(it.quantity) || 1,
+        unitPrice: (it.unit_price_cents || 0) / 100,
+        taxable: Boolean(it.taxable),
+      }));
+      setItems(importedLines);
+
+      if (job.source_quote?.discount_cents) {
+        setDiscountAmount(job.source_quote.discount_cents / 100);
+      }
+      if (job.source_quote?.notes || job.internal_notes) {
+        setNotes(job.source_quote?.notes || job.internal_notes || '');
+      }
+      toast.success(
+        'Job & Quote Scope Imported',
+        `Imported ${importedLines.length} item(s) from Work Order #${job.job_number}.`
+      );
+      return;
+    }
+
+    // Case 2: Job description contains formatted bullet points
+    if (job.description && (job.description.includes('•') || job.description.includes('\n- '))) {
+      const lines = job.description.split('\n').filter((l: string) => l.trim().startsWith('•') || l.trim().startsWith('-'));
+      if (lines.length > 0) {
+        const parsedLines: LineItemState[] = lines.map((line: string, idx: number) => {
+          let clean = line.replace(/^[•\-]\s*/, '').trim();
+          let qty = 1;
+          const qtyMatch = clean.match(/\(Qty:\s*(\d+(?:\.\d+)?)\)/i);
+          if (qtyMatch) {
+            qty = parseFloat(qtyMatch[1]);
+            clean = clean.replace(/\(Qty:\s*\d+(?:\.\d+)?\)/i, '').trim();
+          }
+          return {
+            id: `job-bullet-${idx}-${Date.now()}`,
+            description: clean,
+            quantity: qty,
+            unitPrice: 120.0,
+            taxable: true,
+          };
+        });
+        setItems(parsedLines);
+        setNotes(`Work completed for Order #${job.job_number}: ${job.title || ''}`);
+        toast.success(
+          'Job Items Imported',
+          `Parsed ${parsedLines.length} scope item(s) from Order #${job.job_number}.`
+        );
+        return;
+      }
+    }
+
+    // Case 3: Standard single work order line with full description
     const laborLine: LineItemState = {
       id: `job-${job.id}-labor`,
-      description: `${job.title} — Completed Work Order #${job.job_number}`,
+      description: `${job.title || 'Completed Trade Service'} — Order #${job.job_number}`,
       quantity: 1,
-      unitPrice: 220.0,
-      taxable: false,
+      unitPrice: 180.0,
+      taxable: true,
     };
     setItems([laborLine]);
     if (job.description) {
@@ -167,13 +230,15 @@ export function InvoiceBuilder({
   }
 
   function handleImportFromQuote(quote: any) {
+    setSourceQuoteId(quote.id);
+    setSourceJobId(null);
     if (quote.customer_id) {
       setCustomerId(quote.customer_id);
     }
     if (quote.items && quote.items.length > 0) {
       const importedLines: LineItemState[] = quote.items.map((it: any, idx: number) => ({
         id: `quote-item-${idx}`,
-        description: it.description || 'Plumbing Service',
+        description: it.description || 'Service',
         quantity: Number(it.quantity) || 1,
         unitPrice: (it.unit_price_cents || 0) / 100,
         taxable: Boolean(it.taxable),
@@ -220,6 +285,8 @@ export function InvoiceBuilder({
 
     const payload = {
       customer_id: customerId,
+      source_job_id: sourceJobId || undefined,
+      source_quote_id: sourceQuoteId || undefined,
       issue_date: issueDate,
       due_date: dueDate,
       discount_cents: Math.round((Number(discountAmount) || 0) * 100),
