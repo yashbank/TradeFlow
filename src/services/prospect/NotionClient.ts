@@ -46,7 +46,7 @@ export class NotionClient {
 
       return results.map((page: any) => {
         const props = page.properties || {};
-        const titleArr = props['Business Name']?.title || [];
+        const titleArr = props['Business']?.title || props['Business Name']?.title || [];
         const businessName = titleArr.map((t: any) => t.plain_text).join('');
         const phone = props['Phone']?.phone_number || '';
         const website = props['Website']?.url || '';
@@ -70,32 +70,19 @@ export class NotionClient {
       return { success: false, error: 'NOTION_API_KEY or NOTION_DATABASE_ID is not configured.' };
     }
 
+    // Build adaptive properties payload matching database schema
     const properties: Record<string, any> = {
-      'Business Name': {
+      // Primary Title: supports both "Business" and "Business Name"
+      Business: {
         title: [
           {
             text: { content: prospect.businessName },
           },
         ],
       },
+      // Status property (standard Notion status type)
       Status: {
-        select: { name: 'New' },
-      },
-      Priority: {
-        select: { name: prospect.priority },
-      },
-      Score: {
-        number: prospect.score,
-      },
-      'Score Reason': {
-        rich_text: [
-          {
-            text: { content: prospect.scoreReasons },
-          },
-        ],
-      },
-      Source: {
-        select: { name: prospect.source || 'Google Places + Web' },
+        status: { name: 'New' },
       },
       City: {
         rich_text: [
@@ -104,25 +91,25 @@ export class NotionClient {
           },
         ],
       },
+      'Pain / Observation': {
+        rich_text: [
+          {
+            text: { content: `[Score: ${prospect.score}/100 | ${prospect.priority}] ${prospect.scoreReasons}` },
+          },
+        ],
+      },
+      Notes: {
+        rich_text: [
+          {
+            text: { content: `Address: ${prospect.formattedAddress} | Place ID: ${prospect.placeId}` },
+          },
+        ],
+      },
+      Source: {
+        select: { name: 'Unknown' },
+      },
       Country: {
-        select: { name: prospect.country },
-      },
-      'Formatted Address': {
-        rich_text: [
-          {
-            text: { content: prospect.formattedAddress },
-          },
-        ],
-      },
-      'Google Place ID': {
-        rich_text: [
-          {
-            text: { content: prospect.placeId },
-          },
-        ],
-      },
-      'Discovered Date': {
-        date: { start: prospect.discoveredAt.split('T')[0] },
+        select: { name: 'Unknown' },
       },
     };
 
@@ -137,7 +124,7 @@ export class NotionClient {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/pages`, {
+      let response = await fetch(`${this.baseUrl}/pages`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
@@ -149,6 +136,27 @@ export class NotionClient {
           properties,
         }),
       });
+
+      // Fallback: If title property was named "Business Name" instead of "Business"
+      if (!response.ok && response.status === 400) {
+        const fallbackProperties = { ...properties };
+        delete fallbackProperties['Business'];
+        fallbackProperties['Business Name'] = {
+          title: [{ text: { content: prospect.businessName } }],
+        };
+        response = await fetch(`${this.baseUrl}/pages`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Notion-Version': '2022-06-28',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            parent: { database_id: this.databaseId },
+            properties: fallbackProperties,
+          }),
+        });
+      }
 
       if (!response.ok) {
         const errText = await response.text();
