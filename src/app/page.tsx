@@ -599,7 +599,7 @@ export default function MarketingLandingPage() {
               ))}
             </div>
             <h2 className={`${sora.className} text-3xl sm:text-5xl font-black tracking-tight mb-4`}>
-              "We Cut 3 Hours Of Daily Chaos."
+              &ldquo;We Cut 3 Hours Of Daily Chaos.&rdquo;
             </h2>
             <p className="text-base text-slate-500 dark:text-slate-400">
               Hear from field service owners who retired their whiteboard dispatch boards.
@@ -629,7 +629,7 @@ export default function MarketingLandingPage() {
                 className="p-6 rounded-3xl bg-white/70 dark:bg-zinc-900/70 border border-slate-200/80 dark:border-zinc-800/80 backdrop-blur-md shadow-sm scroll-reveal flex flex-col justify-between"
               >
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic mb-6">
-                  "{t.quote}"
+                  &ldquo;{t.quote}&rdquo;
                 </p>
                 <div className="border-t border-slate-100 dark:border-zinc-800 pt-4">
                   <div className="font-bold text-xs text-slate-900 dark:text-white">{t.author}</div>

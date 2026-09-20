@@ -43,3 +43,6 @@ test-results/
 
 # Supabase CLI
 supabase/.temp/
+
+# Prospect Pipeline Logs
+implementation/prospect_runs/

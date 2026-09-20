@@ -12,6 +12,8 @@
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration",
     "test:e2e": "playwright test",
+    "prospect": "tsx scripts/run_prospect_pipeline.ts",
+    "prospect:dry-run": "tsx scripts/run_prospect_pipeline.ts --dry-run",
     "docker:build": "docker build -t tradeflow .",
     "docker:run": "docker run -p 3000:3000 --env-file .env.local tradeflow",
     "docker:up": "docker compose up --build -d",
@@ -43,6 +45,7 @@
     "eslint-config-next": "^15.5.25",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }

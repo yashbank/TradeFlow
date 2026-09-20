@@ -1,0 +1,62 @@
+[
+  {
+    "id": "market_us_tx_dallas",
+    "country": "US",
+    "state": "TX",
+    "city": "Dallas",
+    "priority": 1,
+    "enabled": true,
+    "targetDailyLeads": 15,
+    "lastRun": "2026-09-20T20:30:40.927Z",
+    "queryVariants": [
+      "plumbing contractor Dallas TX",
+      "residential plumber Dallas TX",
+      "emergency plumber Dallas TX"
+    ]
+  },
+  {
+    "id": "market_us_tx_austin",
+    "country": "US",
+    "state": "TX",
+    "city": "Austin",
+    "priority": 2,
+    "enabled": true,
+    "targetDailyLeads": 15,
+    "lastRun": null,
+    "queryVariants": [
+      "plumbing contractor Austin TX",
+      "residential plumber Austin TX",
+      "emergency plumber Austin TX"
+    ]
+  },
+  {
+    "id": "market_uk_eng_manchester",
+    "country": "UK",
+    "state": "Greater Manchester",
+    "city": "Manchester",
+    "priority": 3,
+    "enabled": true,
+    "targetDailyLeads": 15,
+    "lastRun": null,
+    "queryVariants": [
+      "plumbing contractor Manchester UK",
+      "emergency plumber Manchester UK",
+      "local plumber Manchester UK"
+    ]
+  },
+  {
+    "id": "market_au_nsw_sydney",
+    "country": "AU",
+    "state": "NSW",
+    "city": "Sydney",
+    "priority": 4,
+    "enabled": true,
+    "targetDailyLeads": 15,
+    "lastRun": null,
+    "queryVariants": [
+      "plumbing contractor Sydney NSW",
+      "emergency plumber Sydney",
+      "residential plumber Sydney"
+    ]
+  }
+]

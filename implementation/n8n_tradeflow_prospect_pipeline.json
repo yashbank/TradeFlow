@@ -1,0 +1,117 @@
+{
+  "name": "TradeFlow - Daily Prospecting & Notion CRM Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Daily 6AM Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const markets = [\n  { id: 'market_us_tx_dallas', country: 'US', state: 'TX', city: 'Dallas', priority: 1, target: 15, query: 'plumbing contractor Dallas TX' },\n  { id: 'market_us_tx_austin', country: 'US', state: 'TX', city: 'Austin', priority: 2, target: 15, query: 'residential plumber Austin TX' }\n];\nreturn markets.map(m => ({ json: m }));"
+      },
+      "name": "Load Next Market Queue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://places.googleapis.com/v1/places:searchText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Goog-Api-Key", "value": "={{ $env.GOOGLE_PLACES_API_KEY }}" },
+            { "name": "X-Goog-FieldMask", "value": "places.id,places.displayName,places.formattedAddress,places.types,places.businessStatus,places.nationalPhoneNumber,places.websiteUri" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "textQuery", "value": "={{ $json.query }}" },
+            { "name": "pageSize", "value": 20 }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Google Places Text Search (New)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const places = $json.places || [];\nconst market = $('Load Next Market Queue').item.json;\nconst out = [];\nfor (const p of places) {\n  if (p.businessStatus === 'CLOSED_PERMANENTLY' || p.businessStatus === 'CLOSED_TEMPORARILY') continue;\n  out.push({\n    json: {\n      placeId: p.id,\n      businessName: p.displayName?.text || 'Unknown Business',\n      formattedAddress: p.formattedAddress || '',\n      city: market.city,\n      state: market.state,\n      country: market.country,\n      phone: p.nationalPhoneNumber || '',\n      website: p.websiteUri || '',\n      types: p.types || []\n    }\n  });\n}\nreturn out;"
+      },
+      "name": "Filter & Normalize Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst seen = new Set();\nconst unique = [];\nfor (const item of items) {\n  const p = item.json;\n  const key = p.placeId || (p.businessName + '_' + p.city);\n  if (!seen.has(key)) {\n    seen.add(key);\n    unique.push(item);\n  }\n}\nreturn unique;"
+      },
+      "name": "Deduplicate Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $json;\nlet score = 0;\nconst reasons = [];\nconst lowerName = (p.businessName || '').toLowerCase();\n\nif (lowerName.includes('plumb') || (p.types || []).includes('plumber')) {\n  score += 2;\n  reasons.push('Core plumbing service verified (+2)');\n}\nif (!lowerName.includes('group') && !lowerName.includes('franchise')) {\n  score += 2;\n  reasons.push('Independent trade business signal (+2)');\n}\nif (p.phone) {\n  score += 2;\n  reasons.push('Direct dispatch phone available (+2)');\n}\nscore += 2;\nreasons.push('Quote-to-invoice workflow upgrade potential (+2)');\nif (p.website) {\n  score += 1;\n  reasons.push('Active public website presence (+1)');\n}\n\nscore = Math.min(10, score);\nlet priority = 'REJECT';\nif (score >= 9) priority = 'P0';\nelse if (score >= 7) priority = 'P1';\nelse if (score >= 5) priority = 'P2';\n\nreturn [{\n  json: {\n    ...p,\n    score,\n    priority,\n    scoreReasons: reasons.join('; '),\n    source: 'Google Places + Web',\n    discoveredAt: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Deterministic ICP Scorer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": "={{ $env.NOTION_DATABASE_ID }}",
+        "title": "={{ $json.businessName }}",
+        "propertiesUi": {
+          "propertyValues": [
+            { "key": "Status|select", "selectValue": "New" },
+            { "key": "Priority|select", "selectValue": "={{ $json.priority }}" },
+            { "key": "Score|number", "numberValue": "={{ $json.score }}" },
+            { "key": "Score Reason|rich_text", "textContent": "={{ $json.scoreReasons }}" },
+            { "key": "Phone|phone_number", "phoneValue": "={{ $json.phone }}" },
+            { "key": "Website|url", "urlValue": "={{ $json.website }}" },
+            { "key": "City|rich_text", "textContent": "={{ $json.city }}" },
+            { "key": "Country|select", "selectValue": "={{ $json.country }}" },
+            { "key": "Google Place ID|rich_text", "textContent": "={{ $json.placeId }}" },
+            { "key": "Source|select", "selectValue": "Google Places + Web" }
+          ]
+        }
+      },
+      "name": "Sync to Notion CRM",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [1400, 300]
+    }
+  ],
+  "connections": {
+    "Daily 6AM Schedule": { "main": [[{ "node": "Load Next Market Queue", "type": "main", "index": 0 }]] },
+    "Load Next Market Queue": { "main": [[{ "node": "Google Places Text Search (New)", "type": "main", "index": 0 }]] },
+    "Google Places Text Search (New)": { "main": [[{ "node": "Filter & Normalize Candidates", "type": "main", "index": 0 }]] },
+    "Filter & Normalize Candidates": { "main": [[{ "node": "Deduplicate Candidates", "type": "main", "index": 0 }]] },
+    "Deduplicate Candidates": { "main": [[{ "node": "Deterministic ICP Scorer", "type": "main", "index": 0 }]] },
+    "Deterministic ICP Scorer": { "main": [[{ "node": "Sync to Notion CRM", "type": "main", "index": 0 }]] }
+  }
+}
